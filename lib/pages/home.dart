@@ -43,14 +43,16 @@ class _HomeState extends State<Home> {
                 ),
               ),
               ListTile(
-                title: const Text('Connected Music Accounts'),
+                title: const Text('Account Information'),
+                leading: Icon(Icons.account_box),
                 onTap: () {
                   // Update the state of the app.
                   // ...
                 },
               ),
               ListTile(
-                title: const Text('Settings'),
+                title: const Text('Connected Music Accounts'),
+                leading: Icon(Icons.music_note),
                 onTap: () {
                   // Update the state of the app.
                   // ...
@@ -58,6 +60,7 @@ class _HomeState extends State<Home> {
               ),
               ListTile(
                 title: const Text('Log out'),
+                leading: Icon(Icons.logout),
                 onTap: () {
                   // Update the state of the app.
                   // ...
