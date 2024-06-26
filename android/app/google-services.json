@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "462828064831",
+    "project_id": "hypeclip--1",
+    "storage_bucket": "hypeclip--1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:462828064831:android:823e4d8c3d25c29597688a",
+        "android_client_info": {
+          "package_name": "com.hypeclip.hypeclip"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzaZKfqvP4_ydFMAohcW2E-YJWO9xjf5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

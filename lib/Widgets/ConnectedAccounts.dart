@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ConnectedAccounts extends StatefulWidget {
-  const ConnectedAccounts({Key? key}) : super(key: key);
+  const ConnectedAccounts({super.key});
 
   @override
   _ConnectedAccountsState createState() => _ConnectedAccountsState();

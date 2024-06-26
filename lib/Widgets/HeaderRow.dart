@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class HeaderRow extends StatelessWidget {
 const HeaderRow(
-  { Key? key, required this.header }) : super(key: key);
+  { super.key, required this.header });
 
   final String header;
 

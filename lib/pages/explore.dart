@@ -4,7 +4,7 @@ import 'package:hypeclip/Widgets/HeaderRow.dart';
 
 class Explore extends StatelessWidget {
 
-const Explore({ Key? key }) : super(key: key);
+const Explore({ super.key });
 
   @override
   Widget build(BuildContext context){
@@ -15,10 +15,7 @@ const Explore({ Key? key }) : super(key: key);
              Column(
                crossAxisAlignment: CrossAxisAlignment.start,
                children: [
-                 HeaderRow(header: 'Explore'),
-
-                 
-                 
+                 HeaderRow(header: 'Explore'), 
                ],),
                ConnectedAccounts()
            ],
