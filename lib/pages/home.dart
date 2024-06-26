@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:hypeclip/Widgets/bottomNavigation.dart';
+import 'package:hypeclip/Pages/explore.dart';
+import 'package:hypeclip/Pages/library.dart';
+
+
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
+
+
 
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-  int _currentIndex = 0;
 
+  List pageController = [ Library(), Explore()];
+  int selectedTabIndex = 0;
+  
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        bottomNavigationBar: BottomNavigation(),
+
+    return SafeArea(
+      child: Scaffold(
         appBar: AppBar(
           title: Text('HypeClip'),
           centerTitle: true,
@@ -29,11 +37,40 @@ class _HomeState extends State<Home> {
             },
           ),
         ),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.my_library_music),
+              activeIcon: Icon(Icons.my_library_music, size: 28),
+              label: 'Library',
+        
+            ),
+        
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              activeIcon: Icon(Icons.search, size: 28),
+              label: "Explore"
+            )
+          ],
+          currentIndex: selectedTabIndex, 
+          selectedFontSize: 14,
+          iconSize: 23,
+          selectedItemColor: Color.fromARGB(255, 8, 104, 187),
+          unselectedItemColor: Colors.white,
+        
+          onTap: (index) {
+           
+            setState(() {selectedTabIndex = index;});
+          },
+        ),
+        body: pageController[selectedTabIndex],
+       
         drawer: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
-              Container(
+              SizedBox(
                 height: 150, // Set this to your desired height
                 child: const DrawerHeader(
                   decoration: BoxDecoration(
@@ -68,6 +105,8 @@ class _HomeState extends State<Home> {
               ),
             ],
           ),
-        ));
-  }
-}
+        )));
+      
+    
+  
+  }}  

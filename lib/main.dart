@@ -1,10 +1,17 @@
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hypeclip/pages/Explore.dart';
 import 'package:hypeclip/pages/home.dart';
+import 'package:page_transition/page_transition.dart';
 import 'pages/library.dart';
 
 void main() { //main method is where the root of the application runs
   runApp(const MyApp()); //run app takes in a root widget that displays on your device. The root widget is described by a class
 }
+
+
+
 
 class MyApp extends StatelessWidget { //Stateless widget == no dynamic data, just fixed elements
   const MyApp({super.key});
@@ -17,8 +24,18 @@ class MyApp extends StatelessWidget { //Stateless widget == no dynamic data, jus
       theme: ThemeData.dark().copyWith(
         primaryColor: Color.fromARGB(255, 8, 104, 187),
       ),
+      themeMode: ThemeMode.dark,
+      debugShowCheckedModeBanner: false,
+      home: AnimatedSplashScreen(
+        splash: Icon(Icons.music_note_rounded), 
+        nextScreen: Home(),
+        centered:true,
+        duration: 2000,
+        pageTransitionType: PageTransitionType.fade,
+        backgroundColor: Colors.black,
+        
+      )
       
-      home: const Home(),
     );
   }
 }
