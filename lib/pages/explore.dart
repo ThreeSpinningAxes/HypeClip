@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hypeclip/Widgets/ConnectedAccounts.dart';
 import 'package:hypeclip/Widgets/HeaderRow.dart';
 
 class Explore extends StatelessWidget {
@@ -15,7 +16,11 @@ const Explore({ Key? key }) : super(key: key);
                crossAxisAlignment: CrossAxisAlignment.start,
                children: [
                  HeaderRow(header: 'Explore'),
-               ],)
+
+                 
+                 
+               ],),
+               ConnectedAccounts()
            ],
          ),
        ),

@@ -18,7 +18,7 @@ const HeaderRow(
           Text(
             header,
             style: TextStyle(
-              fontSize: 25,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Colors.white
             ),
