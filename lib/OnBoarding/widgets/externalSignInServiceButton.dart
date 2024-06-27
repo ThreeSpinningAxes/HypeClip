@@ -2,8 +2,8 @@ import "package:flutter/material.dart";
 
 class ExternalSignInServiceButton extends StatefulWidget {
   final String buttonText; //Contents of button, such as text
-  final WidgetStateProperty<Size?>? minimumSize; //Minimum size of button
-  final WidgetStateProperty<Size?>? maximumSize; //Maximum size of button
+  final Size? minimumSize; //Minimum size of button
+  final Size? maximumSize; //Maximum size of button
   final Widget icon; //Icon to be displayed on button
   final void Function()
       onPressed; //Function to be called when button is pressed
@@ -31,8 +31,8 @@ class _ExternalSignInServiceButtonState
         side: WidgetStateProperty.all(BorderSide(
           color: Colors.white,
         )),
-        minimumSize: widget.minimumSize,
-        maximumSize: widget.maximumSize,
+        minimumSize: WidgetStateProperty.all(widget.minimumSize),
+        maximumSize: WidgetStateProperty.all(widget.maximumSize),
         shape: WidgetStateProperty.all(RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         )),
