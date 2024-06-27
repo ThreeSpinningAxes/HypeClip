@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:hypeclip/OnBoarding/widgets/PasswordStrengthValidation.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
+
 
 class RegisterPage extends StatelessWidget {
   RegisterPage({super.key});
@@ -9,6 +11,12 @@ class RegisterPage extends StatelessWidget {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  //Regex to tet if password strength is met.
+
+
+  //validation for password
+
+
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -25,6 +33,7 @@ class RegisterPage extends StatelessWidget {
       );
       return;
     }
+
 
     try {
       UserCredential userCredential =
@@ -73,7 +82,7 @@ class RegisterPage extends StatelessWidget {
               child: Center(
                   child: Column(
                     children: [
-                      const SizedBox(height: 160),
+                      const SizedBox(height: 30),
                       FormTextField(
                         controller: usernameController,
                         hintText: 'Username',
@@ -92,14 +101,16 @@ class RegisterPage extends StatelessWidget {
                         controller: passwordController,
                         hintText: 'Password',
                         obscureText: true,
-                        suffixIcon: Icons.lock_outline,
+                        isPassword: true,                        
                       ),
-                      const SizedBox(height: 30),
+                      SizedBox(height: 20),
+                      PasswordStrengthValidation(passwordController: passwordController),
+
+                      const SizedBox(height: 20),
                       FormTextField(
                         controller: confirmPasswordController,
                         hintText: 'Confirm Password',
                         obscureText: true,
-                        suffixIcon: Icons.lock_outline,
                       ),
                       const SizedBox(height: 30),
                       ElevatedButton(
