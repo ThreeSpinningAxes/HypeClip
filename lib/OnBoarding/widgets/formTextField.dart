@@ -1,35 +1,36 @@
 import 'package:flutter/material.dart';
-
-class MyTextField extends StatefulWidget {
+class FormTextField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
   final bool obscureText;
+  final bool isPassword;
   final Widget? suffixIcon;
   final FormFieldValidator<String>? validator;
-// Added prefixIcon parameter
-
-  const MyTextField({
-    Key? key,
+  const FormTextField({
+    super.key,
     this.suffixIcon,
+    this.isPassword = false,
     required this.controller,
     required this.hintText,
-    this.obscureText = true, 
+
+    this.obscureText = false, 
     this.validator, // Default to true, can be overridden
-  }) : super(key: key);
+  });
 
   @override
-  _MyTextFieldState createState() => _MyTextFieldState();
+  _FormTextFieldState createState() => _FormTextFieldState();
 }
 
-class _MyTextFieldState extends State<MyTextField> {
-  late bool _isObscured;
 
-  @override
+
+
+class _FormTextFieldState extends State<FormTextField> {
+  late bool _isObscured;
+    @override
   void initState() {
     super.initState();
     _isObscured = widget.obscureText;
   }
-
   void _togglePasswordVisibility() {
     setState(() {
       _isObscured = !_isObscured;
@@ -38,14 +39,8 @@ class _MyTextFieldState extends State<MyTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 35.0),
-      child: TextFormField(
-        
-        validator: widget.validator,
-        controller: widget.controller,
-        obscureText: widget.obscureText ? _isObscured : false,
-        decoration: InputDecoration(
+    return TextFormField(
+      decoration: InputDecoration(
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Color.fromARGB(0, 69, 69, 69), width: 2),
             borderRadius: BorderRadius.all(Radius.circular(14)),
@@ -56,8 +51,8 @@ class _MyTextFieldState extends State<MyTextField> {
           ),
           fillColor: Color.fromRGBO(0, 0, 0, 100),
           filled: true,
-          hintText: widget.hintText,// Use the prefixIcon if provided
-          suffixIcon: widget.obscureText ? IconButton(
+          hintText: widget.hintText,
+          suffixIcon: widget.isPassword ? IconButton(
             icon: Icon(
               // Toggle the icon based on _isObscured
               _isObscured ? Icons.visibility_off : Icons.visibility,
@@ -67,7 +62,11 @@ class _MyTextFieldState extends State<MyTextField> {
           ) : widget.suffixIcon,
           hintStyle: TextStyle(color: Color.fromARGB(255, 150, 150, 150), fontSize: 14),
         ),
-      ),
-    );
+        
+        validator: widget.validator,
+        controller: widget.controller,
+        obscureText: widget.isPassword || widget.obscureText ? _isObscured : false,
+        
+      );
   }
 }
