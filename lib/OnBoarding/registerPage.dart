@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:hypeclip/Widgets/textField.dart';
+import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 
 class RegisterPage extends StatelessWidget {
   RegisterPage({super.key});
@@ -68,45 +68,48 @@ class RegisterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
         child: SingleChildScrollView(
-            child: Center(
-                child: Column(
-      children: [
-        const SizedBox(height: 160),
-        MyTextField(
-          controller: usernameController,
-          hintText: 'Username',
-          obscureText: false,
-          suffixIcon: Icon(Icons.person_outline),
-        ),
-        const SizedBox(height: 30),
-        MyTextField(
-          controller: emailController,
-          hintText: 'Email',
-          obscureText: false,
-          suffixIcon: Icon(Icons.email_outlined),
-        ),
-        const SizedBox(height: 30),
-        MyTextField(
-          controller: passwordController,
-          hintText: 'Password',
-          obscureText: true,
-          suffixIcon: Icon(Icons.lock_outline),
-        ),
-        const SizedBox(height: 30),
-        MyTextField(
-          controller: confirmPasswordController,
-          hintText: 'Confirm Password',
-          obscureText: true,
-          suffixIcon: Icon(Icons.lock_outline),
-        ),
-        const SizedBox(height: 30),
-        ElevatedButton(
-          onPressed: () async {
-            await _register(context);
-          },
-          child: const Text('Register'),
-        ),
-      ],
-    ))));
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 35),
+              child: Center(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 160),
+                      FormTextField(
+                        controller: usernameController,
+                        hintText: 'Username',
+                        obscureText: false,
+                        suffixIcon: Icons.person_outline,
+                      ),
+                      const SizedBox(height: 30),
+                      FormTextField(
+                        controller: emailController,
+                        hintText: 'Email',
+                        obscureText: false,
+                        suffixIcon: Icons.email_outlined,
+                      ),
+                      const SizedBox(height: 30),
+                      FormTextField(
+                        controller: passwordController,
+                        hintText: 'Password',
+                        obscureText: true,
+                        suffixIcon: Icons.lock_outline,
+                      ),
+                      const SizedBox(height: 30),
+                      FormTextField(
+                        controller: confirmPasswordController,
+                        hintText: 'Confirm Password',
+                        obscureText: true,
+                        suffixIcon: Icons.lock_outline,
+                      ),
+                      const SizedBox(height: 30),
+                      ElevatedButton(
+                        onPressed: () async {
+              await _register(context);
+                        },
+                        child: const Text('Register'),
+                      ),
+                    ],
+                  )),
+            )));
   }
 }
