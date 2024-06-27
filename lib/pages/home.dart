@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hypeclip/OnBoarding/loginPage.dart';
 import 'package:hypeclip/Pages/explore.dart';
 import 'package:hypeclip/Pages/library.dart';
 
@@ -15,7 +16,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
-  List pageController = [ Library(), Explore()];
+  List pageController = [ LoginPage(), Explore()]; //Library()
   int selectedTabIndex = 0;
   
   @override
