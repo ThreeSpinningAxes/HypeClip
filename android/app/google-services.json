@@ -12,7 +12,20 @@
           "package_name": "com.hypeclip.hypeclip"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "462828064831-clb50bb0a2emeajf501ms8nralkhj9v9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hypeclip.hypeclip",
+            "certificate_hash": "1aa7b959d103f20deb4428a32e74f37ef7824fdb"
+          }
+        },
+        {
+          "client_id": "462828064831-r0a3miml153g95mslia1dkkrd6jjgp4r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBzaZKfqvP4_ydFMAohcW2E-YJWO9xjf5M"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "462828064831-r0a3miml153g95mslia1dkkrd6jjgp4r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "462828064831-p188otgm0i6sh82vf5q050pfipi68g0n.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hypeclip.hypeclip"
+              }
+            }
+          ]
         }
       }
     }

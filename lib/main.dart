@@ -1,6 +1,8 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:hypeclip/OnBoarding/loginPage.dart';
+import 'package:hypeclip/OnBoarding/widgets/widgetTree.dart';
 import 'package:hypeclip/firebase_options.dart';
 import 'package:hypeclip/pages/home.dart';
 import 'package:page_transition/page_transition.dart';
@@ -36,7 +38,7 @@ class MyApp extends StatelessWidget { //Stateless widget == no dynamic data, jus
       debugShowCheckedModeBanner: false,
       home: AnimatedSplashScreen(
         splash: Icon(Icons.music_note_rounded), 
-        nextScreen: Home(),
+        nextScreen: WidgetTree(),
         centered:true,
         duration: 2000,
         pageTransitionType: PageTransitionType.fade,

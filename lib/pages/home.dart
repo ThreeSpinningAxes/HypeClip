@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hypeclip/OnBoarding/loginPage.dart';
 import 'package:hypeclip/OnBoarding/registerPage.dart';
+import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 import 'package:hypeclip/Pages/explore.dart';
 import 'package:hypeclip/Pages/library.dart';
 
@@ -12,7 +13,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  List pageController = [LoginPage(), RegisterPage()]; //Library()
+  List pageController = [Library(), Explore()]; //Library()
   int selectedTabIndex = 0;
 
   @override
@@ -91,6 +92,7 @@ class _HomeState extends State<Home> {
                     title: const Text('Log out'),
                     leading: Icon(Icons.logout),
                     onTap: () {
+                      Auth().signOut();
                       // Update the state of the app.
                       // ...
                     },

@@ -39,13 +39,13 @@ class _PasswordStrengthValidationState extends State<PasswordStrengthValidation>
     'number': false,
   };
 
-  @override
-  void dispose() {
-    // Remove the listener when the widget is disposed
-    widget.passwordController.removeListener(_checkPasswordStrength);
-    widget.passwordController.dispose();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   // Remove the listener when the widget is disposed
+  //   widget.passwordController.removeListener(_checkPasswordStrength);
+  //   widget.passwordController.dispose();
+  //   super.dispose();
+  // }
 
   
 
