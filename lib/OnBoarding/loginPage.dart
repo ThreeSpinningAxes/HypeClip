@@ -75,7 +75,11 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 30),
                   FormSubmissionButton(
                       buttonContents: Text('Login'),
-                      onPressed: signInWithEmailAndPassword,
+                      onPressed: () {
+                        if (_formKey.currentState?.validate() ?? false) {
+                          signInWithEmailAndPassword();
+                        }
+                        },
                       minimumSize: Size(double.infinity, 55)),
 
                   SizedBox(height: 30),
