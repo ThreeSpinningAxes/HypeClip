@@ -1,147 +1,183 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
-import 'package:hypeclip/OnBoarding/widgets/PasswordStrengthValidation.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
-import 'package:hypeclip/OnBoarding/widgets/navigateToLoginOrRegistration.dart';
 import 'package:hypeclip/OnBoarding/widgets/orFormSplit.dart';
+import 'LoginPage.dart'; // Import the LoginPage
+import 'PasswordSetupPage.dart'; // Import the PasswordSetupPage
 
-class RegisterPage extends StatelessWidget {
-  RegisterPage({super.key});
+class RegisterPage extends StatefulWidget {
+  @override
+  _RegisterPageState createState() => _RegisterPageState();
+}
 
-  final usernameController = TextEditingController();
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
-  //Regex to tet if password strength is met.
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
 
-  //validation for password
+  Map<String, bool> validations = {
+    'usernameLength': false,
+    'usernameAlphanumeric': false,
+    'emailValid': false,
+  };
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  void _validateUsername() {
+    final username = usernameController.text;
+    setState(() {
+      validations['usernameLength'] = username.length >= 3;
+      validations['usernameAlphanumeric'] =
+          RegExp(r'^[a-zA-Z0-9]+$').hasMatch(username);
+    });
+  }
 
-  Future<void> _register(BuildContext context) async {
-    final String username = usernameController.text;
-    final String email = emailController.text;
-    final String password = passwordController.text;
-    final String confirmPassword = confirmPasswordController.text;
+  void _validateEmail() {
+    final email = emailController.text;
+    setState(() {
+      validations['emailValid'] =
+          RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email);
+    });
+  }
 
-    if (password != confirmPassword) {
-      // Show error message if passwords do not match
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Passwords do not match')),
-      );
-      return;
-    }
+  @override
+  void initState() {
+    super.initState();
+    usernameController.addListener(_validateUsername);
+    emailController.addListener(_validateEmail);
+  }
 
-    try {
-      
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      
-
-      // Update the user profile with the username
-      await userCredential.user?.updateDisplayName(username);
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      
-
-      // Registration successful
-      
-
-      
-
-      // This is how we will navigate to another screen
-      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home()));
-    } on FirebaseAuthException catch (e) {
-      String message;
-
-      if (e.code == 'weak-password') {
-        message = 'The password provided is too weak.';
-      } else if (e.code == 'email-already-in-use') {
-        message = 'The account already exists for that email.';
-      } else {
-        message = e.code + 'Registration failed. Please try again.';
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred. Please try again.')),
-      );
-    }
-    
+  @override
+  void dispose() {
+    usernameController.dispose();
+    emailController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: BackButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => LoginPage()),
+            );
+          },
+        ),
+      ),
       body: SafeArea(
-          child: SingleChildScrollView(
-              child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 35),
-        child: Center(
-            child: Column(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Center(
+              child: Column(
+                children: [
+                  const SizedBox(height: 10), // Reduced from 20 to 10
+                  FormTextField(
+                    controller: usernameController,
+                    hintText: 'Username',
+                    obscureText: false,
+                    suffixIcon: Icons.person_outline,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildUsernameValidationChecklist(),
+                  const SizedBox(height: 20),
+                  FormTextField(
+                    controller: emailController,
+                    hintText: 'Email',
+                    obscureText: false,
+                    suffixIcon: Icons.email_outlined,
+                  ),
+                  if (validations['emailValid']! &&
+                      emailController.text.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Please enter a valid email address',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (validations.values.every((v) => v)) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PasswordSetupPage(
+                              username: usernameController.text,
+                              email: emailController.text,
+                            ),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Please fill out all fields correctly.')),
+                        );
+                      }
+                    },
+                    child: const Text('Next'),
+                  ),
+                  SizedBox(height: 30),
+
+                  OrFormSplit(),
+
+                  SizedBox(height: 30),
+
+                  ExternalSignInServiceButton(
+                      onPressed: () {/*googleSignIn.signIn();*/},
+                      buttonText: 'Continue with Google',
+                      icon: SvgPicture.asset(
+                        'assets/android_dark_rd_na.svg',
+                        semanticsLabel: 'My SVG Image',
+                      ),
+                      minimumSize: Size(double.infinity, 55) // Change as needed
+                      ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUsernameValidationChecklist() {
+    return Column(
+      children: [
+        Row(
           children: [
-            const SizedBox(height: 30),
-            FormTextField(
-              controller: usernameController,
-              hintText: 'Username',
-              obscureText: false,
-              suffixIcon: Icons.person_outline,
-            ),
-            const SizedBox(height: 30),
-            FormTextField(
-              controller: emailController,
-              hintText: 'Email',
-              obscureText: false,
-              suffixIcon: Icons.email_outlined,
-            ),
-            const SizedBox(height: 30),
-            FormTextField(
-              controller: passwordController,
-              hintText: 'Password',
-              obscureText: true,
-              isPassword: true,
-            ),
-            SizedBox(height: 20),
-            PasswordStrengthValidation(passwordController: passwordController),
-            const SizedBox(height: 20),
-            FormTextField(
-              controller: confirmPasswordController,
-              hintText: 'Confirm Password',
-              obscureText: true,
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () async {
-                await _register(context);
-              },
-              child: const Text('Register'),
-            ),
-            SizedBox(height: 30),
-            OrFormSplit(),
-            SizedBox(height: 30),
-            ExternalSignInServiceButton(
-                onPressed: () => {},
-                buttonText: 'Continue with Google',
-                icon: SvgPicture.asset(
-                  'assets/android_dark_rd_na.svg',
-                  semanticsLabel: 'My SVG Image',
-                ),
-                minimumSize: Size(double.infinity, 55) // Change as needed
-                ),
-            SizedBox(height: 20),
-            NavigateToLoginOrRegistration(currentPageIsLogin: false),
+            Icon(validations['usernameLength']! ? Icons.check : Icons.close,
+                color:
+                    validations['usernameLength']! ? Colors.green : Colors.red),
+            SizedBox(width: 8),
+            Text('At least 3 characters',
+                style: TextStyle(
+                    color: validations['usernameLength']!
+                        ? Colors.green
+                        : Colors.red)),
           ],
-        )),
-      ))),
+        ),
+        Row(
+          children: [
+            Icon(
+                validations['usernameAlphanumeric']!
+                    ? Icons.check
+                    : Icons.close,
+                color: validations['usernameAlphanumeric']!
+                    ? Colors.green
+                    : Colors.red),
+            SizedBox(width: 8),
+            Text('Only letters and numbers',
+                style: TextStyle(
+                    color: validations['usernameAlphanumeric']!
+                        ? Colors.green
+                        : Colors.red)),
+          ],
+        ),
+      ],
     );
   }
 }
