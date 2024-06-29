@@ -79,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
                         if (_formKey.currentState?.validate() ?? false) {
                           signInWithEmailAndPassword();
                         }
-                        },
+                      },
                       minimumSize: Size(double.infinity, 55)),
 
                   SizedBox(height: 30),
@@ -89,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 30),
 
                   ExternalSignInServiceButton(
-                      onPressed: ()  {/*googleSignIn.signIn();*/},
+                      onPressed: () {/*googleSignIn.signIn();*/},
                       buttonText: 'Continue with Google',
                       icon: SvgPicture.asset(
                         'assets/android_dark_rd_na.svg',
@@ -136,23 +136,24 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> signInWithGoogle() async {
-  try {
-    final GoogleSignInAccount? googleSignInAccount = await googleSignIn.signIn();
-    final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount!.authentication;
+    try {
+      final GoogleSignInAccount? googleSignInAccount =
+          await googleSignIn.signIn();
+      final GoogleSignInAuthentication googleSignInAuthentication =
+          await googleSignInAccount!.authentication;
 
-    final AuthCredential credential = GoogleAuthProvider.credential(
-      accessToken: googleSignInAuthentication.accessToken,
-      idToken: googleSignInAuthentication.idToken,
-    );
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleSignInAuthentication.accessToken,
+        idToken: googleSignInAuthentication.idToken,
+      );
 
-    final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-    final User? user = userCredential.user;
-    
-    // Use the user object for further operations or navigate to a new screen.
-  } catch (e) {
-    print(e.toString());
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      // Use the user object for further operations or navigate to a new screen.
+    } catch (e) {
+      print(e.toString());
+    }
   }
-}
-
-
 }

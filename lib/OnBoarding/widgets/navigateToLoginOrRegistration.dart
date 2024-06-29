@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hypeclip/OnBoarding/loginPage.dart';
-import 'package:hypeclip/OnBoarding/registerPage.dart';
+import 'package:hypeclip/OnBoarding/Registration/registrationUsernameEmailPage.dart';
 
 class NavigateToLoginOrRegistration extends StatelessWidget {
   final bool currentPageIsLogin;
   const NavigateToLoginOrRegistration(
-      {Key? key, required this.currentPageIsLogin})
-      : super(key: key);
+      {super.key, required this.currentPageIsLogin});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +16,7 @@ class NavigateToLoginOrRegistration extends StatelessWidget {
                   {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
-                      return RegisterPage();
+                      return RegistrationUsernameEmailPage();
                     }))
                   }
                 else

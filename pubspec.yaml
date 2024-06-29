@@ -43,6 +43,7 @@ dependencies:
 
   
   flutter_svg: ^2.0.5
+  cloud_firestore: ^5.0.2
 
 
 
