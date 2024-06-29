@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class PasswordStrengthValidation extends StatefulWidget {
   final TextEditingController passwordController;
-  const PasswordStrengthValidation({Key? key, required this.passwordController}) : super(key: key);
+  const PasswordStrengthValidation({super.key, required this.passwordController});
 
   @override
   _PasswordStrengthValidationState createState() => _PasswordStrengthValidationState();
@@ -39,13 +39,15 @@ class _PasswordStrengthValidationState extends State<PasswordStrengthValidation>
     'number': false,
   };
 
-  // @override
-  // void dispose() {
+  @override
+  void dispose() {
   //   // Remove the listener when the widget is disposed
-  //   widget.passwordController.removeListener(_checkPasswordStrength);
-  //   widget.passwordController.dispose();
-  //   super.dispose();
-  // }
+  widget.passwordController.removeListener(_checkPasswordStrength);
+  widget.passwordController.dispose();
+  super.dispose();
+}
+
+  
 
   
 

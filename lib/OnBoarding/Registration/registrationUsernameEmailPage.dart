@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:hypeclip/OnBoarding/registration/PasswordSetupPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/orFormSplit.dart';
-import 'LoginPage.dart'; // Import the LoginPage
-import 'PasswordSetupPage.dart'; // Import the PasswordSetupPage
+import '../LoginPage.dart'; // Import the LoginPage
 
-class RegisterPage extends StatefulWidget {
+class RegistrationUsernameEmailPage extends StatefulWidget {
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  _RegistrationUsernameEmailPageState createState() => _RegistrationUsernameEmailPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegistrationUsernameEmailPageState extends State<RegistrationUsernameEmailPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
 
@@ -34,7 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final email = emailController.text;
     setState(() {
       validations['emailValid'] =
-          RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email);
+          RegExp(r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$').hasMatch(email);
     });
   }
 
@@ -68,7 +68,7 @@ class _RegisterPageState extends State<RegisterPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 35),
             child: Center(
               child: Column(
                 children: [
@@ -88,14 +88,19 @@ class _RegisterPageState extends State<RegisterPage> {
                     obscureText: false,
                     suffixIcon: Icons.email_outlined,
                   ),
-                  if (validations['emailValid']! &&
+                  if (!validations['emailValid']! &&
                       emailController.text.isNotEmpty)
+                      
                     Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Please enter a valid email address',
-                        style: TextStyle(color: Colors.red),
-                      ),
+                      padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+
+                      child: Row(
+                        children: [
+                          Text('Please enter a valid email address',
+                          style: TextStyle(color: Colors.red),
+                          )
+                        ]
+                        ),
                     ),
                   const SizedBox(height: 20),
                   ElevatedButton(

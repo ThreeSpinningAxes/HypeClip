@@ -20,31 +20,8 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
-  Map<String, bool> validations = {
-    'length': false,
-    'upperCase': false,
-    'lowerCase': false,
-    'number': false,
-    'specialChar': false,
-  };
+ 
 
-  @override
-  void initState() {
-    super.initState();
-    passwordController.addListener(_checkPasswordStrength);
-  }
-
-  void _checkPasswordStrength() {
-    final password = passwordController.text;
-    setState(() {
-      validations['length'] = password.length >= 8 && password.length <= 20;
-      validations['upperCase'] = password.contains(RegExp(r'[A-Z]'));
-      validations['lowerCase'] = password.contains(RegExp(r'[a-z]'));
-      validations['number'] = password.contains(RegExp(r'[0-9]'));
-      validations['specialChar'] =
-          password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-    });
-  }
 
   Future<void> _register(BuildContext context) async {
     final String password = passwordController.text;
@@ -56,13 +33,8 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
       );
       return;
     }
+    
 
-    if (!validations.values.every((v) => v)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password does not meet all criteria')),
-      );
-      return;
-    }
 
     try {
       UserCredential userCredential =
@@ -84,7 +56,7 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
       } else if (e.code == 'email-already-in-use') {
         message = 'The account already exists for that email.';
       } else {
-        message = e.code + 'Registration failed. Please try again.';
+        message = '${e.code}Registration failed. Please try again.';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,7 +82,7 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 35),
             child: Center(
               child: Column(
                 children: [
@@ -122,7 +94,9 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
                     isPassword: true,
                   ),
                   SizedBox(height: 20),
-                  _buildPasswordValidationChecklist(),
+                  Padding(padding:  const EdgeInsets.only(left: 8.0),
+                  child: PasswordStrengthValidation(passwordController: passwordController),
+                  ),
                   const SizedBox(height: 20),
                   FormTextField(
                     controller: confirmPasswordController,
@@ -146,64 +120,4 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
     );
   }
 
-  Widget _buildPasswordValidationChecklist() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Icon(validations['length']! ? Icons.check : Icons.close,
-                color: validations['length']! ? Colors.green : Colors.red),
-            SizedBox(width: 8),
-            Text('Minimum 8 characters (max 20)',
-                style: TextStyle(
-                    color: validations['length']! ? Colors.green : Colors.red)),
-          ],
-        ),
-        Row(
-          children: [
-            Icon(validations['upperCase']! ? Icons.check : Icons.close,
-                color: validations['upperCase']! ? Colors.green : Colors.red),
-            SizedBox(width: 8),
-            Text('1 uppercase letter',
-                style: TextStyle(
-                    color:
-                        validations['upperCase']! ? Colors.green : Colors.red)),
-          ],
-        ),
-        Row(
-          children: [
-            Icon(validations['lowerCase']! ? Icons.check : Icons.close,
-                color: validations['lowerCase']! ? Colors.green : Colors.red),
-            SizedBox(width: 8),
-            Text('1 lowercase letter',
-                style: TextStyle(
-                    color:
-                        validations['lowerCase']! ? Colors.green : Colors.red)),
-          ],
-        ),
-        Row(
-          children: [
-            Icon(validations['number']! ? Icons.check : Icons.close,
-                color: validations['number']! ? Colors.green : Colors.red),
-            SizedBox(width: 8),
-            Text('1 number',
-                style: TextStyle(
-                    color: validations['number']! ? Colors.green : Colors.red)),
-          ],
-        ),
-        Row(
-          children: [
-            Icon(validations['specialChar']! ? Icons.check : Icons.close,
-                color: validations['specialChar']! ? Colors.green : Colors.red),
-            SizedBox(width: 8),
-            Text('1 special character',
-                style: TextStyle(
-                    color: validations['specialChar']!
-                        ? Colors.green
-                        : Colors.red)),
-          ],
-        ),
-      ],
-    );
-  }
 }
