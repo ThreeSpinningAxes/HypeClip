@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
 import 'package:hypeclip/OnBoarding/handleUserSignIn.dart';
 import 'package:hypeclip/OnBoarding/widgets/PasswordStrengthValidation.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/formSubmissionButton.dart';
+import 'package:hypeclip/Services/UserService.dart';
 
 class PasswordSetupPage extends StatefulWidget {
   final String username;
@@ -20,9 +22,6 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
- 
-
-
   Future<void> _register(BuildContext context) async {
     final String password = passwordController.text;
     final String confirmPassword = confirmPasswordController.text;
@@ -33,8 +32,6 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
       );
       return;
     }
-    
-
 
     try {
       UserCredential userCredential =
@@ -45,9 +42,22 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
 
       await userCredential.user?.updateDisplayName(widget.username);
 
-      await HandleUserSignIn().addUserData(userCredential.user!, {});
+      await UserProfileService().addUserData(userCredential.user!, {
+        'username': widget.username,
+      });
+      Userservice().setUser(FirebaseAuth.instance.currentUser!.uid,
+          FirebaseAuth.instance.currentUser!.displayName ?? '',
+          FirebaseAuth.instance.currentUser!.email ?? '',
+          true);
 
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      //Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ConnectMusicLibrariesRegistrationPage()
+            ),
+        );
+    
     } on FirebaseAuthException catch (e) {
       String message;
 
@@ -94,8 +104,10 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
                     isPassword: true,
                   ),
                   SizedBox(height: 20),
-                  Padding(padding:  const EdgeInsets.only(left: 8.0),
-                  child: PasswordStrengthValidation(passwordController: passwordController),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: PasswordStrengthValidation(
+                        passwordController: passwordController),
                   ),
                   const SizedBox(height: 20),
                   FormTextField(
@@ -119,5 +131,4 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
       ),
     );
   }
-
 }
