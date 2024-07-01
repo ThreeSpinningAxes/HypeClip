@@ -4,6 +4,7 @@ import 'package:hypeclip/OnBoarding/registration/PasswordSetupPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/orFormSplit.dart';
+import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
 import '../LoginPage.dart'; // Import the LoginPage
 
 class RegistrationUsernameEmailPage extends StatefulWidget {
@@ -116,10 +117,10 @@ class _RegistrationUsernameEmailPageState extends State<RegistrationUsernameEmai
                           ),
                         );
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(
-                                  'Please fill out all fields correctly.')),
+                       
+                          ShowErrorDialog.showSnackbar(
+                            context,
+                            'Please fill out all fields correctly'
                         );
                       }
                     },
