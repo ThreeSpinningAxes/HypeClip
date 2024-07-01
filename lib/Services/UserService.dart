@@ -10,12 +10,12 @@ class Userservice {
 
 
   void setUser(String id, String username, String email, bool isLoggedIn) {
-    print('user now:${user.ID}${user.username}${user.email}${user.isLoggedIn}');
+    //print('user now:${user.ID}${user.username}${user.email}${user.isLoggedIn}');
     user.setID = id;
     user.setUsername = username;
     user.setEmail = email;
     user.setLoggedIn = isLoggedIn;
-    print('user now after logging in:${user.ID}${user.username}${user.email}${user.isLoggedIn}');
+    //print('user now after logging in:${user.ID}${user.username}${user.email}${user.isLoggedIn}');
   }
 
   Future<void> logout() async {
@@ -26,7 +26,7 @@ class Userservice {
     user.setLoggedIn = false;
     await Future.wait(user.connectedMusicLibraries.values.map((value) => value.deleteAll()));
     Auth().signOut();
-    print('user now after logging out:${user.ID}${user.username}${user.email}${user.isLoggedIn}');
+    //print('user now after logging out:${user.ID}${user.username}${user.email}${user.isLoggedIn}');
   }
 
     Future<void> addMusicService(MusicLibraryService service, Map<String, dynamic> data) async {

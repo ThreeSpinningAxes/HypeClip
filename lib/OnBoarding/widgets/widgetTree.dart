@@ -3,6 +3,7 @@ import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrati
 import 'package:hypeclip/OnBoarding/loginPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 import 'package:hypeclip/Pages/home.dart';
+import 'package:hypeclip/Utilities/Alerts.dart';
 
 class WidgetTree extends StatefulWidget {
   const WidgetTree({super.key});
@@ -18,7 +19,7 @@ class _WidgetTreeState extends State<WidgetTree> {
       stream: Auth().authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+          return Alerts().showLoaderDialog(context);
         } else if (snapshot.hasData) {
           return Home();
         } else {
