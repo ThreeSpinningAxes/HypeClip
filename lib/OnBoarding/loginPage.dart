@@ -9,6 +9,7 @@ import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/navigateToLoginOrRegistration.dart';
 import 'package:hypeclip/OnBoarding/widgets/orFormSplit.dart'; // Ensure this custom widget supports `validator`
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hypeclip/Services/UserService.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({super.key});
@@ -114,6 +115,12 @@ class _LoginPageState extends State<LoginPage> {
         email: emailController.text,
         password: passwordController.text,
       );
+      Userservice().setUser(
+          FirebaseAuth.instance.currentUser!.uid,
+          FirebaseAuth.instance.currentUser!.displayName ?? '',
+          FirebaseAuth.instance.currentUser!.email ?? '',
+          true);
+
     } on FirebaseAuthException catch (e) {
       String message;
 

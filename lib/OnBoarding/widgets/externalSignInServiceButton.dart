@@ -4,6 +4,7 @@ class ExternalSignInServiceButton extends StatefulWidget {
   final String buttonText; //Contents of button, such as text
   final Size? minimumSize; //Minimum size of button
   final Size? maximumSize; //Maximum size of button
+  final double? fontSize; //Font size of button text
   final Widget icon; //Icon to be displayed on button
   final void Function()
       onPressed; //Function to be called when button is pressed
@@ -12,7 +13,7 @@ class ExternalSignInServiceButton extends StatefulWidget {
       {super.key,
       required this.buttonText,
       this.minimumSize,
-      required this.onPressed, this.maximumSize, required this.icon});
+      required this.onPressed, this.maximumSize, required this.icon, this.fontSize});
 
   @override
   _ExternalSignInServiceButtonState createState() =>
@@ -44,7 +45,7 @@ class _ExternalSignInServiceButtonState
                           alignment: Alignment.centerLeft,
                           child: widget.icon, // Google icon, change as needed
                         ),
-                        Text(widget.buttonText, style:  TextStyle(fontWeight: FontWeight.bold),),
+                        Text(widget.buttonText, style:  TextStyle(fontWeight: FontWeight.bold, fontSize: widget.fontSize),),
                       ],
                     )
     );

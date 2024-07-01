@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 21.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="logo_x5F_youtube_x5F_music_x5F_round_x5F_192px"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 192 192"
+	 enable-background="new 0 0 192 192" xml:space="preserve">
+<rect id="bounding_box_1_" fill="none" width="192" height="192"/>
+<g id="BG_circle">
+	<g>
+		<circle fill="#FFFFFF" cx="96" cy="96" r="88"/>
+	</g>
+</g>
+<g id="BG_x5F_edge">
+	<path opacity="0.1" enable-background="new    " d="M183.99,96c-0.22,38.38-25.27,70.9-59.99,82.48c-8.8,2.93-18.21,4.52-28,4.52
+		C47.57,183.01,8.27,144.1,8,96c0,0.17,0,0.33,0,0.5C8,144.82,47.4,184,96,184c9.79,0,19.2-1.59,28-4.52
+		c34.87-11.63,60-44.39,60-82.98C184,96.33,183.99,96.17,183.99,96z"/>
+	<path opacity="0.4" fill="#FFFFFF" enable-background="new    " d="M184,96c0-38.81-25.13-71.75-60-83.45C115.2,9.6,105.79,8,96,8
+		C47.4,8,8,47.4,8,96"/>
+</g>
+<g id="art_layer">
+	<circle id="XMLID_4814_" fill="#FF0000" cx="96" cy="96" r="88"/>
+	<path fill="#FFFFFF" d="M96,50.32c25.19,0,45.68,20.49,45.68,45.68S121.19,141.68,96,141.68S50.32,121.19,50.32,96
+		S70.81,50.32,96,50.32 M96,43.92c-28.76,0-52.08,23.32-52.08,52.08c0,28.76,23.32,52.08,52.08,52.08s52.08-23.32,52.08-52.08
+		C148.08,67.24,124.76,43.92,96,43.92L96,43.92z"/>
+	<polygon fill="#FFFFFF" points="79,122 124,96 79,70 	"/>
+</g>
+</svg>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 import 'package:hypeclip/Pages/explore.dart';
 import 'package:hypeclip/Pages/library.dart';
+import 'package:hypeclip/Services/UserService.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -89,8 +90,8 @@ class _HomeState extends State<Home> {
                   ListTile(
                     title: const Text('Log out'),
                     leading: Icon(Icons.logout),
-                    onTap: () {
-                      Auth().signOut();
+                    onTap: () async {
+                      await Userservice().logout();
                       // Update the state of the app.
                       // ...
                     },
