@@ -18,6 +18,9 @@ class ConnectMusicLibrariesRegistrationPage extends StatefulWidget {
 class _ConnectMusicLibrariesRegistrationPageState
     extends State<ConnectMusicLibrariesRegistrationPage> {
 
+      bool connectedAccount = false;
+      String skipDescriptor = '';
+
       List musicServiceButtons = [];
   @override
   Widget build(BuildContext context) {
@@ -51,6 +54,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                     ExternalSignInServiceButton(
                         onPressed: () async {
                           await SpotifyService().authorize();
+                          connectedAccount = true;
                         },
                         buttonText: 'Connect Spotify',
                         fontSize: 18,
@@ -67,6 +71,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                         onPressed: () async {
                           Map<String, dynamic>? s = await Userservice().getMusicServiceData(MusicLibraryService.spotify);
                           print(jsonEncode(s));
+                          connectedAccount = true;
 
                           },
                         buttonText: 'Connect Youtube Music',
@@ -111,7 +116,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                       .min, // Ensures the Row only takes as much space as needed
                   children: [
                     Text(
-                      'Skip',
+                      nextText.isEmpty ? 'Skip' : nextText,
                       style: TextStyle(
                         color: Colors
                             .blue, // Change as needed for your app's theme
