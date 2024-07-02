@@ -37,7 +37,9 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 160),
+                  
+                  const SizedBox(height: 100),
+                  Center(child: Text("Log in to HypeClip", style: Theme.of(context).textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 8, 104, 187)))),
                   const SizedBox(height: 30),
                   FormTextField(
                     controller: emailController,
@@ -75,7 +77,7 @@ class _LoginPageState extends State<LoginPage> {
                           Container()), //replace with password reset page widget
                   SizedBox(height: 30),
                   FormSubmissionButton(
-                      buttonContents: Text('Login'),
+                      buttonContents: Text('Login', style: TextStyle(color: Colors.white, fontSize: 16),),
                       onPressed: () {
                         if (_formKey.currentState?.validate() ?? false) {
                           signInWithEmailAndPassword();

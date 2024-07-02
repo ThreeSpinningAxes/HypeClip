@@ -118,9 +118,10 @@ class _RegistrationUsernameEmailPageState extends State<RegistrationUsernameEmai
                         );
                       } else {
                        
-                          ShowErrorDialog.showSnackbar(
+                          ShowSnackBar.showSnackbarError(
                             context,
-                            'Please fill out all fields correctly'
+                            'Please fill out all fields correctly',10
+                            
                         );
                       }
                     },

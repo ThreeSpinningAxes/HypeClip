@@ -33,7 +33,7 @@ class NavigateToLoginOrRegistration extends StatelessWidget {
                 : "Already have a account? Login",
             style: TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline),
           ))

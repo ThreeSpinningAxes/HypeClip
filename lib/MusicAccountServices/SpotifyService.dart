@@ -88,7 +88,7 @@ class SpotifyService {
       'response_type': 'code',
       'redirect_uri': REDIRECT_URI,
       'scope': SCOPES,
-      'show_dialog': 'false',
+      'show_dialog': 'true',
       'state': randomString
       //if response has same state as this, then it is a valid response
     };

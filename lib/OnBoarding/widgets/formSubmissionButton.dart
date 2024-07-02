@@ -15,9 +15,9 @@ class FormSubmissionButton extends StatelessWidget {
         alignment: Alignment.center,
         minimumSize: WidgetStateProperty.all(minimumSize),
         maximumSize: WidgetStateProperty.all(maximumSize),
-        backgroundColor: WidgetStateProperty.all(Colors.black),
+        backgroundColor: WidgetStateProperty.all(Color.fromARGB(255, 8, 104, 187)),
         foregroundColor:
-            WidgetStateProperty.all(Color.fromARGB(255, 8, 104, 187)),
+            WidgetStateProperty.all(Colors.black),
         shape: WidgetStateProperty.all(RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         )),
