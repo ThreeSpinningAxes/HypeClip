@@ -6,6 +6,8 @@ import 'package:hypeclip/OnBoarding/widgets/PasswordStrengthValidation.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/formSubmissionButton.dart';
 import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Utilities/Alerts.dart';
+import 'package:hypeclip/Utilities/ShowLoading.dart';
 
 class PasswordSetupPage extends StatefulWidget {
   final String username;
@@ -21,6 +23,7 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+  bool _isLoading = false;
 
   Future<void> _register(BuildContext context) async {
     final String password = passwordController.text;
@@ -45,7 +48,8 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
       await UserProfileService().addUserData(userCredential.user!, {
         'username': widget.username,
       });
-      Userservice().setUser(FirebaseAuth.instance.currentUser!.uid,
+      Userservice().setUser(
+          FirebaseAuth.instance.currentUser!.uid,
           FirebaseAuth.instance.currentUser!.displayName ?? '',
           FirebaseAuth.instance.currentUser!.email ?? '',
           true);
@@ -54,10 +58,8 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ConnectMusicLibrariesRegistrationPage()
-            ),
-        );
-    
+            builder: (context) => ConnectMusicLibrariesRegistrationPage()),
+      );
     } on FirebaseAuthException catch (e) {
       String message;
 
@@ -81,7 +83,8 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ShowLoading(isLoading: _isLoading,
+      child: Scaffold(
       appBar: AppBar(
         leading: BackButton(
           onPressed: () {
@@ -117,18 +120,29 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
                   ),
                   const SizedBox(height: 20),
                   FormSubmissionButton(
-                    buttonContents: Text('Register'),
-                    onPressed: () async {
-                      await _register(context);
-                    },
-                    minimumSize: Size(double.infinity, 55),
-                  ),
+                          buttonContents: Text('Register'),
+                          onPressed: () {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                          
+                            _register(context).whenComplete(() {
+                              setState(() {
+                                _isLoading = false;
+                              
+                              });
+                            });
+                          },
+                          minimumSize: Size(double.infinity, 55),
+                        ),
                 ],
               ),
             ),
           ),
         ),
       ),
+            ),
     );
+    
   }
 }

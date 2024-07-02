@@ -19,7 +19,7 @@ class _WidgetTreeState extends State<WidgetTree> {
       stream: Auth().authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Alerts().showLoaderDialog(context);
+          return CircularProgressIndicator();
         } else if (snapshot.hasData) {
           return Home();
         } else {
