@@ -1,10 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
 import 'package:hypeclip/OnBoarding/registration/PasswordSetupPage.dart';
+import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/orFormSplit.dart';
 import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Utilities/ShowLoading.dart';
 import '../LoginPage.dart'; // Import the LoginPage
 
 class RegistrationUsernameEmailPage extends StatefulWidget {
@@ -21,6 +25,8 @@ class _RegistrationUsernameEmailPageState extends State<RegistrationUsernameEmai
     'usernameAlphanumeric': false,
     'emailValid': false,
   };
+  
+  var _isLoading = false;
 
   void _validateUsername() {
     final username = usernameController.text;
@@ -55,94 +61,118 @@ class _RegistrationUsernameEmailPageState extends State<RegistrationUsernameEmai
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => LoginPage()),
-            );
-          },
+    return ShowLoading(
+      isLoading: _isLoading,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: BackButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+            },
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 35),
-            child: Center(
-              child: Column(
-                children: [
-                  const SizedBox(height: 10), // Reduced from 20 to 10
-                  FormTextField(
-                    controller: usernameController,
-                    hintText: 'Username',
-                    obscureText: false,
-                    suffixIcon: Icons.person_outline,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildUsernameValidationChecklist(),
-                  const SizedBox(height: 20),
-                  FormTextField(
-                    controller: emailController,
-                    hintText: 'Email',
-                    obscureText: false,
-                    suffixIcon: Icons.email_outlined,
-                  ),
-                  if (!validations['emailValid']! &&
-                      emailController.text.isNotEmpty)
-                      
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0, left: 8.0),
-
-                      child: Row(
-                        children: [
-                          Text('Please enter a valid email address',
-                          style: TextStyle(color: Colors.red),
-                          )
-                        ]
-                        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 35),
+              child: Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10), // Reduced from 20 to 10
+                    FormTextField(
+                      controller: usernameController,
+                      hintText: 'Username',
+                      obscureText: false,
+                      suffixIcon: Icons.person_outline,
                     ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (validations.values.every((v) => v)) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PasswordSetupPage(
-                              username: usernameController.text,
-                              email: emailController.text,
-                            ),
+                    const SizedBox(height: 20),
+                    _buildUsernameValidationChecklist(),
+                    const SizedBox(height: 20),
+                    FormTextField(
+                      controller: emailController,
+                      hintText: 'Email',
+                      obscureText: false,
+                      suffixIcon: Icons.email_outlined,
+                    ),
+                    if (!validations['emailValid']! &&
+                        emailController.text.isNotEmpty)
+                        
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+      
+                        child: Row(
+                          children: [
+                            Text('Please enter a valid email address',
+                            style: TextStyle(color: Colors.red),
+                            )
+                          ]
                           ),
-                        );
-                      } else {
-                       
-                          ShowSnackBar.showSnackbarError(
+                      ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (validations.values.every((v) => v)) {
+                          Navigator.push(
                             context,
-                            'Please fill out all fields correctly',10
+                            MaterialPageRoute(
+                              builder: (context) => PasswordSetupPage(
+                                username: usernameController.text,
+                                email: emailController.text,
+                              ),
+                            ),
+                          );
+                        } else {
+                         
+                            ShowSnackBar.showSnackbarError(
+                              context,
+                              'Please fill out all fields correctly',10
+                              
+                          );
+                        }
+                      },
+                      child: const Text('Next'),
+                    ),
+                    SizedBox(height: 30),
+      
+                    OrFormSplit(),
+      
+                    SizedBox(height: 30),
+      
+                    ExternalSignInServiceButton(
+                        onPressed: () async {
+                          setState(() {
+                            _isLoading = true;
+                          });
+                          UserCredential? userCred = await Auth().signInWithGoogle(context);
+                          if (userCred != null) {
+                            if (userCred.additionalUserInfo!.isNewUser) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ConnectMusicLibrariesRegistrationPage()),
+                            );
+                            }
+                            else {
+                              Navigator.pop(context);
+                            }
                             
-                        );
-                      }
-                    },
-                    child: const Text('Next'),
-                  ),
-                  SizedBox(height: 30),
-
-                  OrFormSplit(),
-
-                  SizedBox(height: 30),
-
-                  ExternalSignInServiceButton(
-                      onPressed: () {/*googleSignIn.signIn();*/},
-                      buttonText: 'Continue with Google',
-                      icon: SvgPicture.asset(
-                        'assets/android_dark_rd_na.svg',
-                        semanticsLabel: 'My SVG Image',
-                      ),
-                      minimumSize: Size(double.infinity, 55) // Change as needed
-                      ),
-                ],
+                          }
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        },
+                        buttonText: 'Continue with Google',
+                        icon: SvgPicture.asset(
+                          'assets/android_dark_rd_na.svg',
+                          semanticsLabel: 'My SVG Image',
+                        ),
+                        minimumSize: Size(double.infinity, 55) // Change as needed
+                        ),
+                  ],
+                ),
               ),
             ),
           ),

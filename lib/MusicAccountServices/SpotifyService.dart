@@ -96,9 +96,10 @@ class SpotifyService {
     final authURL = Uri.https(BASE_AUTH_API_URL, '/authorize', body);
     try {
       final result = await FlutterWebAuth2.authenticate(
-          url: authURL.toString(), callbackUrlScheme: "hypeclip");
+          url: authURL.toString(), callbackUrlScheme: "hypeclip",options: FlutterWebAuth2Options(intentFlags: ephemeralIntentFlags));
 
       Map<String, dynamic> response = Uri.parse(result).queryParameters;
+      print("auth data: " + jsonEncode(response));
       if (response['error'] != null) {
         print('error getting auth code: ${response['error']}');
         return null;

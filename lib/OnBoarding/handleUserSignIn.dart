@@ -11,7 +11,7 @@ class UserProfileService {
        // This spreads the additionalData into the userData map
     };
 
-    await users.doc(user.uid).set(userData);
+    //await users.doc(user.uid).set(userData);
   }
 
   
