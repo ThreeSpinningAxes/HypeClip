@@ -1,10 +1,7 @@
 import 'dart:convert';
-import 'dart:math';
 
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
-import 'package:hypeclip/Entities/User.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/RandomGen.dart';
@@ -45,13 +42,13 @@ class SpotifyService {
     if (authCode != null) {
       Map<String, dynamic>? accessData= await getAccessData(authCode);
       if (accessData != null) {
-        Userservice().addMusicService(MusicLibraryService.spotify, accessData);
+        Userservice.addMusicService(MusicLibraryService.spotify, accessData);
       }
     }
   }
 
   Future<String?> getAccessTokenFromStroage() async{
-    Map<String, dynamic>? data = await Userservice().getMusicServiceData(MusicLibraryService.spotify);
+    Map<String, dynamic>? data = await Userservice.getMusicServiceData(MusicLibraryService.spotify);
     if(data != null){
       return data[ACCESS_TOKEN_VAR_NAME];
     }
@@ -59,7 +56,7 @@ class SpotifyService {
   }
 
   Future<String?> getRefreshTokenFromStorage() async{
-    Map<String, dynamic>? data = await Userservice().getMusicServiceData(MusicLibraryService.spotify);
+    Map<String, dynamic>? data = await Userservice.getMusicServiceData(MusicLibraryService.spotify);
     if(data != null){
       return data[REFRESH_TOKEN_VAR_NAME];
     }
@@ -67,7 +64,7 @@ class SpotifyService {
   }
 
   Future<String?> getExpirationTimeFromStorage() async{
-    Map<String, dynamic>? data = await Userservice().getMusicServiceData(MusicLibraryService.spotify);
+    Map<String, dynamic>? data = await Userservice.getMusicServiceData(MusicLibraryService.spotify);
     if(data != null){
       return data[ACCESS_TOKEN_EXP_VAR_NAME];
     }
@@ -78,7 +75,7 @@ class SpotifyService {
     Map<String, dynamic> data = {
       ACCESS_TOKEN_VAR_NAME: accessToken
     };
-    await Userservice().addMusicService(MusicLibraryService.spotify, data);
+    await Userservice.addMusicService(MusicLibraryService.spotify, data);
   }
 
   Future<String?> getAuthorizationToken() async {
@@ -99,7 +96,7 @@ class SpotifyService {
           url: authURL.toString(), callbackUrlScheme: "hypeclip",options: FlutterWebAuth2Options(intentFlags: ephemeralIntentFlags));
 
       Map<String, dynamic> response = Uri.parse(result).queryParameters;
-      print("auth data: " + jsonEncode(response));
+      print("auth data: ${jsonEncode(response)}");
       if (response['error'] != null) {
         print('error getting auth code: ${response['error']}');
         return null;
@@ -180,7 +177,7 @@ class SpotifyService {
       REFRESH_TOKEN_VAR_NAME: refreshToken,
       ACCESS_TOKEN_EXP_VAR_NAME: expiresIn
     };
-    await Userservice().setMusicServiceData(MusicLibraryService.spotify, data);
+    await Userservice.setMusicServiceData(MusicLibraryService.spotify, data);
   }
   
 

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
 import 'package:hypeclip/OnBoarding/loginPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 import 'package:hypeclip/Pages/home.dart';
-import 'package:hypeclip/Utilities/Alerts.dart';
+
 
 class WidgetTree extends StatefulWidget {
   const WidgetTree({super.key});

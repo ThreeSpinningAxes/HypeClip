@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hypeclip/Widgets/HeaderRow.dart';
 class Library extends StatelessWidget {
   
 const Library({ super.key });
@@ -13,7 +12,7 @@ const Library({ super.key });
              Column(
                crossAxisAlignment: CrossAxisAlignment.start,
                children: [
-                 HeaderRow(header: 'Library'),
+                 
                ],)
            ],
          ),

@@ -11,9 +11,7 @@ import 'package:hypeclip/OnBoarding/widgets/navigateToLoginOrRegistration.dart';
 import 'package:hypeclip/OnBoarding/widgets/orFormSplit.dart'; // Ensure this custom widget supports `validator`
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hypeclip/Services/UserService.dart';
-import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
 import 'package:hypeclip/Utilities/ShowLoading.dart';
-
 
 class LoginPage extends StatefulWidget {
   LoginPage({super.key});
@@ -65,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email address';
                         }
-      
+
                         return null;
                       },
                     ),
@@ -101,43 +99,44 @@ class _LoginPageState extends State<LoginPage> {
                           }
                         },
                         minimumSize: Size(double.infinity, 55)),
-      
+
                     SizedBox(height: 30),
-      
+
                     OrFormSplit(),
-      
+
                     SizedBox(height: 30),
-      
+
                     ExternalSignInServiceButton(
                         onPressed: () async {
                           setState(() {
                             _isLoading = true;
                           });
-                          UserCredential? userCredential = await Auth().signInWithGoogle(context);
+                          UserCredential? userCredential = await Auth()
+                              .signInWithGoogle(context);
                           if (mounted) {
-                            setState(() {
-                            _isLoading = false;
-                          });
-                          }
-                          
-                          if (userCredential != null) {
-                            if (userCredential.additionalUserInfo!.isNewUser) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        ConnectMusicLibrariesRegistrationPage()),
-                              );
+                              setState(() {
+                                _isLoading = false;
+                              });
                             }
-                            
-                          }
+                          if (userCredential != null) {
+                              if (userCredential.additionalUserInfo!.isNewUser) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          ConnectMusicLibrariesRegistrationPage()),
+                                );
+                              }
+                            }
+
                         },
                         buttonText: 'Continue with Google',
                         icon: SvgPicture.asset(
                           'assets/android_dark_rd_na.svg',
                           semanticsLabel: 'My SVG Image',
                         ),
-                        minimumSize: Size(double.infinity, 55) // Change as needed
+                        minimumSize:
+                            Size(double.infinity, 55) // Change as needed
                         ),
                     SizedBox(height: 20),
                     NavigateToLoginOrRegistration(currentPageIsLogin: true),
@@ -157,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
         email: emailController.text,
         password: passwordController.text,
       );
-      Userservice().setUser(
+      Userservice.setUser(
           FirebaseAuth.instance.currentUser!.uid,
           FirebaseAuth.instance.currentUser!.displayName ?? '',
           FirebaseAuth.instance.currentUser!.email ?? '',
@@ -182,6 +181,4 @@ class _LoginPageState extends State<LoginPage> {
       );
     }
   }
-
-
 }

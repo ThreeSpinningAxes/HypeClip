@@ -8,11 +8,10 @@ import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
 
-class ConnectMusicLibrariesRegistrationPage extends StatefulWidget {
-  final bool? addBackButton;
-  final bool? addSkipButton;
+class ConnectMusicServicesPage extends StatefulWidget {
+  final Function? onConnectedCallback;
 
-  const ConnectMusicLibrariesRegistrationPage({super.key, this.addBackButton, this.addSkipButton});
+  const ConnectMusicServicesPage({super.key, this.onConnectedCallback});
 
   @override
   _ConnectMusicLibrariesRegistrationPageState createState() =>
@@ -20,18 +19,16 @@ class ConnectMusicLibrariesRegistrationPage extends StatefulWidget {
 }
 
 class _ConnectMusicLibrariesRegistrationPageState
-    extends State<ConnectMusicLibrariesRegistrationPage> {
-  String nextText = 'Skip';
-
-  String nextTextDescriptor =
-      'You can always connect your music libraries later in settings.';
-  Set musicServices = Userservice.getConnectedMusicLibraries();
+    extends State<ConnectMusicServicesPage> {
+  Set<MusicLibraryService> musicServices = Userservice.getConnectedMusicLibraries();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: widget.addBackButton ?? false,
-      ),
+          leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => navigateBackToRoute(context),
+          ),),
       body: SafeArea(
         child: Stack(children: [
           SingleChildScrollView(
@@ -56,16 +53,17 @@ class _ConnectMusicLibrariesRegistrationPageState
                     ),
 
                     SizedBox(height: 30),
-                    if (!musicServices.contains(MusicLibraryService.spotify))                     
+                    if (!musicServices.contains(MusicLibraryService.spotify))
                       ExternalSignInServiceButton(
                           onPressed: () async {
                             await SpotifyService().authorize();
-                            if (await Userservice
-                                .hasMusicService(MusicLibraryService.spotify)) {
-                              afterSuccessfulConnection(MusicLibraryService.spotify);
-                              
-                            }
                             
+                            if (Userservice.hasMusicService(
+                                MusicLibraryService.spotify)) {
+                              afterSuccessfulConnection(
+                                  MusicLibraryService.spotify);
+                                  
+                            }
                           },
                           buttonText: 'Connect Spotify',
                           fontSize: 18,
@@ -78,11 +76,13 @@ class _ConnectMusicLibrariesRegistrationPageState
                               Size(double.infinity, 55) // Change as needed
                           ),
                     SizedBox(height: 20),
-                    if (!musicServices.contains(MusicLibraryService.youtubeMusic))   
+                    if (!musicServices
+                        .contains(MusicLibraryService.youtubeMusic))
                       ExternalSignInServiceButton(
                           onPressed: () async {
-                            Map<String, dynamic>? s = await Userservice
-                                .getMusicServiceData(MusicLibraryService.spotify);
+                            Map<String, dynamic>? s =
+                                await Userservice.getMusicServiceData(
+                                    MusicLibraryService.spotify);
                             print(jsonEncode(s));
                           },
                           buttonText: 'Connect Youtube Music',
@@ -96,7 +96,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                               Size(double.infinity, 55) // Change as needed
                           ),
                     SizedBox(height: 20),
-                    if (!musicServices.contains(MusicLibraryService.soundCloud))   
+                    if (!musicServices.contains(MusicLibraryService.soundCloud))
                       ExternalSignInServiceButton(
                           onPressed: () {/*googleSignIn.signIn();*/},
                           buttonText: 'Connect SoundCloud',
@@ -110,69 +110,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                               Size(double.infinity, 55) // Change as needed
                           ),
                     SizedBox(height: 20),
-                                      Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Expanded(child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Text(
-                          nextTextDescriptor,
-                          style: TextStyle(
-                            color: Colors.white, // Change as needed for your app's theme
-                            fontSize: 14,
-                            
-                          ),
-                          softWrap: true,
-                          overflow: TextOverflow.clip,
-                        ),
-                      ),)
-                      
-                    ],
-                  )
                   ]),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.all(
-                  16.0), // Add padding for better positioning
-              child: TextButton(
-                onPressed: () {
-                  if (widget.addSkipButton ?? false) {
-                    Navigator.of(context).pop();
-                    
-                  }else {
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                  }
-                  
-                },
-                child: Stack(alignment: Alignment.bottomRight, children: [
-                  Row(
-                    mainAxisSize: MainAxisSize
-                        .min, // Ensures the Row only takes as much space as needed
-                    children: [
-                      Text(
-                        widget.addSkipButton ?? false ? 'Continue' : nextText,
-                        style: TextStyle(
-                          color: Colors
-                              .blue, // Change as needed for your app's theme
-                          fontSize: 20, // Increased font size
-                        ),
-                      ),
-                      SizedBox(width: 5), // Space between text and icon
-                      Icon(
-                        Icons
-                            .arrow_forward, // Arrow icon to the right of the text
-                        color: Colors
-                            .blue, // Match the text color or adjust as needed
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-
-                ]),
-              ),
             ),
           ),
         ]),
@@ -183,14 +121,18 @@ class _ConnectMusicLibrariesRegistrationPageState
   void afterSuccessfulConnection(MusicLibraryService service) {
     setState(() {
       // Change the skip button to next and remove the descriptor
-      if (nextText.startsWith("S")) {
-        nextText = "Continue";
-        nextTextDescriptor = '';
-      }
-      
+
       musicServices.add(service);
-      ShowSnackBar.showSnackbar(context, "Susscessfully added ${service.name}", 3);
-      
+      print(Userservice.getConnectedMusicLibraries());
+      ShowSnackBar.showSnackbar(
+          context, "Susscessfully added ${service.name}", 3);
     });
+     widget.onConnectedCallback?.call();
+  }
+
+    void navigateBackToRoute(BuildContext context) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(); // Fallback to popping the current route if no route name is provided
+    }
   }
 }

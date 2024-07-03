@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
-import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
-import 'package:hypeclip/Pages/explore.dart';
+import 'package:hypeclip/Pages/Explore/explore.dart';
 import 'package:hypeclip/Pages/library.dart';
 import 'package:hypeclip/Services/UserService.dart';
 
@@ -14,6 +13,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List pageController = [Library(), Explore()]; //Library()
+  List pageNames = ["Library", "Explore"];
   int selectedTabIndex = 0;
 
   @override
@@ -21,8 +21,12 @@ class _HomeState extends State<Home> {
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
-              title: Text('HypeClip'),
-              centerTitle: true,
+              title: Text(pageNames[selectedTabIndex], style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white)),
+            
+              centerTitle: false,
               leading: Builder(
                 builder: (context) {
                   return IconButton(
@@ -93,7 +97,7 @@ class _HomeState extends State<Home> {
                     title: const Text('Log out'),
                     leading: Icon(Icons.logout),
                     onTap: () async {
-                      await Userservice().logout();
+                      await Userservice.logout();
                       // Update the state of the app.
                       // ...
                     },

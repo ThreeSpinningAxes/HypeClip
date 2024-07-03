@@ -52,7 +52,8 @@ class Auth {
       final User? user =
           userCredential.user ?? FirebaseAuth.instance.currentUser;
           
-      Userservice().setUser(user!.uid, user.displayName!, user.email!, true);
+      Userservice.setUser(user!.uid, user.displayName!, user.email!, true);
+      Userservice.initMusicServicesForStorage();
       
       return userCredential;
 
