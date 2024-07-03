@@ -29,7 +29,7 @@ class _ExploreState extends State<Explore> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              HeaderRow(header: 'Explore'),
+
               page,
             ],
           ),

@@ -13,6 +13,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List pageController = [Library(), Explore()]; //Library()
+  List pageNames = ["Library", "Explore"];
   int selectedTabIndex = 0;
 
   @override
@@ -20,8 +21,12 @@ class _HomeState extends State<Home> {
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
-              title: Text('HypeClip'),
-              centerTitle: true,
+              title: Text(pageNames[selectedTabIndex], style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white)),
+            
+              centerTitle: false,
               leading: Builder(
                 builder: (context) {
                   return IconButton(
