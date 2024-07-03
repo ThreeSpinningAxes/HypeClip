@@ -25,7 +25,7 @@ class _ConnectMusicLibrariesRegistrationPageState
 
   String nextTextDescriptor =
       'You can always connect your music libraries later in settings.';
-  Set musicServices = Userservice.user.connectedMusicLibraries.keys.toSet();
+  Set musicServices = Userservice.getConnectedMusicLibraries();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,7 +60,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                       ExternalSignInServiceButton(
                           onPressed: () async {
                             await SpotifyService().authorize();
-                            if (Userservice
+                            if (await Userservice
                                 .hasMusicService(MusicLibraryService.spotify)) {
                               afterSuccessfulConnection(MusicLibraryService.spotify);
                               

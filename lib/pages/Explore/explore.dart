@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Widgets/ConnectedAccounts.dart';
-import 'package:hypeclip/Widgets/HeaderRow.dart';
 
 class Explore extends StatefulWidget {
   Explore({super.key});
@@ -13,7 +13,7 @@ class Explore extends StatefulWidget {
 }
 
 class _ExploreState extends State<Explore> {
-  Set connectedMusicLibraries = Userservice.getConnectedMusicLibraries();
+  Set<MusicLibraryService> connectedMusicLibraries = Userservice.getConnectedMusicLibraries();
   Widget page = Container();
   @override
   initState() {

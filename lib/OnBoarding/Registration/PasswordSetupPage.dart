@@ -47,11 +47,13 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
       await UserProfileService().addUserData(userCredential.user!, {
         'username': widget.username,
       });
-      Userservice().setUser(
+      Userservice.setUser(
           FirebaseAuth.instance.currentUser!.uid,
           FirebaseAuth.instance.currentUser!.displayName ?? '',
           FirebaseAuth.instance.currentUser!.email ?? '',
           true);
+
+      
 
       //Navigator.of(context).popUntil((route) => route.isFirst);
       Navigator.push(

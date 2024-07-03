@@ -20,7 +20,7 @@ class ConnectMusicServicesPage extends StatefulWidget {
 
 class _ConnectMusicLibrariesRegistrationPageState
     extends State<ConnectMusicServicesPage> {
-  Set musicServices = Userservice.user.connectedMusicLibraries.keys.toSet();
+  Set<MusicLibraryService> musicServices = Userservice.getConnectedMusicLibraries();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,6 +57,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                       ExternalSignInServiceButton(
                           onPressed: () async {
                             await SpotifyService().authorize();
+                            
                             if (Userservice.hasMusicService(
                                 MusicLibraryService.spotify)) {
                               afterSuccessfulConnection(
@@ -122,6 +123,7 @@ class _ConnectMusicLibrariesRegistrationPageState
       // Change the skip button to next and remove the descriptor
 
       musicServices.add(service);
+      print(Userservice.getConnectedMusicLibraries());
       ShowSnackBar.showSnackbar(
           context, "Susscessfully added ${service.name}", 3);
     });
