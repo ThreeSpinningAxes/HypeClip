@@ -17,10 +17,7 @@ class _ConnectedAccountsState extends State<ConnectedAccounts> {
           padding: EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 20 ), 
           child: Text(
             'Connected Music Libraries',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(context).textTheme.headlineSmall
           ),
         ),
       ],

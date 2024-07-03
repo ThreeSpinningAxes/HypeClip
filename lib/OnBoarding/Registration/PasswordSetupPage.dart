@@ -6,7 +6,6 @@ import 'package:hypeclip/OnBoarding/widgets/PasswordStrengthValidation.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/formSubmissionButton.dart';
 import 'package:hypeclip/Services/UserService.dart';
-import 'package:hypeclip/Utilities/Alerts.dart';
 import 'package:hypeclip/Utilities/ShowLoading.dart';
 
 class PasswordSetupPage extends StatefulWidget {

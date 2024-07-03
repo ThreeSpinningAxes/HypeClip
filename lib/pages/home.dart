@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
-import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
-import 'package:hypeclip/Pages/explore.dart';
+import 'package:hypeclip/Pages/Explore/explore.dart';
 import 'package:hypeclip/Pages/library.dart';
 import 'package:hypeclip/Services/UserService.dart';
 
@@ -93,7 +92,7 @@ class _HomeState extends State<Home> {
                     title: const Text('Log out'),
                     leading: Icon(Icons.logout),
                     onTap: () async {
-                      await Userservice().logout();
+                      await Userservice.logout();
                       // Update the state of the app.
                       // ...
                     },
