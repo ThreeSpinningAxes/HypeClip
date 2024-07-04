@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
 import 'package:hypeclip/Pages/Explore/explore.dart';
 import 'package:hypeclip/Pages/library.dart';
@@ -18,6 +20,10 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    User? user = FirebaseAuth.instance.currentUser;
+    // Determine the profile picture URL or null if not available
+    String? profilePicUrl = user?.photoURL;
+    
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
@@ -30,12 +36,16 @@ class _HomeState extends State<Home> {
               leading: Builder(
                 builder: (context) {
                   return IconButton(
-                    icon: const Icon(Icons.account_circle_outlined, size: 28),
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                  );
+                icon: profilePicUrl != null
+                    ? CircleAvatar(
+                        backgroundImage: NetworkImage(profilePicUrl),
+                        radius: 16, // Adjust the size to fit your AppBar
+                      )
+                    : const Icon(Icons.account_circle_outlined, size: 28), // Default icon
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
                 },
+              );}
               ),
             ),
             bottomNavigationBar: BottomNavigationBar(
@@ -67,15 +77,21 @@ class _HomeState extends State<Home> {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  SizedBox(
-                    height: 150, // Set this to your desired height
-                    child: const DrawerHeader(
-                      decoration: BoxDecoration(
-                        color: Color.fromARGB(255, 8, 104, 187),
-                      ),
-                      child: Text('Profile'),
+            UserAccountsDrawerHeader(
+              accountName: Text(Userservice.user.username ?? Userservice.user.email!),
+              accountEmail: null, // You can also display the user's email here if you want
+              currentAccountPicture: profilePicUrl != null
+                  ? CircleAvatar(
+                      backgroundImage: NetworkImage(profilePicUrl, ),radius: 16,
+                    )
+                  : CircleAvatar(
+                      backgroundColor: Colors.grey.shade800,
+                      child: Icon(Icons.account_circle, size: 28),
                     ),
-                  ),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 8, 104, 187),
+              ),
+            ),
                   ListTile(
                     title: const Text('Account Information'),
                     leading: Icon(Icons.account_box),
