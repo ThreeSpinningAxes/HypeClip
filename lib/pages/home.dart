@@ -19,6 +19,7 @@ class _HomeState extends State<Home> {
   List pageNames = ["Library", "Explore"];
   int selectedTabIndex = 0;
 
+
   @override
   Widget build(BuildContext context) {
     User? user = FirebaseAuth.instance.currentUser;
@@ -123,4 +124,23 @@ class _HomeState extends State<Home> {
               ),
             )));
   }
+
+    //  List<PersistentBottomNavBarItem> _navBarsItems() {
+    //     return [
+    //         PersistentBottomNavBarItem(
+    //             icon: Icon(Icons.my_library_music),
+    //             title: 'Library',
+    //             activeColorPrimary: Color.fromARGB(255, 8, 104, 187),
+    //             inactiveColorPrimary: Colors.white,
+    //         ),
+    //         PersistentBottomNavBarItem(
+    //             icon: Icon(Icons.my_library_music),
+    //             title: 'Library',
+    //             activeColorPrimary: Color.fromARGB(255, 8, 104, 187),
+    //             inactiveColorPrimary: Colors.white
+    //         ),
+    //     ];
+    // }
+
+
 }

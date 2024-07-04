@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -14,6 +15,10 @@ class Userservice {
   static FlutterSecureStorage storage = FlutterSecureStorage();
 
   static String _connectedMusicServicesKey = 'connectedMusicServices';
+
+  static StreamController<Set<MusicLibraryService>> _musicServicesStreamController = StreamController.broadcast();
+
+   static Stream<Set<MusicLibraryService>> get musicServicesStream => _musicServicesStreamController.stream;
 
 
   static void setUser(String id, String username, String email, bool isLoggedIn) {
@@ -89,7 +94,6 @@ class Userservice {
     // store to user object
     String service = musicService.name;
     user.connectedMusicServices.add(musicService);
-    print(user.connectedMusicServices);
 
 
     //store to secure storage
@@ -149,6 +153,7 @@ class Userservice {
   }
 
   
+
 
 
 }

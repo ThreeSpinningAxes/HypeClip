@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
 import 'package:hypeclip/Services/UserService.dart';
-import 'package:hypeclip/Widgets/ConnectedAccounts.dart';
+import 'package:hypeclip/Pages/Explore/ConnectedAccounts.dart';
 
 class Explore extends StatefulWidget {
   Explore({super.key});
@@ -26,17 +26,7 @@ class _ExploreState extends State<Explore> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              page,
-            ],
-          ),
-        ),
-      ),
+      child: page
     );
   }
 
