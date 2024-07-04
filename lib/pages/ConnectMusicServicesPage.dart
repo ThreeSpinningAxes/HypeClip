@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
+import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
@@ -20,15 +22,17 @@ class ConnectMusicServicesPage extends StatefulWidget {
 
 class _ConnectMusicLibrariesRegistrationPageState
     extends State<ConnectMusicServicesPage> {
-  Set<MusicLibraryService> musicServices = Userservice.getConnectedMusicLibraries();
+  Set<MusicLibraryService> musicServices =
+      Userservice.getConnectedMusicLibraries();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          leading: IconButton(
+        leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () => navigateBackToRoute(context),
-          ),),
+        ),
+      ),
       body: SafeArea(
         child: Stack(children: [
           SingleChildScrollView(
@@ -56,13 +60,13 @@ class _ConnectMusicLibrariesRegistrationPageState
                     if (!musicServices.contains(MusicLibraryService.spotify))
                       ExternalSignInServiceButton(
                           onPressed: () async {
-                            await SpotifyService().authorize();
-                            
+                            Map<String, dynamic>? data =
+                                await SpotifyService().authorize();
+
                             if (Userservice.hasMusicService(
                                 MusicLibraryService.spotify)) {
                               afterSuccessfulConnection(
-                                  MusicLibraryService.spotify);
-                                  
+                                  MusicLibraryService.spotify, data!);
                             }
                           },
                           buttonText: 'Connect Spotify',
@@ -118,21 +122,26 @@ class _ConnectMusicLibrariesRegistrationPageState
     );
   }
 
-  void afterSuccessfulConnection(MusicLibraryService service) {
+  void afterSuccessfulConnection(
+      MusicLibraryService service, Map<String, dynamic> data) async {
     setState(() {
       // Change the skip button to next and remove the descriptor
 
       musicServices.add(service);
       print(Userservice.getConnectedMusicLibraries());
-      ShowSnackBar.showSnackbar(
-          context, "Susscessfully added ${service.name}", 3);
+     
+      
     });
-     widget.onConnectedCallback?.call();
+     await UserProfileFireStoreService()
+          .addMusicService(FirebaseAuth.instance.currentUser!.uid, service, data);
+    ShowSnackBar.showSnackbar(context, "Susscessfully added ${service.name}", 3);
+    widget.onConnectedCallback?.call();
   }
 
-    void navigateBackToRoute(BuildContext context) {
+  void navigateBackToRoute(BuildContext context) {
     if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop(); // Fallback to popping the current route if no route name is provided
+      Navigator.of(context)
+          .pop(); // Fallback to popping the current route if no route name is provided
     }
   }
 }

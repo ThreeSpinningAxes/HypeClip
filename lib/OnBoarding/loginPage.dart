@@ -111,8 +111,7 @@ class _LoginPageState extends State<LoginPage> {
                           setState(() {
                             _isLoading = true;
                           });
-                          UserCredential? userCredential = await Auth()
-                              .signInWithGoogle(context);
+                          UserCredential? userCredential = await Auth().signInWithGoogle(context);
                           if (mounted) {
                               setState(() {
                                 _isLoading = false;
@@ -161,6 +160,8 @@ class _LoginPageState extends State<LoginPage> {
           FirebaseAuth.instance.currentUser!.displayName ?? '',
           FirebaseAuth.instance.currentUser!.email ?? '',
           true);
+      await Userservice.fetchAndStoreConnectedMusicLibrariesFromFireStore();
+      
     } on FirebaseAuthException catch (e) {
       String message;
 

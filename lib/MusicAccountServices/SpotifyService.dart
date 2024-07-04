@@ -37,13 +37,18 @@ class SpotifyService {
       'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming playlist-read-private user-read-playback-position user-library-read';
 
 
-  Future<void> authorize() async {
+  Future<Map<String, dynamic>?> authorize() async {
     String? authCode = await getAuthorizationToken();
     if (authCode != null) {
       Map<String, dynamic>? accessData= await getAccessData(authCode);
       if (accessData != null) {
         Userservice.addMusicService(MusicLibraryService.spotify, accessData);
+        return accessData;
       }
+      else {
+        return null;
+      }
+      
     }
   }
 

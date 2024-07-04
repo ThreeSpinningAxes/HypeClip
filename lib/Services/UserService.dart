@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hypeclip/Entities/User.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
+import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 
 
@@ -40,6 +41,10 @@ class Userservice {
     return user.connectedMusicServices;
   }
 
+  static String? getUID() {
+    return user.ID;
+  }
+
   static Future<void> logout() async {
     print('user now:${user.ID}${user.username}${user.email}${user.isLoggedIn}');
     user.setID = '';
@@ -58,6 +63,17 @@ class Userservice {
      storage.write(key: _connectedMusicServicesKey, value: jsonEncode({}));
     }
 
+  }
+
+  static Future<void> fetchAndStoreConnectedMusicLibrariesFromFireStore() async {
+    UserProfileFireStoreService().getConnectedMusicLibraries(user.ID!).then((connectedMusicLibraries) {
+      if (connectedMusicLibraries != null) {
+        for (String key in connectedMusicLibraries.keys) {
+          MusicLibraryService service = MusicLibraryService.values.firstWhere((element) => element.name == key);
+          addMusicService(service, connectedMusicLibraries[key]);
+        }
+      }
+    });
   }
 
 

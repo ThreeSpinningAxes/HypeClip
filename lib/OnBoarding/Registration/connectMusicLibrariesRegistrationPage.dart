@@ -1,9 +1,12 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
+import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
@@ -59,10 +62,10 @@ class _ConnectMusicLibrariesRegistrationPageState
                     if (!musicServices.contains(MusicLibraryService.spotify))                     
                       ExternalSignInServiceButton(
                           onPressed: () async {
-                            await SpotifyService().authorize();
-                            if (Userservice
-                                .hasMusicService(MusicLibraryService.spotify)) {
-                              afterSuccessfulConnection(MusicLibraryService.spotify);
+                            Map<String, dynamic>? data = await SpotifyService().authorize();
+                            if (Userservice.hasMusicService(MusicLibraryService.spotify) && data != null) {
+                              
+                              afterSuccessfulConnection(MusicLibraryService.spotify, data);
                               
                             }
                             
@@ -180,8 +183,9 @@ class _ConnectMusicLibrariesRegistrationPageState
     );
   }
 
-  void afterSuccessfulConnection(MusicLibraryService service) {
-    setState(() {
+  void afterSuccessfulConnection(MusicLibraryService service, Map<String, dynamic> data) async {
+    
+    setState(()  {
       // Change the skip button to next and remove the descriptor
       if (nextText.startsWith("S")) {
         nextText = "Continue";
@@ -189,8 +193,13 @@ class _ConnectMusicLibrariesRegistrationPageState
       }
       
       musicServices.add(service);
-      ShowSnackBar.showSnackbar(context, "Susscessfully added ${service.name}", 3);
       
+     
+    
     });
+    await UserProfileFireStoreService().addMusicService(FirebaseAuth.instance.currentUser!.uid, service, data);
+     ShowSnackBar.showSnackbar(context, "Susscessfully added ${service.name}", 3);
+    
   }
+  
 }
