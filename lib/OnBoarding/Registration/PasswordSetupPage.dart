@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
-import 'package:hypeclip/OnBoarding/handleUserSignIn.dart';
+import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
+
 import 'package:hypeclip/OnBoarding/widgets/PasswordStrengthValidation.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/formSubmissionButton.dart';
@@ -44,16 +45,14 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
 
       await userCredential.user?.updateDisplayName(widget.username);
 
-      await UserProfileService().addUserData(userCredential.user!, {
-        'username': widget.username,
-      });
+      await UserProfileFireStoreService().addNewUser(
+          FirebaseAuth.instance.currentUser!, widget.username);
+          
       Userservice.setUser(
           FirebaseAuth.instance.currentUser!.uid,
           FirebaseAuth.instance.currentUser!.displayName ?? '',
           FirebaseAuth.instance.currentUser!.email ?? '',
           true);
-
-      
 
       //Navigator.of(context).popUntil((route) => route.isFirst);
       Navigator.push(
@@ -84,66 +83,65 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ShowLoading(isLoading: _isLoading,
+    return ShowLoading(
+      isLoading: _isLoading,
       child: Scaffold(
-      appBar: AppBar(
-        leading: BackButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
+        appBar: AppBar(
+          leading: BackButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 35),
-            child: Center(
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  FormTextField(
-                    controller: passwordController,
-                    hintText: 'Password',
-                    obscureText: true,
-                    isPassword: true,
-                  ),
-                  SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: PasswordStrengthValidation(
-                        passwordController: passwordController),
-                  ),
-                  const SizedBox(height: 20),
-                  FormTextField(
-                    controller: confirmPasswordController,
-                    hintText: 'Confirm Password',
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 20),
-                  FormSubmissionButton(
-                          buttonContents: Text('Register'),
-                          onPressed: () {
-                            setState(() {
-                              _isLoading = true;
-                            });
-                          
-                            _register(context).whenComplete(() {
-                              setState(() {
-                                _isLoading = false;
-                              
-                              });
-                            });
-                          },
-                          minimumSize: Size(double.infinity, 55),
-                        ),
-                ],
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 35),
+              child: Center(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    FormTextField(
+                      controller: passwordController,
+                      hintText: 'Password',
+                      obscureText: true,
+                      isPassword: true,
+                    ),
+                    SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: PasswordStrengthValidation(
+                          passwordController: passwordController),
+                    ),
+                    const SizedBox(height: 20),
+                    FormTextField(
+                      controller: confirmPasswordController,
+                      hintText: 'Confirm Password',
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 20),
+                    FormSubmissionButton(
+                      buttonContents: Text('Register'),
+                      onPressed: () {
+                        setState(() {
+                          _isLoading = true;
+                        });
+
+                        _register(context).whenComplete(() {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        });
+                      },
+                      minimumSize: Size(double.infinity, 55),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-            ),
     );
-    
   }
 }

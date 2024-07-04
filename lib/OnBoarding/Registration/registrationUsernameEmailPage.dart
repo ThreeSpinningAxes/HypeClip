@@ -76,8 +76,8 @@ class _RegistrationUsernameEmailPageState
         }
 
         // Email is available, now check if username is available
-        bool isUsernameTaken = await isUsernameInUse(usernameController.text);
-        if (isUsernameTaken) {
+        
+        if (await isUsernameInUse(usernameController.text)) {
           setState(() {
             usernameErrorMessage = 'Username is already taken';
             _formKey.currentState!.validate();
@@ -141,10 +141,10 @@ class _RegistrationUsernameEmailPageState
 
   Future<bool> isUsernameInUse(String username) async {
     final result = await FirebaseFirestore.instance
-        .collection('users')
-        .where('username', isEqualTo: username)
+        .collection('usernames')
+        .doc(username)
         .get();
-    return result.docs.isNotEmpty;
+    return result.exists;
   }
 
   @override

@@ -60,7 +60,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                       ExternalSignInServiceButton(
                           onPressed: () async {
                             await SpotifyService().authorize();
-                            if (await Userservice
+                            if (Userservice
                                 .hasMusicService(MusicLibraryService.spotify)) {
                               afterSuccessfulConnection(MusicLibraryService.spotify);
                               
