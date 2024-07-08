@@ -1,9 +1,16 @@
-import 'package:animated_splash_screen/animated_splash_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:hypeclip/OnBoarding/widgets/widgetTree.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hypeclip/OnBoarding/Registration/PasswordSetupPage.dart';
+import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
+
+import 'package:hypeclip/OnBoarding/Registration/registrationUsernameEmailPage.dart';
+import 'package:hypeclip/OnBoarding/loginPage.dart';
+import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
+import 'package:hypeclip/Pages/ConnectMusicServicesPage.dart';
+import 'package:hypeclip/Pages/home.dart';
 import 'package:hypeclip/firebase_options.dart';
-import 'package:page_transition/page_transition.dart';
 
 Future main() async {
   //main method is where the root of the application runs
@@ -11,9 +18,88 @@ Future main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    _router.refresh();
+  });
   runApp(const MyApp());
   //run app takes in a root widget that displays on your device. The root widget is described by a class
 }
+
+final GoRouter _router = GoRouter(
+  initialLocation: '/auth/login',
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const Home(),
+    ),
+    GoRoute(path: '/auth', builder: (context, state) => LoginPage(), routes: [
+      GoRoute(
+        path: 'login',
+        name: 'login',
+        builder: (BuildContext context, GoRouterState state) => LoginPage(),
+      ),
+      GoRoute(
+          path: 'register',
+          name: 'register',
+          builder: (BuildContext context, GoRouterState state) =>
+              RegistrationUsernameEmailPage(),
+          routes: [
+            GoRoute(
+                path: 'pass',
+                name: 'register/pass',
+                builder: (context, state) {
+                  final String username =
+                      state.uri.queryParameters['username'] ?? '';
+                  // state.pathParameters['username'] ?? '';
+                  final String email = state.uri.queryParameters['email'] ?? '';
+
+                  return PasswordSetupPage(username: username, email: email);
+                }),
+            GoRoute(
+                path: 'connectMusicServices',
+                name: 'register/connectMusicServices',
+                builder: (context, state) {
+
+
+                  return ConnectMusicLibrariesRegistrationPage(addSkipButton: true, addBackButton: false,);
+                }) 
+          ])
+    ]),
+  ],
+  redirect: (BuildContext context, GoRouterState state) async {
+    //Check for display name as well since making dummy account for checking if email already exists automatically logs user in.
+    final bool loggedIn =
+        Auth().user != null && Auth().user!.displayName != null;
+    // Check if the current location is attempting to access the registration page
+    final bool isRegister = state.matchedLocation == '/auth/register';
+    final bool isPassword = state.matchedLocation.startsWith('/auth/register/pass');
+    final bool isConnectMusicLibraries = state.matchedLocation == '/auth/register/connectMusicServices';
+    // If not logged in, redirect to the appropriate auth page based on the current location
+    if (!loggedIn) {
+      if (isRegister) {
+        return '/auth/register';
+      } else if (isPassword) {
+        final String queryParams = '?${Uri(queryParameters: state.uri.queryParameters).query}';
+        return '/auth/register/pass$queryParams';
+      }
+      else {
+        return '/auth/login';
+      }
+    }
+    // If logged in and trying to access auth pages, redirect to the home page
+    if (loggedIn && (state.matchedLocation.startsWith('/auth'))) {
+      if (isConnectMusicLibraries) {
+        return '/auth/register/connectMusicServices';
+      }
+      return '/';
+    }
+    // No redirection needed
+    return null;
+  },
+
+  // if the user is logged in but still on the login page, send them to
+  // the home page
+);
 
 class MyApp extends StatelessWidget {
   //Stateless widget == no dynamic data, just fixed elements
@@ -23,20 +109,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //build describes a specific UI and is called everytime a rebuilding of that UI is needed.
-    return MaterialApp(
-        title: 'HypeClip',
-        theme: ThemeData.dark().copyWith(
-          primaryColor: Color.fromARGB(255, 8, 104, 187),
-        ),
-        themeMode: ThemeMode.dark,
-        debugShowCheckedModeBanner: false,
-        home: AnimatedSplashScreen(
-          splash: Icon(Icons.music_note_rounded),
-          nextScreen: WidgetTree(),
-          centered: true,
-          duration: 2000,
-          pageTransitionType: PageTransitionType.fade,
-          backgroundColor: Colors.black,
-        ));
+    return MaterialApp.router(
+      title: 'HypeClip',
+      theme: ThemeData.dark().copyWith(
+        primaryColor: Color.fromARGB(255, 8, 104, 187),
+      ),
+      themeMode: ThemeMode.dark,
+      debugShowCheckedModeBanner: false,
+      routerConfig: _router,
+    );
   }
 }

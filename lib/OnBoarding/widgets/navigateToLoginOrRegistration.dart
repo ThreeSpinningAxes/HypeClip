@@ -1,36 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:hypeclip/OnBoarding/loginPage.dart';
-import 'package:hypeclip/OnBoarding/Registration/registrationUsernameEmailPage.dart';
+import 'package:go_router/go_router.dart';
 
 class NavigateToLoginOrRegistration extends StatelessWidget {
-  final bool currentPageIsLogin;
-  const NavigateToLoginOrRegistration(
-      {super.key, required this.currentPageIsLogin});
+  const NavigateToLoginOrRegistration({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       GestureDetector(
-          onTap: () => {
-                if (currentPageIsLogin)
-                  {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return RegistrationUsernameEmailPage();
-                    }))
-                  }
-                else
-                  {
-                    Navigator.pop(context,
-                        MaterialPageRoute(builder: (context) {
-                      return LoginPage();
-                    }))
-                  }
-              },
+          onTap: () => 
+               GoRouter.of(context).go('/auth/register'),
+              
           child: Text(
-            currentPageIsLogin
-                ? "Dont have a account? Sign up"
-                : "Already have a account? Login",
+            "Dont have a account? Sign up",
             style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
