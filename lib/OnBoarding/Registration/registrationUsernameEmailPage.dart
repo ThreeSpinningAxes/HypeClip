@@ -241,14 +241,10 @@ class _RegistrationUsernameEmailPageState
                               await Auth().signInWithGoogle(context);
                           if (userCred != null) {
                             if (userCred.additionalUserInfo!.isNewUser) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        ConnectMusicLibrariesRegistrationPage()),
-                              );
+                              GoRouter.of(context).goNamed('register/connectMusicServices');
+                                  
                             } else {
-                              Navigator.pop(context);
+                              GoRouter.of(context).go('/auth');
                             }
                           }
                           setState(() {

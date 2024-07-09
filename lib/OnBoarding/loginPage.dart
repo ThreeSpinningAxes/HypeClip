@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
@@ -119,15 +120,10 @@ class _LoginPageState extends State<LoginPage> {
                             }
                           if (userCredential != null) {
                               if (userCredential.additionalUserInfo!.isNewUser) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          ConnectMusicLibrariesRegistrationPage()),
-                                );
+                                GoRouter.of(context).goNamed('register/connectMusicServices');
                               }
                               else {
-                                //GoRouter.of(context).go('/home');
+                                GoRouter.of(context).go('/auth');
                               }
                             }
 
