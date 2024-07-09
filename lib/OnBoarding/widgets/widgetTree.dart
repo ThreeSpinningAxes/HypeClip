@@ -20,9 +20,12 @@ class _WidgetTreeState extends State<WidgetTree> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();
         } else if (snapshot.hasData) {
+          //GoRouter.of(context).go('/home');
           return Home();
         } else {
+          //GoRouter.of(context).go('/login');
           return LoginPage();
+          
         }
       },
     );

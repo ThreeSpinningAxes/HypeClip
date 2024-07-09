@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
 
 import 'package:hypeclip/OnBoarding/widgets/PasswordStrengthValidation.dart';
@@ -55,11 +55,7 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
           true);
 
       //Navigator.of(context).popUntil((route) => route.isFirst);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => ConnectMusicLibrariesRegistrationPage()),
-      );
+      GoRouter.of(context).goNamed('register/connectMusicServices');
     } on FirebaseAuthException catch (e) {
       String message;
 

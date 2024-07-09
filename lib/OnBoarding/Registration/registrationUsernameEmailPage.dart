@@ -2,20 +2,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
-import 'package:hypeclip/OnBoarding/registration/PasswordSetupPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/orFormSplit.dart';
 import 'package:hypeclip/Utilities/ShowLoading.dart';
-import '../LoginPage.dart';
 
 class RegistrationUsernameEmailPage extends StatefulWidget {
   @override
   _RegistrationUsernameEmailPageState createState() =>
       _RegistrationUsernameEmailPageState();
 }
+
+
 
 class _RegistrationUsernameEmailPageState
     extends State<RegistrationUsernameEmailPage> {
@@ -30,6 +31,14 @@ class _RegistrationUsernameEmailPageState
     'usernameAlphanumeric': false,
     'emailValid': false,
   };
+
+    @override
+  void setState(fn) {
+    if(mounted) {
+      super.setState(fn);
+    }
+  }
+
 
   var _isLoading = false;
 
@@ -91,15 +100,7 @@ class _RegistrationUsernameEmailPageState
           _isLoading = false;
         });
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PasswordSetupPage(
-              username: usernameController.text,
-              email: emailController.text,
-            ),
-          ),
-        );
+        GoRouter.of(context).goNamed('register/pass', queryParameters:  {'username': usernameController.text, 'email': emailController.text});
       } on FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use') {
           setState(() {
@@ -169,10 +170,7 @@ class _RegistrationUsernameEmailPageState
         appBar: AppBar(
           leading: BackButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
-              );
+              GoRouter.of(context).goNamed('login');
             },
           ),
         ),

@@ -12,8 +12,9 @@ import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
 
 class ConnectMusicServicesPage extends StatefulWidget {
   final Function? onConnectedCallback;
+  final bool? canNavigateBack;
 
-  const ConnectMusicServicesPage({super.key, this.onConnectedCallback});
+  const ConnectMusicServicesPage({super.key, this.onConnectedCallback, this.canNavigateBack});
 
   @override
   _ConnectMusicLibrariesRegistrationPageState createState() =>
@@ -28,10 +29,10 @@ class _ConnectMusicLibrariesRegistrationPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
+        leading: widget.canNavigateBack != null && widget.canNavigateBack! ? IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () => navigateBackToRoute(context),
-        ),
+        ) : null,
       ),
       body: SafeArea(
         child: Stack(children: [

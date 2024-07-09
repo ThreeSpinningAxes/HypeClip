@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
 import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
@@ -142,12 +142,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                   16.0), // Add padding for better positioning
               child: TextButton(
                 onPressed: () {
-                  if (widget.addSkipButton ?? false) {
-                    Navigator.of(context).pop();
-                    
-                  }else {
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                  }
+                 GoRouter.of(context).go('/auth');
                   
                 },
                 child: Stack(alignment: Alignment.bottomRight, children: [

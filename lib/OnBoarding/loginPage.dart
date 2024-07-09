@@ -126,6 +126,9 @@ class _LoginPageState extends State<LoginPage> {
                                           ConnectMusicLibrariesRegistrationPage()),
                                 );
                               }
+                              else {
+                                //GoRouter.of(context).go('/home');
+                              }
                             }
 
                         },
@@ -138,7 +141,7 @@ class _LoginPageState extends State<LoginPage> {
                             Size(double.infinity, 55) // Change as needed
                         ),
                     SizedBox(height: 20),
-                    NavigateToLoginOrRegistration(currentPageIsLogin: true),
+                    NavigateToLoginOrRegistration(),
                   ],
                 ),
               ),
