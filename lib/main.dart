@@ -25,8 +25,12 @@ Future main() async {
   //run app takes in a root widget that displays on your device. The root widget is described by a class
 }
 
+
+final _shellNavigatorKey = GlobalKey<NavigatorState>();
+
 final GoRouter _router = GoRouter(
   initialLocation: '/auth/login',
+  
   routes: [
     GoRoute(
       path: '/',
@@ -59,10 +63,11 @@ final GoRouter _router = GoRouter(
                 path: 'connectMusicServices',
                 name: 'register/connectMusicServices',
                 builder: (context, state) {
-
-
-                  return ConnectMusicLibrariesRegistrationPage(addSkipButton: true, addBackButton: false,);
-                }) 
+                  return ConnectMusicLibrariesRegistrationPage(
+                    addSkipButton: true,
+                    addBackButton: false,
+                  );
+                })
           ])
     ]),
   ],
@@ -72,17 +77,19 @@ final GoRouter _router = GoRouter(
         Auth().user != null && Auth().user!.displayName != null;
     // Check if the current location is attempting to access the registration page
     final bool isRegister = state.matchedLocation == '/auth/register';
-    final bool isPassword = state.matchedLocation.startsWith('/auth/register/pass');
-    final bool isConnectMusicLibraries = state.matchedLocation == '/auth/register/connectMusicServices';
+    final bool isPassword =
+        state.matchedLocation.startsWith('/auth/register/pass');
+    final bool isConnectMusicLibraries =
+        state.matchedLocation == '/auth/register/connectMusicServices';
     // If not logged in, redirect to the appropriate auth page based on the current location
     if (!loggedIn) {
       if (isRegister) {
         return '/auth/register';
       } else if (isPassword) {
-        final String queryParams = '?${Uri(queryParameters: state.uri.queryParameters).query}';
+        final String queryParams =
+            '?${Uri(queryParameters: state.uri.queryParameters).query}';
         return '/auth/register/pass$queryParams';
-      }
-      else {
+      } else {
         return '/auth/login';
       }
     }
