@@ -9,7 +9,9 @@ import 'package:hypeclip/OnBoarding/Registration/registrationUsernameEmailPage.d
 import 'package:hypeclip/OnBoarding/loginPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 import 'package:hypeclip/Pages/ConnectMusicServicesPage.dart';
+import 'package:hypeclip/Pages/Explore/explore.dart';
 import 'package:hypeclip/Pages/home.dart';
+import 'package:hypeclip/Pages/library.dart';
 import 'package:hypeclip/firebase_options.dart';
 
 Future main() async {
@@ -25,16 +27,34 @@ Future main() async {
   //run app takes in a root widget that displays on your device. The root widget is described by a class
 }
 
-
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
+
 
 final GoRouter _router = GoRouter(
   initialLocation: '/auth/login',
-  
+
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const Home(),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) => Home(key: state.pageKey, child: navigationShell),
+      branches: <StatefulShellBranch>[
+        StatefulShellBranch(routes: <RouteBase>[
+          GoRoute(
+            path: '/library',
+            pageBuilder: (context, state) {
+              return NoTransitionPage(key: state.pageKey, child: Library(key: state.pageKey,));
+            },
+          ),
+        ]),
+        StatefulShellBranch(routes: <RouteBase>[
+          GoRoute(
+            path: '/explore',
+            pageBuilder: (context, state) {
+              return NoTransitionPage(key: state.pageKey, child: Explore(key: state.pageKey,));
+              },
+          ),
+        ])
+      ],
+      
     ),
     GoRoute(path: '/auth', builder: (context, state) => LoginPage(), routes: [
       GoRoute(
@@ -98,7 +118,7 @@ final GoRouter _router = GoRouter(
       if (isConnectMusicLibraries) {
         return '/auth/register/connectMusicServices';
       }
-      return '/';
+      return '/library';
     }
     // No redirection needed
     return null;

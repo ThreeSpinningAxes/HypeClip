@@ -21,7 +21,7 @@ class _WidgetTreeState extends State<WidgetTree> {
           return CircularProgressIndicator();
         } else if (snapshot.hasData) {
           //GoRouter.of(context).go('/home');
-          return Home();
+          return Container();
         } else {
           //GoRouter.of(context).go('/login');
           return LoginPage();
