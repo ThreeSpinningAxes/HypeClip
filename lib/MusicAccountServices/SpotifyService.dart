@@ -36,6 +36,7 @@ class SpotifyService {
   final String SCOPES =
       'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming playlist-read-private user-read-playback-position user-library-read';
 
+  final String TRACKS_URL = 'me/tracks';
 
   Future<Map<String, dynamic>?> authorize() async {
     String? authCode = await getAuthorizationToken();
@@ -186,6 +187,45 @@ class SpotifyService {
     await Userservice.setMusicServiceData(MusicLibraryService.spotify, data);
   }
   
+  /*
+    Get the user's tracks from spotify. This includes the songs that the user has liked. 
+    The limit parameter specifies the number of tracks to fetch, and the offset parameter specifies the index to start fetching from.
+  */
+  Future<List<dynamic>?> getUserTracks(int limit, int offset) async {
+  String? accessToken = await getAccessTokenFromStroage();
+  if (accessToken == null) {
+    print('Access Token is null');
+    return null;
+  }
+  var queryParams = {
+    'limit': limit.toString(),
+    'offset': offset.toString(),
+
+  };
+  String url = Uri.parse('$BASE_API_URL$TRACKS_URL').replace(queryParameters: queryParams).toString();
+
+
+  var response = await http.get(
+    Uri.parse(url),
+    headers: {
+      'Authorization': 'Bearer $accessToken',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    Map<String, dynamic> data = json.decode(response.body);
+    List<dynamic> tracks = data['items'];
+    return tracks;
+  } else if (
+      response.statusCode == 401) {
+    await refreshAccessToken();
+    return await getUserTracks(limit, offset);
+  } else {
+    return null;
+  }
+  //code error codes 403 and 429
+  
+}
 
 
 }

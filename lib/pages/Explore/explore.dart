@@ -26,7 +26,10 @@ class _ExploreState extends State<Explore> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: page
+      child: Padding(
+        padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 20),
+        child: page,
+      ),
     );
   }
 

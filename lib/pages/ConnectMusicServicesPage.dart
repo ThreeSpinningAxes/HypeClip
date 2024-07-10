@@ -135,7 +135,9 @@ class _ConnectMusicLibrariesRegistrationPageState
     });
      await UserProfileFireStoreService()
           .addMusicService(FirebaseAuth.instance.currentUser!.uid, service, data);
-    ShowSnackBar.showSnackbar(context, "Susscessfully added ${service.name}", 3);
+    if (mounted) {
+      ShowSnackBar.showSnackbar(context, "Susscessfully added ${service.name}", 3);
+    }
     widget.onConnectedCallback?.call();
   }
 

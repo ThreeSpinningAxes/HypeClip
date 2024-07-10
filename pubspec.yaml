@@ -50,6 +50,10 @@ dependencies:
   shared_preferences: ^2.2.3
   connectivity_plus: ^6.0.3
   firebase_core_platform_interface: ^5.1.0
+  cached_network_image: ^3.3.1
+  just_audio: ^0.9.38
+  audio_video_progress_bar: ^2.0.3
+  palette_generator: ^0.3.3+3
 
 
 

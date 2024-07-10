@@ -25,28 +25,25 @@ class _ConnectedAccountsState extends State<ConnectedAccounts> {
 
 @override
 Widget build(BuildContext context) {
-  return Padding(
-    padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 20),
-    child: ListView(
-      children: [
-        Text('Connected Music Libraries', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        SizedBox(height: 16), // Adds a little space between the header and descriptor text
-        // Text(
-        //   'Explore your connected music accounts to start clipping!',
-        //   style: Theme.of(context).textTheme.bodyMedium, // This assumes bodySmall is smaller than headlineSmall
-        // ),
-        SizedBox(height: 20), // Adds space before the list starts
-        ListView.builder(
-          shrinkWrap: true, // Needed to nest ListView.builder inside another ListView
-          physics: ScrollPhysics(),// Disables scrolling for the inner ListView.builder
-          itemCount: connectedServices.length,
-          itemBuilder: (context, index) {
-            MusicLibraryService service = connectedServices.elementAt(index);
-            return _buildServiceRow(service);
-          },
-        ),
-      ],
-    ),
+  return ListView(
+    children: [
+      Text('Connected Music Libraries', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+      SizedBox(height: 16), // Adds a little space between the header and descriptor text
+      // Text(
+      //   'Explore your connected music accounts to start clipping!',
+      //   style: Theme.of(context).textTheme.bodyMedium, // This assumes bodySmall is smaller than headlineSmall
+      // ),
+      SizedBox(height: 20), // Adds space before the list starts
+      ListView.builder(
+        shrinkWrap: true, // Needed to nest ListView.builder inside another ListView
+        physics: ScrollPhysics(),
+        itemCount: connectedServices.length,
+        itemBuilder: (context, index) {
+          MusicLibraryService service = connectedServices.elementAt(index);
+          return _buildServiceRow(service);
+        },
+      ),
+    ],
   );
 }
 
