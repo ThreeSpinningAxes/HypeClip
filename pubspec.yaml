@@ -54,6 +54,7 @@ dependencies:
   just_audio: ^0.9.38
   audio_video_progress_bar: ^2.0.3
   palette_generator: ^0.3.3+3
+  flutter_riverpod: ^2.5.1
 
 
 

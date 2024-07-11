@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
 import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
@@ -10,11 +12,8 @@ import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
 
-class ConnectMusicServicesPage extends StatefulWidget {
-  final Function? onConnectedCallback;
-  final bool? canNavigateBack;
-
-  const ConnectMusicServicesPage({super.key, this.onConnectedCallback, this.canNavigateBack});
+class ConnectMusicServicesPage extends ConsumerStatefulWidget {
+  const ConnectMusicServicesPage({super.key});
 
   @override
   _ConnectMusicLibrariesRegistrationPageState createState() =>
@@ -22,20 +21,23 @@ class ConnectMusicServicesPage extends StatefulWidget {
 }
 
 class _ConnectMusicLibrariesRegistrationPageState
-    extends State<ConnectMusicServicesPage> {
+    extends ConsumerState<ConnectMusicServicesPage> {
+  bool _isLoading = false;
   Set<MusicLibraryService> musicServices =
       Userservice.getConnectedMusicLibraries();
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
     return Scaffold(
-      appBar: AppBar(
-        leading: widget.canNavigateBack != null && widget.canNavigateBack! ? IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => navigateBackToRoute(context),
-        ) : null,
-      ),
-      body: SafeArea(
-        child: Stack(children: [
+      appBar: AppBar(toolbarHeight: 40),
+      body: Stack(
+        children: [
           SingleChildScrollView(
             child: Padding(
               padding:
@@ -44,7 +46,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     //Text('Registration Complete!', style: Theme.of(context).textTheme.headlineMedium),
-                    SizedBox(height: 40),
+
                     Text(
                       'Connect Your Music Libraries to Start Clipping!',
                       style: TextStyle(
@@ -66,6 +68,9 @@ class _ConnectMusicLibrariesRegistrationPageState
 
                             if (Userservice.hasMusicService(
                                 MusicLibraryService.spotify)) {
+                              setState(() {
+                                _isLoading = true;
+                              });
                               afterSuccessfulConnection(
                                   MusicLibraryService.spotify, data!);
                             }
@@ -118,7 +123,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                   ]),
             ),
           ),
-        ]),
+        ],
       ),
     );
   }
@@ -129,22 +134,21 @@ class _ConnectMusicLibrariesRegistrationPageState
       // Change the skip button to next and remove the descriptor
 
       musicServices.add(service);
+
       print(Userservice.getConnectedMusicLibraries());
-     
-      
     });
-     await UserProfileFireStoreService()
-          .addMusicService(FirebaseAuth.instance.currentUser!.uid, service, data);
+    await UserProfileFireStoreService()
+        .addMusicService(FirebaseAuth.instance.currentUser!.uid, service, data);
+    setState(() {
+      _isLoading = false;
+    });
     if (mounted) {
-      ShowSnackBar.showSnackbar(context, "Susscessfully added ${service.name}", 3);
+      ShowSnackBar.showSnackbar(
+          context, "Susscessfully added ${service.name}", 3);
     }
-    widget.onConnectedCallback?.call();
   }
 
   void navigateBackToRoute(BuildContext context) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context)
-          .pop(); // Fallback to popping the current route if no route name is provided
-    }
+    context.pop();
   }
 }

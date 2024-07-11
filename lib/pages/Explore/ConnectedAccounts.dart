@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
-import 'package:hypeclip/Pages/Explore/GenericExplorePage.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
 
@@ -57,7 +57,6 @@ Widget build(BuildContext context) {
                             'assets/Spotify_Icon_RGB_Green.svg',
                             semanticsLabel: 'Spotify logo',
                           ); // Replace with Spotify icon
-        break;
       // case MusicLibraryService.appleMusic:
       //   icon = Icons.library_music; // Replace with Apple Music icon
       //   break;
@@ -73,10 +72,9 @@ Widget build(BuildContext context) {
         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => GenericExplorePage(service: service)),
-        );
+        if (service == MusicLibraryService.spotify) {
+          context.pushNamed('explore/connectedAccounts/browseMusicPlatform');
+        }
       },
     );
   }

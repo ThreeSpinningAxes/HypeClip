@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
-import 'package:hypeclip/Pages/Explore/explore.dart';
-import 'package:hypeclip/Pages/library.dart';
 import 'package:hypeclip/Services/UserService.dart';
 
 
@@ -29,12 +27,14 @@ class _HomeState extends State<Home> {
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
+              
               title: Text(pageNames[widget.child.currentIndex], style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.white)),
             
               centerTitle: false,
+              
               leading: Builder(
                 builder: (context) {
                   return IconButton(
