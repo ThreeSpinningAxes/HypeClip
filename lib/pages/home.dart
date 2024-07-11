@@ -1,23 +1,22 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
-import 'package:hypeclip/Pages/Explore/explore.dart';
-import 'package:hypeclip/Pages/library.dart';
 import 'package:hypeclip/Services/UserService.dart';
 
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final StatefulNavigationShell child;
+  const Home({super.key, required this.child});
 
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-  List pageController = [Library(), Explore()]; //Library()
   List pageNames = ["Library", "Explore"];
-  int selectedTabIndex = 0;
+
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +27,14 @@ class _HomeState extends State<Home> {
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
-              title: Text(pageNames[selectedTabIndex], style: TextStyle(
+              
+              title: Text(pageNames[widget.child.currentIndex], style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.white)),
             
               centerTitle: false,
+              
               leading: Builder(
                 builder: (context) {
                   return IconButton(
@@ -62,18 +63,22 @@ class _HomeState extends State<Home> {
                     activeIcon: Icon(Icons.search, size: 28),
                     label: "Explore")
               ],
-              currentIndex: selectedTabIndex,
+              currentIndex: widget.child.currentIndex,
               selectedFontSize: 14,
               iconSize: 23,
               selectedItemColor: Color.fromARGB(255, 8, 104, 187),
               unselectedItemColor: Colors.white,
               onTap: (index) {
-                setState(() {
-                  selectedTabIndex = index;
-                });
+                widget.child
+                .goBranch(
+                  index,
+                  initialLocation: index == widget.child.currentIndex 
+                  );
+             
               },
+              
             ),
-            body: pageController[selectedTabIndex],
+            body: widget.child,
             drawer: Drawer(
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -123,4 +128,5 @@ class _HomeState extends State<Home> {
               ),
             )));
   }
+
 }

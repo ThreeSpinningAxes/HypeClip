@@ -6,7 +6,6 @@ import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/RandomGen.dart';
 
-
 /*
   This class is responsible for handling all the spotify related operations.
 */
@@ -29,58 +28,64 @@ class SpotifyService {
 
   final String ACCESS_TOKEN_EXP_VAR_NAME = 'expires_in';
 
-  ///api/token';
-
   final String BASE_API_URL = 'https://api.spotify.com/v1/';
 
   final String SCOPES =
-      'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming playlist-read-private user-read-playback-position user-library-read';
+      'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming playlist-read-private user-read-playback-position user-library-read user-read-email';
 
+  final String TRACKS_URL = 'me/tracks';
+
+  final String PLAYBACK_STATE_URL = 'me/player';
+
+  final String AVAILABLE_DEVICES = 'me/player/devices';
+
+  final String PLAY_TRACK = 'me/player/play';
+
+  final String PAUSE_PLAYBACK = 'me/player/pause';
 
   Future<Map<String, dynamic>?> authorize() async {
     String? authCode = await getAuthorizationToken();
     if (authCode != null) {
-      Map<String, dynamic>? accessData= await getAccessData(authCode);
+      Map<String, dynamic>? accessData = await getAccessData(authCode);
       if (accessData != null) {
         Userservice.addMusicService(MusicLibraryService.spotify, accessData);
         return accessData;
-      }
-      else {
+      } else {
         return null;
       }
-      
     }
     return null;
   }
 
-  Future<String?> getAccessTokenFromStroage() async{
-    Map<String, dynamic>? data = await Userservice.getMusicServiceData(MusicLibraryService.spotify);
-    if(data != null){
+  Future<String?> getAccessTokenFromStroage() async {
+    Map<String, dynamic>? data =
+        await Userservice.getMusicServiceData(MusicLibraryService.spotify);
+    if (data != null) {
       return data[ACCESS_TOKEN_VAR_NAME];
     }
     return null;
   }
 
-  Future<String?> getRefreshTokenFromStorage() async{
-    Map<String, dynamic>? data = await Userservice.getMusicServiceData(MusicLibraryService.spotify);
-    if(data != null){
+  Future<String?> getRefreshTokenFromStorage() async {
+    Map<String, dynamic>? data =
+        await Userservice.getMusicServiceData(MusicLibraryService.spotify);
+    if (data != null) {
       return data[REFRESH_TOKEN_VAR_NAME];
     }
     return null;
   }
 
-  Future<String?> getExpirationTimeFromStorage() async{
-    Map<String, dynamic>? data = await Userservice.getMusicServiceData(MusicLibraryService.spotify);
-    if(data != null){
+  Future<String?> getExpirationTimeFromStorage() async {
+    Map<String, dynamic>? data =
+        await Userservice.getMusicServiceData(MusicLibraryService.spotify);
+    if (data != null) {
       return data[ACCESS_TOKEN_EXP_VAR_NAME];
     }
     return null;
   }
-  
-  Future<void> setAccessTokenToStorage(String accessToken) async{
-    Map<String, dynamic> data = {
-      ACCESS_TOKEN_VAR_NAME: accessToken
-    };
+
+  Future<void> setAccessTokenToStorage(String accessToken) async {
+    Map<String, dynamic> data = {ACCESS_TOKEN_VAR_NAME: accessToken};
     await Userservice.addMusicService(MusicLibraryService.spotify, data);
   }
 
@@ -99,7 +104,9 @@ class SpotifyService {
     final authURL = Uri.https(BASE_AUTH_API_URL, '/authorize', body);
     try {
       final result = await FlutterWebAuth2.authenticate(
-          url: authURL.toString(), callbackUrlScheme: "hypeclip",options: FlutterWebAuth2Options(intentFlags: ephemeralIntentFlags));
+          url: authURL.toString(),
+          callbackUrlScheme: "hypeclip",
+          options: FlutterWebAuth2Options(intentFlags: ephemeralIntentFlags));
 
       Map<String, dynamic> response = Uri.parse(result).queryParameters;
       print("auth data: ${jsonEncode(response)}");
@@ -139,14 +146,13 @@ class SpotifyService {
       final params = jsonDecode(response.body) as Map<String, dynamic>;
       if (params.containsKey('error')) {
         print('error getting access token: ${params['error']}');
-        
-      // ignore: unnecessary_null_comparison
-      } 
+
+        // ignore: unnecessary_null_comparison
+      }
       return params;
-    }
-    else {
+    } else {
       print('Failed to get access data: ${response.body}');
-      return null;  
+      return null;
     }
   }
 
@@ -168,24 +174,187 @@ class SpotifyService {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      setNewAccessRefreshTokens(data[ACCESS_TOKEN_VAR_NAME], 
-      data[REFRESH_TOKEN_VAR_NAME], 
-      data[ACCESS_TOKEN_EXP_VAR_NAME]);
-      
+      setNewAccessRefreshTokens(data[ACCESS_TOKEN_VAR_NAME],
+          refreshToken, data[ACCESS_TOKEN_EXP_VAR_NAME]);
     } else {
       // Handle error: invalid refresh token, network error, etc.
       print('Failed to refresh token: ${response.body}');
     }
   }
-  Future<void> setNewAccessRefreshTokens(String accessToken, String refreshToken, String expiresIn) async {
+
+  Future<void> setNewAccessRefreshTokens(
+      String accessToken, String? refreshToken, int expiresIn) async {
     Map<String, dynamic> data = {
       ACCESS_TOKEN_VAR_NAME: accessToken,
       REFRESH_TOKEN_VAR_NAME: refreshToken,
-      ACCESS_TOKEN_EXP_VAR_NAME: expiresIn
+      ACCESS_TOKEN_EXP_VAR_NAME: expiresIn.toString()
     };
     await Userservice.setMusicServiceData(MusicLibraryService.spotify, data);
   }
+
+  /*
+    Get the user's tracks from spotify. This includes the songs that the user has liked. 
+    The limit parameter specifies the number of tracks to fetch, and the offset parameter specifies the index to start fetching from.
+  */
+  Future<List<dynamic>?> getUserTracks(int limit, int offset) async {
+    String? accessToken = await getAccessTokenFromStroage();
+    if (accessToken == null) {
+      print('Access Token is null');
+      return null;
+    }
+    var queryParams = {
+      'limit': limit.toString(),
+      'offset': offset.toString(),
+    };
+    String url = Uri.parse('$BASE_API_URL$TRACKS_URL')
+        .replace(queryParameters: queryParams)
+        .toString();
+
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = json.decode(response.body);
+      List<dynamic> tracks = data['items'];
+      return tracks;
+    } else if (response.statusCode == 401) {
+      await refreshAccessToken();
+      return await getUserTracks(limit, offset);
+    } else {
+      return null;
+    }
+    //code error codes 403 and 429
+  }
+
+  Future<Map<String, dynamic>?> getCurrentPlaybackState() async {
+    String? accessToken = await getAccessTokenFromStroage();
+
+    String url = '$BASE_API_URL$PLAYBACK_STATE_URL';
+
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> playbackState = json.decode(response.body);
+      return playbackState;
+    } else if (response.statusCode == 401) {
+      // Assuming refreshAccessToken is a method that refreshes the token
+      await refreshAccessToken();
+      // Retry fetching the playback state after refreshing the token
+      return await getCurrentPlaybackState();
+    } else {
+      // Handle other status codes appropriately
+      print('Failed to get playback state: ${response.statusCode}');
+      return null;
+    }
+  }
+
+  Future<List<dynamic>?> getAvailableDevices() async {
+    String? accessToken = await getAccessTokenFromStroage();
+
+    String url = '$BASE_API_URL$AVAILABLE_DEVICES';
+
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = json.decode(response.body);
+      List<dynamic> devices = data['devices'];
+      return devices;
+    } else if (response.statusCode == 401) {
+      // Assuming refreshAccessToken is a method that refreshes the token
+      await refreshAccessToken();
+      // Retry fetching the available devices after refreshing the token
+      return await getAvailableDevices();
+    } else if (response.statusCode == 403) {
+      print('Access forbidden: The user is not allowed to access this data.');
+      return null;
+    } else if (response.statusCode == 429) {
+      print('Too many requests: Rate limiting has been applied.');
+      // You might want to handle retry-after logic here
+      return null;
+    } else {
+      // Handle other status codes appropriately
+      print('Failed to get available devices: ${response.statusCode}');
+      return null;
+    }
+  }
+
+  Future<void> playTrack(String trackURI) async {
+    String? accessToken = await getAccessTokenFromStroage();
+
+    String url = '$BASE_API_URL$PLAY_TRACK';
+
   
 
+    var response = await http.put(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json'
+      },
+      body: jsonEncode({
+        'uris': [trackURI],
+        //'position_ms': position_ms ?? 0,
+      }),
+    );
 
+    if (response.statusCode == 204) {
+      print('success');
+    }
+    else if (response.statusCode == 401) {
+      print('asd');
+      await refreshAccessToken();
+      await playTrack(trackURI);
+    }
+    else {
+      print('failed 403');
+    }
+  }
+
+  Future<bool> pausePlayback() async {
+  String? accessToken = await getAccessTokenFromStroage();
+
+  String url = '$BASE_API_URL$PAUSE_PLAYBACK';
+
+  var response = await http.put(
+    Uri.parse(url),
+    headers: {
+      'Authorization': 'Bearer $accessToken',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    // The request has succeeded and the playback has been paused
+    return true;
+  } else if (response.statusCode == 401) {
+    // Assuming refreshAccessToken is a method that refreshes the token
+    await refreshAccessToken();
+    // Retry pausing the playback after refreshing the token
+    return await pausePlayback();
+  } else if (response.statusCode == 403) {
+    print('Access forbidden: The user is not allowed to access this data.');
+    return false;
+  } else if (response.statusCode == 429) {
+    print('Too many requests: Rate limiting has been applied.');
+    // You might want to handle retry-after logic here
+    return false;
+  } else {
+    // Handle other status codes appropriately
+    print('Failed to pause playback: ${response.statusCode}');
+    return false;
+  }
+}
 }
