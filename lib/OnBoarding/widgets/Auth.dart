@@ -5,8 +5,6 @@ import "package:hypeclip/OnBoarding/UserProfileFireStoreService.dart";
 import "package:hypeclip/Services/UserService.dart";
 import "package:hypeclip/Utilities/ShowErrorDialog.dart";
 
-
-
 class Auth {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
@@ -17,12 +15,16 @@ class Auth {
   GoogleSignIn googleSignIn = GoogleSignIn();
 
   // Sign in with Email and Password
-  Future<void> signInWithEmailAndPassword({required String email, required String password}) async {
-    await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
+  Future<void> signInWithEmailAndPassword(
+      {required String email, required String password}) async {
+    await _firebaseAuth.signInWithEmailAndPassword(
+        email: email, password: password);
   }
 
-  Future<void> createUserWithEmailAndPassword({required String email, required String password}) async {
-    await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
+  Future<void> createUserWithEmailAndPassword(
+      {required String email, required String password}) async {
+    await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email, password: password);
   }
 
   // Check if User is Signed In
@@ -38,17 +40,14 @@ class Auth {
     await _firebaseAuth.signOut();
   }
 
-  Future<void> deleteUser() async {
-    
-  }
+  Future<void> deleteUser() async {}
 
-    Future<UserCredential?> signInWithGoogle(BuildContext context) async {
+  Future<UserCredential?> signInWithGoogle(BuildContext context) async {
     try {
       final GoogleSignInAccount? googleSignInAccount =
           await googleSignIn.signIn();
       final GoogleSignInAuthentication googleSignInAuthentication =
           await googleSignInAccount!.authentication;
-          
 
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleSignInAuthentication.accessToken,
@@ -57,10 +56,10 @@ class Auth {
 
       final UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
-          
+
       final User? user =
           userCredential.user ?? FirebaseAuth.instance.currentUser;
-          
+
       Userservice.setUser(user!.uid, user.displayName!, user.email!, true);
       await Userservice.initMusicServicesForStorage();
       if (userCredential.additionalUserInfo!.isNewUser) {
@@ -70,7 +69,7 @@ class Auth {
       if (!userCredential.additionalUserInfo!.isNewUser) {
         await Userservice.fetchAndStoreConnectedMusicLibrariesFromFireStore();
       }
-      
+
       return userCredential;
 
       // Use the user object for further operations or navigate to a new screen.
