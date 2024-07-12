@@ -1,9 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'package:http/http.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/Utilities/RandomGen.dart';
 
 /*
@@ -42,6 +46,18 @@ class SpotifyService {
   final String PLAY_TRACK = 'me/player/play';
 
   final String PAUSE_PLAYBACK = 'me/player/pause';
+
+  String deviceID = "NO_DEVICE";
+
+  static final SpotifyService _instance = SpotifyService._internal();
+
+  SpotifyService._internal();
+
+    factory SpotifyService() {
+    return _instance;
+  }
+
+  static SpotifyService get instance => _instance;
 
   Future<Map<String, dynamic>?> authorize() async {
     String? authCode = await getAuthorizationToken();
@@ -174,8 +190,8 @@ class SpotifyService {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      setNewAccessRefreshTokens(data[ACCESS_TOKEN_VAR_NAME],
-          refreshToken, data[ACCESS_TOKEN_EXP_VAR_NAME]);
+      setNewAccessRefreshTokens(data[ACCESS_TOKEN_VAR_NAME], refreshToken,
+          data[ACCESS_TOKEN_EXP_VAR_NAME]);
     } else {
       // Handle error: invalid refresh token, network error, etc.
       print('Failed to refresh token: ${response.body}');
@@ -257,6 +273,58 @@ class SpotifyService {
     }
   }
 
+  Future<String> setDeviceID() async{
+    List<dynamic>? availableDevices = await getAvailableDevices();
+    if (availableDevices == null) {
+      return deviceID;
+    }
+    for (dynamic device in availableDevices) {
+        if (device['type'] == 'Smartphone' && device['name'] == DeviceInfoManager().model) {
+            deviceID = device['id'];
+            return deviceID;         
+        }
+    }
+    return deviceID;
+  }
+
+  // Checks if Spotify app is open on mobile device. If it is not, make this device the current active device.
+  Future<bool> isSpotifyAppOpen() async {
+    List<dynamic>? availableDevices = await getAvailableDevices();
+    if (availableDevices != null) {
+      for (dynamic device in availableDevices) {
+        
+        if (device['type'] == 'Smartphone' && device['name'] == DeviceInfoManager().model) {
+          deviceID = device['id'];
+          return await transferPlaybackToCurrentDevice().then((resp) {
+            if (resp.statusCode == 200 || resp.statusCode == 204) {
+              return true;
+            } else {
+              return false;
+            }
+          });
+        }
+      }
+      return false;
+    } else {
+      print(
+          "Spotify must be active on current device. Make sure the Spotify app is open");
+      return false;
+    }
+  }
+
+  Future<Response> transferPlaybackToCurrentDevice() async {
+    String? accessToken = await getAccessTokenFromStroage();
+
+    String url = '$BASE_API_URL$PLAYBACK_STATE_URL';
+
+    var response = await http.put(Uri.parse(url), headers: {
+      'Authorization': 'Bearer $accessToken',
+    }, body: jsonEncode({
+      'device_ids': [deviceID]
+    }));
+    return response;
+  }
+
   Future<List<dynamic>?> getAvailableDevices() async {
     String? accessToken = await getAccessTokenFromStroage();
 
@@ -292,69 +360,70 @@ class SpotifyService {
     }
   }
 
-  Future<void> playTrack(String trackURI) async {
+  Future<Response> playTrack(String trackURI, {required int position}) async {
+
+    if (deviceID == 'NO_DEVICE') {
+      await setDeviceID();
+    }
     String? accessToken = await getAccessTokenFromStroage();
 
-    String url = '$BASE_API_URL$PLAY_TRACK';
+    String url = '$BASE_API_URL$PLAY_TRACK?device_id=$deviceID';
 
-  
+    print(DeviceInfoManager().deviceId.toString());
+    var response = await http.put(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+        
+      },
+      body: jsonEncode({
+        'uris': [trackURI],
+        'position_ms': position,
+      }),
+    );
+
+    if (response.statusCode == 401) {
+      print('refresh token');
+      await refreshAccessToken();
+      await playTrack(trackURI, position: position);
+    } else if (response.statusCode == 404) {
+      print('device is not active');
+    }
+    return response;
+  }
+
+  Future<bool> pausePlayback() async {
+    String? accessToken = await getAccessTokenFromStroage();
+
+    String url = '$BASE_API_URL$PAUSE_PLAYBACK';
 
     var response = await http.put(
       Uri.parse(url),
       headers: {
         'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json'
       },
-      body: jsonEncode({
-        'uris': [trackURI],
-        //'position_ms': position_ms ?? 0,
-      }),
     );
 
-    if (response.statusCode == 204) {
-      print('success');
-    }
-    else if (response.statusCode == 401) {
-      print('asd');
+    if (response.statusCode == 200) {
+      // The request has succeeded and the playback has been paused
+      return true;
+    } else if (response.statusCode == 401) {
+      // Assuming refreshAccessToken is a method that refreshes the token
       await refreshAccessToken();
-      await playTrack(trackURI);
-    }
-    else {
-      print('failed 403');
+      // Retry pausing the playback after refreshing the token
+      return await pausePlayback();
+    } else if (response.statusCode == 403) {
+      print('Access forbidden: The user is not allowed to access this data.');
+      return false;
+    } else if (response.statusCode == 429) {
+      print('Too many requests: Rate limiting has been applied.');
+      // You might want to handle retry-after logic here
+      return false;
+    } else {
+      // Handle other status codes appropriately
+      print('Failed to pause playback: ${response.statusCode}');
+      return false;
     }
   }
-
-  Future<bool> pausePlayback() async {
-  String? accessToken = await getAccessTokenFromStroage();
-
-  String url = '$BASE_API_URL$PAUSE_PLAYBACK';
-
-  var response = await http.put(
-    Uri.parse(url),
-    headers: {
-      'Authorization': 'Bearer $accessToken',
-    },
-  );
-
-  if (response.statusCode == 200) {
-    // The request has succeeded and the playback has been paused
-    return true;
-  } else if (response.statusCode == 401) {
-    // Assuming refreshAccessToken is a method that refreshes the token
-    await refreshAccessToken();
-    // Retry pausing the playback after refreshing the token
-    return await pausePlayback();
-  } else if (response.statusCode == 403) {
-    print('Access forbidden: The user is not allowed to access this data.');
-    return false;
-  } else if (response.statusCode == 429) {
-    print('Too many requests: Rate limiting has been applied.');
-    // You might want to handle retry-after logic here
-    return false;
-  } else {
-    // Handle other status codes appropriately
-    print('Failed to pause playback: ${response.statusCode}');
-    return false;
-  }
-}
 }

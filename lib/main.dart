@@ -18,6 +18,7 @@ import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
 import 'package:hypeclip/Pages/home.dart';
 import 'package:hypeclip/Pages/library.dart';
 import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/firebase_options.dart';
 
 Future<void> initUser() async {
@@ -41,6 +42,7 @@ Future main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await initUser();
+  await DeviceInfoManager().initDeviceId();
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     _router.refresh();
   });
