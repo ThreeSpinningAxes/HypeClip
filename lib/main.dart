@@ -20,14 +20,14 @@ import 'package:hypeclip/Pages/library.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/firebase_options.dart';
 
-Future<void> fetchMusicLibrariesIfUserSignedIn() async {
+Future<void> initUser() async {
   User? user = FirebaseAuth.instance.currentUser;
 
   if (user != null) {
     Userservice.setUser(
-      user.uid,
-      user.displayName ?? '',
-      user.email ?? '',
+     FirebaseAuth.instance.currentUser.uid,
+      FirebaseAuth.instance.currentUser.displayName ?? '',
+      FirebaseAuth.instance.currentUser.email ?? '',
       true,
     );
     await Userservice.fetchAndStoreConnectedMusicLibrariesFromFireStore();
@@ -40,7 +40,7 @@ Future main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await fetchMusicLibrariesIfUserSignedIn();
+  await initUser();
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     _router.refresh();
   });
