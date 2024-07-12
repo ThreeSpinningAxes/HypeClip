@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/OnBoarding/Registration/PasswordSetupPage.dart';
 import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
-
 import 'package:hypeclip/OnBoarding/Registration/registrationUsernameEmailPage.dart';
 import 'package:hypeclip/OnBoarding/loginPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
@@ -18,7 +17,22 @@ import 'package:hypeclip/Pages/Explore/likedSongs.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
 import 'package:hypeclip/Pages/home.dart';
 import 'package:hypeclip/Pages/library.dart';
+import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/firebase_options.dart';
+
+Future<void> fetchMusicLibrariesIfUserSignedIn() async {
+  User? user = FirebaseAuth.instance.currentUser;
+
+  if (user != null) {
+    Userservice.setUser(
+      user.uid,
+      user.displayName ?? '',
+      user.email ?? '',
+      true,
+    );
+    await Userservice.fetchAndStoreConnectedMusicLibrariesFromFireStore();
+  }
+}
 
 Future main() async {
   //main method is where the root of the application runs
@@ -26,85 +40,103 @@ Future main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await fetchMusicLibrariesIfUserSignedIn();
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     _router.refresh();
   });
-  runApp(const ProviderScope(child:  MyApp()));
+  runApp(const ProviderScope(child: MyApp()));
   //run app takes in a root widget that displays on your device. The root widget is described by a class
 }
 
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-
 final GoRouter _router = GoRouter(
   initialLocation: '/auth/login',
-
   routes: [
     StatefulShellRoute.indexedStack(
-
-      builder: (context, state, navigationShell) => Home(key: state.pageKey, child: navigationShell),
+      builder: (context, state, navigationShell) =>
+          Home(key: state.pageKey, child: navigationShell),
       branches: <StatefulShellBranch>[
         StatefulShellBranch(routes: <RouteBase>[
           GoRoute(
             path: '/library',
             pageBuilder: (context, state) {
-              return NoTransitionPage(key: state.pageKey, child: Library(key: state.pageKey,));
+              return NoTransitionPage(
+                  key: state.pageKey,
+                  child: Library(
+                    key: state.pageKey,
+                  ));
             },
           ),
         ]),
         StatefulShellBranch(routes: <RouteBase>[
           GoRoute(
-            path: '/explore',
-            pageBuilder: (context, state) {
-              return NoTransitionPage(key: state.pageKey, child: Explore(key: state.pageKey,));
-              },
-            routes: [
-              GoRoute(
-              path: 'noAccountsConnected',
+              path: '/explore',
               pageBuilder: (context, state) {
-                return NoTransitionPage(key: state.pageKey, child: NoConnectedAccounts(key: state.pageKey,));
-                },
-            ),
-               GoRoute(
+                return NoTransitionPage(
+                    key: state.pageKey,
+                    child: Explore(
+                      key: state.pageKey,
+                    ));
+              },
+              routes: [
+                GoRoute(
+                  path: 'noAccountsConnected',
+                  pageBuilder: (context, state) {
+                    return NoTransitionPage(
+                        key: state.pageKey,
+                        child: NoConnectedAccounts(
+                          key: state.pageKey,
+                        ));
+                  },
+                ),
+                GoRoute(
                   path: 'connectMusicServicesPage',
                   name: 'explore/connectMusicServicesPage',
                   pageBuilder: (context, state) {
-                    return NoTransitionPage(key: state.pageKey, child: ConnectMusicServicesPage(key: state.pageKey));
+                    return NoTransitionPage(
+                        key: state.pageKey,
+                        child: ConnectMusicServicesPage(key: state.pageKey));
                   },
                 ),
-                   GoRoute(
-                  path: 'connectedAccounts',
-                  name: 'explore/connectedAccounts',
-                  pageBuilder: (context, state) {
-                    return NoTransitionPage(key: state.pageKey, child: ConnectedAccounts(key: state.pageKey,));
-                  },
-                  routes: [
-                     GoRoute(
-                      path: 'browseMusicPlatform',
-                      name: 'explore/connectedAccounts/browseMusicPlatform',
-                      pageBuilder: (context, state) {
-                        // later change so that you can pass in any service
-                        return NoTransitionPage(key: state.pageKey, child: GenericExplorePage(key: state.pageKey, service: MusicLibraryService.spotify));
-                      },
-                      routes: [
-                        GoRoute(
-                          path: 'userLikedSongs',
-                          name: 'explore/connectedAccounts/browseMusicPlatform/userLikedSongs',
+                GoRoute(
+                    path: 'connectedAccounts',
+                    name: 'explore/connectedAccounts',
+                    pageBuilder: (context, state) {
+                      return NoTransitionPage(
+                          key: state.pageKey,
+                          child: ConnectedAccounts(
+                            key: state.pageKey,
+                          ));
+                    },
+                    routes: [
+                      GoRoute(
+                          path: 'browseMusicPlatform',
+                          name: 'explore/connectedAccounts/browseMusicPlatform',
                           pageBuilder: (context, state) {
                             // later change so that you can pass in any service
-                            return NoTransitionPage(key: state.pageKey, child: LikedSongs());
+                            return NoTransitionPage(
+                                key: state.pageKey,
+                                child: GenericExplorePage(
+                                    key: state.pageKey,
+                                    service: MusicLibraryService.spotify));
                           },
-                        ),
-                      ]
-                    ),
-                  ]
-                ),
-            ]
-          ),
-
+                          routes: [
+                            GoRoute(
+                              path: 'userLikedSongs',
+                              name:
+                                  'explore/connectedAccounts/browseMusicPlatform/userLikedSongs',
+                              pageBuilder: (context, state) {
+                                // later change so that you can pass in any service
+                                return NoTransitionPage(
+                                    key: state.pageKey, child: LikedSongs());
+                              },
+                            ),
+                          ]),
+                    ]),
+              ]),
         ])
       ],
-      
     ),
     GoRoute(path: '/auth', builder: (context, state) => LoginPage(), routes: [
       GoRoute(
