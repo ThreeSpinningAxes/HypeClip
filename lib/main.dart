@@ -25,9 +25,9 @@ Future<void> initUser() async {
 
   if (user != null) {
     Userservice.setUser(
-     FirebaseAuth.instance.currentUser.uid,
-      FirebaseAuth.instance.currentUser.displayName ?? '',
-      FirebaseAuth.instance.currentUser.email ?? '',
+     user.uid,
+      user.displayName ?? '',
+      user.email ?? '',
       true,
     );
     await Userservice.fetchAndStoreConnectedMusicLibrariesFromFireStore();
