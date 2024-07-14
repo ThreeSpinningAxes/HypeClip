@@ -26,6 +26,7 @@ class SongPlayback extends StatefulWidget {
 class _SongPlaybackState extends State<SongPlayback> {
   Timer? progressTimer;
   Duration currentProgress = Duration.zero;
+  bool _isLoading = false;
 
   //Future<Color?> imageColor;
 
@@ -33,6 +34,7 @@ class _SongPlaybackState extends State<SongPlayback> {
 
   @override
   void initState() {
+    _isLoading = true;
     SpotifyService().isSpotifyAppOpen().then((isOpen) async {
       if (!isOpen) {
         ShowSnackBar.showSnackbarError(
@@ -50,6 +52,7 @@ class _SongPlaybackState extends State<SongPlayback> {
         });
       }
     });
+    _isLoading = false;
 
     super.initState();
     //imageColor =  await getImagePalette(NetworkImage(widget.artworkUrl));
@@ -91,6 +94,11 @@ class _SongPlaybackState extends State<SongPlayback> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(color: Colors.white,),
+      );
+    }
     return Column(
       children: [
         Align(
@@ -137,7 +145,7 @@ class _SongPlaybackState extends State<SongPlayback> {
                     ),
                   ),
                 ),
-                SizedBox(height: 50),
+                SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -189,8 +197,11 @@ class _SongPlaybackState extends State<SongPlayback> {
                       await SpotifyService().playTrack(widget.song.trackId,
                           position: duration.inMilliseconds);
                       setState(() {
-                        currentProgress = duration;
+                        currentProgress = duration;               
                       });
+                      
+                      
+                      //resumePlayback();
                       
                     },
                   ),

@@ -129,11 +129,17 @@ class Userservice {
     }
   }
 
+  static Future<Map<String, dynamic>?> getAllConnectedMusicServiceData() async {
+    String? data = await storage.read(key: _connectedMusicServicesKey);
+    Map<String, dynamic> storedData = jsonDecode(data!);
+    return storedData;
+  }
+
   static Future<void> setMusicServiceData(MusicLibraryService service, Map<String, dynamic> data) async {
-     Map<String, dynamic>? storedData = await getMusicServiceData(service);
-     if (storedData != null) {
-       storedData.addAll(data);
-       await storage.write(key: service.name, value: jsonEncode(storedData));
+     Map<String, dynamic>? storedData = await getAllConnectedMusicServiceData();
+     if (storedData![service.name] != null) {
+       storedData[service.name].addAll(data);
+       await storage.write(key: _connectedMusicServicesKey, value: jsonEncode(storedData));
      } 
   }
 

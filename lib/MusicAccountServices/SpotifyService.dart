@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart';
@@ -190,7 +188,7 @@ class SpotifyService {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      setNewAccessRefreshTokens(data[ACCESS_TOKEN_VAR_NAME], refreshToken,
+      await setNewAccessRefreshTokens(data[ACCESS_TOKEN_VAR_NAME], refreshToken,
           data[ACCESS_TOKEN_EXP_VAR_NAME]);
     } else {
       // Handle error: invalid refresh token, network error, etc.
@@ -212,7 +210,7 @@ class SpotifyService {
     Get the user's tracks from spotify. This includes the songs that the user has liked. 
     The limit parameter specifies the number of tracks to fetch, and the offset parameter specifies the index to start fetching from.
   */
-  Future<List<dynamic>?> getUserTracks(int limit, int offset) async {
+  Future<List<dynamic>?> getUserTracks(int limit, int offset,) async {
     String? accessToken = await getAccessTokenFromStroage();
     if (accessToken == null) {
       print('Access Token is null');
@@ -238,6 +236,7 @@ class SpotifyService {
       List<dynamic> tracks = data['items'];
       return tracks;
     } else if (response.statusCode == 401) {
+
       await refreshAccessToken();
       return await getUserTracks(limit, offset);
     } else {
