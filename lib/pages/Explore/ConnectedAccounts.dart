@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
+import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
+import 'package:spotify_sdk/spotify_sdk.dart';
+import 'dart:developer' as debug;
 
 
 
@@ -71,9 +74,17 @@ Widget build(BuildContext context) {
         service.name.toCapitalized(),
         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      onTap: () {
+      onTap: () async {
         if (service == MusicLibraryService.spotify) {
-          context.pushNamed('explore/connectedAccounts/browseMusicPlatform');
+          bool success = await SpotifyService().connectToSpotifyRemote();
+          if (success) {
+           debug.log('Connected to Spotify remote');
+           context.pushNamed('explore/connectedAccounts/browseMusicPlatform');
+          }
+          else {
+            debug.log('Failed to connect to Spotify remote');
+          }
+          
         }
       },
     );

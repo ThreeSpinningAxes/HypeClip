@@ -1,3 +1,4 @@
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/firebase_options.dart';
 
 Future<void> initUser() async {
+  
   User? user = FirebaseAuth.instance.currentUser;
 
   if (user != null) {
@@ -45,6 +47,7 @@ Future main() async {
   await DeviceInfoManager().initDeviceId();
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     _router.refresh();
+
   });
   runApp(const ProviderScope(child: MyApp()));
   //run app takes in a root widget that displays on your device. The root widget is described by a class

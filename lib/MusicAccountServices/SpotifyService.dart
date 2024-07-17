@@ -7,6 +7,9 @@ import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/Utilities/RandomGen.dart';
+import 'package:spotify_sdk/spotify_sdk.dart';
+import 'dart:developer' as developer;
+
 
 /*
   This class is responsible for handling all the spotify related operations.
@@ -51,24 +54,42 @@ class SpotifyService {
 
   SpotifyService._internal();
 
-    factory SpotifyService() {
+  factory SpotifyService() {
     return _instance;
   }
 
   static SpotifyService get instance => _instance;
 
+  Future<bool> connectToSpotifyRemote() async {
+
+    return await SpotifySdk.connectToSpotifyRemote(
+        clientId: CLIENT_ID, redirectUrl: REDIRECT_URI, scope: SCOPES);
+        
+
+  }
+
   Future<Map<String, dynamic>?> authorize() async {
-    String? authCode = await getAuthorizationToken();
-    if (authCode != null) {
-      Map<String, dynamic>? accessData = await getAccessData(authCode);
-      if (accessData != null) {
-        Userservice.addMusicService(MusicLibraryService.spotify, accessData);
-        return accessData;
-      } else {
-        return null;
-      }
-    }
+    // String? authCode = await getAuthorizationToken();
+    // if (authCode != null) {
+    //   Map<String, dynamic>? accessData = await getAccessData(authCode);
+    //   if (accessData != null) {
+    //     Userservice.addMusicService(MusicLibraryService.spotify, accessData);
+    //     return accessData;
+    //   } else {
+    //     return null;
+    //   }
+    // }
+  try {
+    String accessToken = await SpotifySdk.getAccessToken(clientId: CLIENT_ID, redirectUrl: REDIRECT_URI, scope: SCOPES);
+      await setAccessTokenToStorage(accessToken);
+      Map<String, dynamic> data = {'access_token': accessToken};
+      Userservice.addMusicService(MusicLibraryService.spotify, data);
+      return data;
+  }
+  catch (e) {
+    developer.log(e.toString());
     return null;
+  }
   }
 
   Future<String?> getAccessTokenFromStroage() async {
@@ -210,7 +231,10 @@ class SpotifyService {
     Get the user's tracks from spotify. This includes the songs that the user has liked. 
     The limit parameter specifies the number of tracks to fetch, and the offset parameter specifies the index to start fetching from.
   */
-  Future<List<dynamic>?> getUserTracks(int limit, int offset,) async {
+  Future<List<dynamic>?> getUserTracks(
+    int limit,
+    int offset,
+  ) async {
     String? accessToken = await getAccessTokenFromStroage();
     if (accessToken == null) {
       print('Access Token is null');
@@ -236,7 +260,6 @@ class SpotifyService {
       List<dynamic> tracks = data['items'];
       return tracks;
     } else if (response.statusCode == 401) {
-
       await refreshAccessToken();
       return await getUserTracks(limit, offset);
     } else {
@@ -272,16 +295,17 @@ class SpotifyService {
     }
   }
 
-  Future<String> setDeviceID() async{
+  Future<String> setDeviceID() async {
     List<dynamic>? availableDevices = await getAvailableDevices();
     if (availableDevices == null) {
       return deviceID;
     }
     for (dynamic device in availableDevices) {
-        if (device['type'] == 'Smartphone' && device['name'] == DeviceInfoManager().model) {
-            deviceID = device['id'];
-            return deviceID;         
-        }
+      if (device['type'] == 'Smartphone' &&
+          device['name'] == DeviceInfoManager().model) {
+        deviceID = device['id'];
+        return deviceID;
+      }
     }
     return deviceID;
   }
@@ -291,8 +315,8 @@ class SpotifyService {
     List<dynamic>? availableDevices = await getAvailableDevices();
     if (availableDevices != null) {
       for (dynamic device in availableDevices) {
-        
-        if (device['type'] == 'Smartphone' && device['name'] == DeviceInfoManager().model) {
+        if (device['type'] == 'Smartphone' &&
+            device['name'] == DeviceInfoManager().model) {
           deviceID = device['id'];
           return await transferPlaybackToCurrentDevice().then((resp) {
             if (resp.statusCode == 200 || resp.statusCode == 204) {
@@ -316,11 +340,13 @@ class SpotifyService {
 
     String url = '$BASE_API_URL$PLAYBACK_STATE_URL';
 
-    var response = await http.put(Uri.parse(url), headers: {
-      'Authorization': 'Bearer $accessToken',
-    }, body: jsonEncode({
-      'device_ids': [deviceID]
-    }));
+    var response = await http.put(Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode({
+          'device_ids': [deviceID]
+        }));
     return response;
   }
 
@@ -360,7 +386,6 @@ class SpotifyService {
   }
 
   Future<Response> playTrack(String trackURI, {required int position}) async {
-
     if (deviceID == 'NO_DEVICE') {
       await setDeviceID();
     }
@@ -374,7 +399,6 @@ class SpotifyService {
       headers: {
         'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
-        
       },
       body: jsonEncode({
         'uris': [trackURI],
