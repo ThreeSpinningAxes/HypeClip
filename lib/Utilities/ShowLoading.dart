@@ -4,6 +4,7 @@ class ShowLoading extends StatelessWidget {
   final bool isLoading;
   final Widget child;
   final String? message;
+  static OverlayEntry? _currentOverlayEntry;
 
   const ShowLoading({super.key, required this.isLoading, required this.child, this.message});
 
@@ -43,4 +44,30 @@ class ShowLoading extends StatelessWidget {
       ],
     );
   }
+
+  OverlayEntry createLoadingOverlay(BuildContext context, String? message) {
+  return OverlayEntry(
+    builder: (context) => Positioned.fill(
+      child: Material(
+        color: Colors.black.withOpacity(0.8),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              if (message != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    message,
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
 }

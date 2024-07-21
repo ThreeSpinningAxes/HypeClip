@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart';
@@ -7,9 +8,11 @@ import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/Utilities/RandomGen.dart';
+import 'package:spotify_sdk/models/library_state.dart';
+import 'package:spotify_sdk/models/player_context.dart';
+import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'dart:developer' as developer;
-
 
 /*
   This class is responsible for handling all the spotify related operations.
@@ -61,11 +64,8 @@ class SpotifyService {
   static SpotifyService get instance => _instance;
 
   Future<bool> connectToSpotifyRemote() async {
-
     return await SpotifySdk.connectToSpotifyRemote(
         clientId: CLIENT_ID, redirectUrl: REDIRECT_URI, scope: SCOPES);
-        
-
   }
 
   Future<Map<String, dynamic>?> authorize() async {
@@ -79,17 +79,17 @@ class SpotifyService {
     //     return null;
     //   }
     // }
-  try {
-    String accessToken = await SpotifySdk.getAccessToken(clientId: CLIENT_ID, redirectUrl: REDIRECT_URI, scope: SCOPES);
+    try {
+      String accessToken = await SpotifySdk.getAccessToken(
+          clientId: CLIENT_ID, redirectUrl: REDIRECT_URI, scope: SCOPES);
       await setAccessTokenToStorage(accessToken);
       Map<String, dynamic> data = {'access_token': accessToken};
       Userservice.addMusicService(MusicLibraryService.spotify, data);
       return data;
-  }
-  catch (e) {
-    developer.log(e.toString());
-    return null;
-  }
+    } catch (e) {
+      developer.log(e.toString());
+      return null;
+    }
   }
 
   Future<String?> getAccessTokenFromStroage() async {
@@ -268,6 +268,19 @@ class SpotifyService {
     //code error codes 403 and 429
   }
 
+  Future<void> getSongsFromLibrary(String uri) async {
+    try {
+    
+    }
+    
+      on PlatformException catch (e) {
+      developer.log("Failed to get library state: '${e.message}'.");
+      return;
+      }
+    
+    
+  }
+
   Future<Map<String, dynamic>?> getCurrentPlaybackState() async {
     String? accessToken = await getAccessTokenFromStroage();
 
@@ -382,6 +395,18 @@ class SpotifyService {
       // Handle other status codes appropriately
       print('Failed to get available devices: ${response.statusCode}');
       return null;
+    }
+  }
+
+  Future<bool> checkIfAppIsActive() async {
+    try {
+      return await SpotifySdk.isSpotifyAppActive;
+    } on PlatformException catch (e) {
+      developer.log("Failed to check if Spotify app is active: '${e.message}'.");
+      return false;
+    } on MissingPluginException catch (e) {
+      developer.log("Not implemented on platform:  '${e.message}'.");
+      return false;
     }
   }
 

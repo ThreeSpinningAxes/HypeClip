@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
 import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Utilities/ShowLoading.dart';
+import 'package:hypeclip/Utilities/ShowLoadingService.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'dart:developer' as debug;
@@ -20,6 +22,7 @@ class ConnectedAccounts extends StatefulWidget {
 class _ConnectedAccountsState extends State<ConnectedAccounts> {
   late Set<MusicLibraryService> connectedServices;
 
+
     @override
   void initState() {
     super.initState();
@@ -28,6 +31,7 @@ class _ConnectedAccountsState extends State<ConnectedAccounts> {
 
 @override
 Widget build(BuildContext context) {
+
   return ListView(
     children: [
       Text('Connected Music Libraries', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
@@ -76,14 +80,24 @@ Widget build(BuildContext context) {
       ),
       onTap: () async {
         if (service == MusicLibraryService.spotify) {
+          setState(() {
+            ShowLoadingService.showOverlay(context, "Connecting to Spotify");
+          });
           bool success = await SpotifyService().connectToSpotifyRemote();
           if (success) {
+          setState(() {
+            ShowLoadingService.hideOverlay();
+          });
            debug.log('Connected to Spotify remote');
            context.pushNamed('explore/connectedAccounts/browseMusicPlatform');
           }
           else {
             debug.log('Failed to connect to Spotify remote');
+            setState(() {
+            ShowLoadingService.hideOverlay();
+          });
           }
+          
           
         }
       },
