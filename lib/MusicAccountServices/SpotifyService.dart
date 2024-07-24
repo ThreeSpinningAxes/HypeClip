@@ -69,27 +69,27 @@ class SpotifyService {
   }
 
   Future<Map<String, dynamic>?> authorize() async {
-    // String? authCode = await getAuthorizationToken();
-    // if (authCode != null) {
-    //   Map<String, dynamic>? accessData = await getAccessData(authCode);
-    //   if (accessData != null) {
-    //     Userservice.addMusicService(MusicLibraryService.spotify, accessData);
-    //     return accessData;
-    //   } else {
-    //     return null;
-    //   }
-    // }
-    try {
-      String accessToken = await SpotifySdk.getAccessToken(
-          clientId: CLIENT_ID, redirectUrl: REDIRECT_URI, scope: SCOPES);
-      await setAccessTokenToStorage(accessToken);
-      Map<String, dynamic> data = {'access_token': accessToken};
-      Userservice.addMusicService(MusicLibraryService.spotify, data);
-      return data;
-    } catch (e) {
-      developer.log(e.toString());
-      return null;
+    String? authCode = await getAuthorizationToken();
+    if (authCode != null) {
+      Map<String, dynamic>? accessData = await getAccessData(authCode);
+      if (accessData != null) {
+        Userservice.addMusicService(MusicLibraryService.spotify, accessData);
+        return accessData;
+      } else {
+        return null;
+      }
     }
+    // try {
+    //   String accessToken = await SpotifySdk.getAccessToken(
+    //       clientId: CLIENT_ID, redirectUrl: REDIRECT_URI, scope: SCOPES);
+    //   await setAccessTokenToStorage(accessToken);
+    //   Map<String, dynamic> data = {'access_token': accessToken};
+    //   Userservice.addMusicService(MusicLibraryService.spotify, data);
+    //   return data;
+    // } catch (e) {
+    //   developer.log(e.toString());
+    //   return null;
+    // }
   }
 
   Future<String?> getAccessTokenFromStroage() async {
