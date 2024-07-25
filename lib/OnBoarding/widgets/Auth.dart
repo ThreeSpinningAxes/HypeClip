@@ -73,9 +73,31 @@ class Auth {
       return userCredential;
 
       // Use the user object for further operations or navigate to a new screen.
-    } catch (e) {
-      ShowSnackBar.showSnackbarError(context, e.toString(), 3);
-      return null;
+    } on FirebaseAuthException catch (e) {
+    String errorMessage;
+    switch (e.code) {
+      case "account-exists-with-different-credential":
+        errorMessage = "An account already exists with the same email address but different sign-in credentials. Sign in using a provider associated with this email address.";
+      case "invalid-credential":
+        errorMessage = "The credential is malformed or has expired.";
+      case "operation-not-allowed":
+        errorMessage = "The type of account corresponding to the credential is not enabled. Please enable it in the Firebase Console, under the Auth tab.";
+      case "user-disabled":
+        errorMessage = "The user corresponding to the given credential has been disabled.";
+      case "user-not-found":
+        errorMessage = "There is no user corresponding to the given email.";
+      case "wrong-password":
+        errorMessage = "Wrong password provided for the given email address.";
+      case "invalid-verification-code":
+        errorMessage = "The verification code of the credential is not valid.";
+      case "invalid-verification-id":
+        errorMessage = "The verification ID of the credential is not valid.";
+      default:
+        errorMessage = "An undefined Error happened.";
     }
+    ShowSnackBar.showSnackbarError(context, errorMessage, 3);
+  } catch (e) {
+    ShowSnackBar.showSnackbarError(context, "An error occurred. Please try again.", 3);
+  }
   }
 }

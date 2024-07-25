@@ -14,15 +14,33 @@ class LikedSongs extends StatefulWidget {
 class _LikedSongsState extends State<LikedSongs>
     with AutomaticKeepAliveClientMixin {
   int totalSongs = 0;
+  int offset = 0;
   SpotifyService spotifyService = SpotifyService();
   Future<List<dynamic>>? likedSongs;
   List<dynamic> filteredSongs = [];
   TextEditingController search = TextEditingController();
+  ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     likedSongs = loadSongs();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+        loadSongs();
+      }
+    });
+  }
+
+  Future<List<dynamic>> loadNextSongs(int offset) async {
+
+    var fetchedSongs = await spotifyService.getUserTracks(50, offset);
+    List<dynamic> likedSongs = await this.likedSongs!;
+    if (fetchedSongs != null && fetchedSongs.isNotEmpty) {
+      likedSongs.addAll(fetchedSongs);
+      filteredSongs.addAll(fetchedSongs);
+    }
+    return likedSongs; // Return the list of all fetched songs
   }
 
   Future<List<dynamic>> loadSongs() async {

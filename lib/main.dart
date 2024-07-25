@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/OnBoarding/Registration/PasswordSetupPage.dart';
-import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
 import 'package:hypeclip/OnBoarding/Registration/registrationUsernameEmailPage.dart';
 import 'package:hypeclip/OnBoarding/loginPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
@@ -101,7 +100,7 @@ final GoRouter _router = GoRouter(
                   pageBuilder: (context, state) {
                     return NoTransitionPage(
                         key: state.pageKey,
-                        child: ConnectMusicServicesPage(key: state.pageKey));
+                        child: ConnectMusicServicesPage(key: state.pageKey, showBackButton: true, showContinue: false, showDescription: true,));
                   },
                 ),
                 GoRoute(
@@ -170,9 +169,9 @@ final GoRouter _router = GoRouter(
                 path: 'connectMusicServices',
                 name: 'register/connectMusicServices',
                 builder: (context, state) {
-                  return ConnectMusicLibrariesRegistrationPage(
-                    addSkipButton: true,
-                    addBackButton: false,
+                  return ConnectMusicServicesPage(
+                    showBackButton: false,
+                    showContinue: true,
                   );
                 })
           ])
