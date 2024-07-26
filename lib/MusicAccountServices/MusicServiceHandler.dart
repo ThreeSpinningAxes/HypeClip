@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:hypeclip/Entities/Playlist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
@@ -123,6 +124,18 @@ class MusicServiceHandler {
       throw Exception("Unsupported service");
     }
     return null;
+  }
+
+  Future<List<Song>?> getRecentlyPlayedTracks({int limit = 25, int? time}) async {
+    if (service == MusicLibraryService.spotify) {
+      return await spotifyService.getRecentlyPlayedTracks(limit: limit, time: time);
+    } else if (service == MusicLibraryService.appleMusic) {
+      //return appleMusicService.refreshAccessToken();
+    } else {
+      throw Exception("Unsupported service");
+    }
+    return null;
+
   }
 
 }

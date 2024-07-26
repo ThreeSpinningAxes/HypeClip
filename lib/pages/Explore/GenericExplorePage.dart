@@ -109,7 +109,8 @@ class _GenericExplorePageState extends State<GenericExplorePage> {
                   style: TextStyle(fontSize: 14, color: Colors.white)),
               onTap: () {
                 // Add your action for Playlists here
-                print('Playlists tapped');
+                context.pushNamed('explore/connectedAccounts/browseMusicPlatform/userRecentlyPlayedTracks');
+                print('recently tapped');
               },
             ),
           ],

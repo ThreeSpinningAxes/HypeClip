@@ -147,6 +147,16 @@ final GoRouter _router = GoRouter(
                                     key: state.pageKey, child: UserPlaylistsPage());
                               },
                             ),
+                            GoRoute(
+                              path: 'userRecentlyPlayedTracks',
+                              name:
+                                  'explore/connectedAccounts/browseMusicPlatform/userRecentlyPlayedTracks',
+                              pageBuilder: (context, state) {
+                                // later change so that you can pass in any service
+                                return NoTransitionPage(
+                                    key: state.pageKey, child: TrackList(fetchRecentlyPlayedTracks: true,));
+                              },
+                            ),
                           ]),
                     ]),
               ]),

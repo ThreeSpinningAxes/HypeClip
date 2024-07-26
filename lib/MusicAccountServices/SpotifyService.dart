@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
@@ -41,7 +42,7 @@ class SpotifyService {
   final String BASE_API_URL = 'https://api.spotify.com/v1/';
 
   final String SCOPES =
-      'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming playlist-read-private user-read-playback-position user-library-read user-read-email';
+      'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming playlist-read-private user-read-playback-position user-library-read user-read-email user-read-recently-played';
 
   final String TRACKS_URL = 'me/tracks';
 
@@ -54,6 +55,8 @@ class SpotifyService {
   final String PAUSE_PLAYBACK = 'me/player/pause';
 
   final String USER_PLAYLISTS_URL = 'me/playlists';
+
+  final String RECENTLY_PLAYED = 'me/player/recently-played';
 
   String deviceID = "NO_DEVICE";
 
@@ -328,46 +331,97 @@ class SpotifyService {
     }
   }
 
-  Future<List<Song>?> getTracksFromPlaylist(Playlist playlist, limit, offset) async {
-  String? accessToken = await getAccessTokenFromStorage();
+  Future<List<Song>?> getTracksFromPlaylist(
+      Playlist playlist, limit, offset) async {
+    String? accessToken = await getAccessTokenFromStorage();
 
-  if (accessToken == null) {
-    developer.log("No access token");
-    return null;
+    if (accessToken == null) {
+      developer.log("No access token");
+      return null;
+    }
+
+    String url = '${BASE_API_URL}playlists/${playlist.id}/tracks';
+
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      List<Song> tracks = (data['items'] as List)
+          .map((item) => Song(
+                trackURI: item['track']['uri'],
+                songName: item['track']['name'],
+                artistName: item['track']['artists']
+                    .map((artist) => artist['name'])
+                    .join(', '),
+                albumName: item['track']['album']['name'],
+                albumImage: item['track']['album']['images'].isNotEmpty
+                    ? item['track']['album']['images'][0]['url']
+                    : null,
+                duration: item['track']['duration_ms'] != null
+                    ? Duration(milliseconds: item['track']['duration_ms'])
+                    : null,
+              ))
+          .toList();
+      return tracks;
+    } else if (response.statusCode == 401) {
+      await refreshAccessToken();
+      return await getTracksFromPlaylist(playlist, limit, offset);
+    } else {
+      developer.log('Failed to get tracks: ${response.statusCode}');
+      return null;
+    }
   }
 
-  String url = '${BASE_API_URL}playlists/${playlist.id}/tracks';
+  Future<List<Song>?> getRecentlyPlayedTracks({int limit = 25, int? time}) async {
+    String? accessToken = await getAccessTokenFromStorage();
 
-  var response = await http.get(
-    Uri.parse(url),
-    headers: {
-      'Authorization': 'Bearer $accessToken',
-    },
-  );
+    time = time ?? DateTime.now().millisecondsSinceEpoch;
+    String url = '$BASE_API_URL$RECENTLY_PLAYED?limit=$limit';
+    
 
-  if (response.statusCode == 200) {
-    var data = json.decode(response.body);
-    List<Song> tracks = (data['items'] as List)
-        .map((item) => Song(
-              trackURI: item['track']['uri'],
-              songName: item['track']['name'],
-              artistName: item['track']['artists'].map((artist) => artist['name']).join(', '),
-              albumName: item['track']['album']['name'],
-              albumImage: item['track']['album']['images'].isNotEmpty
-                  ? item['track']['album']['images'][0]['url']
-                  : null,
-              duration: item['track']['duration_ms'] != null ? Duration(milliseconds: item['track']['duration_ms']) : null,
-            ))
-        .toList();
-    return tracks;
-  } else if (response.statusCode == 401) {
-    await refreshAccessToken();
-    return await getTracksFromPlaylist(playlist, limit, offset);
-  } else {
-    developer.log('Failed to get tracks: ${response.statusCode}');
-    return null;
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+    
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      List<Song> tracks = (data['items'] as List)
+          .map((item) => Song(
+                trackURI: item['track']['uri'],
+                songName: item['track']['name'],
+                artistName: item['track']['artists']
+                    .map((artist) => artist['name'])
+                    .join(', '),
+                albumName: item['track']['album']['name'],
+                albumImage: item['track']['album']['images'].isNotEmpty
+                    ? item['track']['album']['images'][0]['url']
+                    : null,
+                duration: item['track']['duration_ms'] != null
+                    ? Duration(milliseconds: item['track']['duration_ms'])
+                    : null,
+              ))
+          .toList();
+      return tracks;
+    } else if (response.statusCode == 401) {
+      // Assuming refreshAccessToken is a method that refreshes the token
+      await refreshAccessToken();
+      // Retry fetching the recently played tracks after refreshing the token
+      return await getRecentlyPlayedTracks();
+    } else {
+      // Handle other status codes appropriately
+      print('Failed to fetch recently played tracks: ${response.statusCode}');
+      return null;
+    }
   }
-}
 
   Future<void> getSongsFromLibrary(String uri) async {
     try {} on PlatformException catch (e) {

@@ -10,7 +10,12 @@ class TrackList extends StatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
   final Playlist? playlist;
   final bool fetchLikedSongs;
-  const TrackList({super.key, this.playlist, this.fetchLikedSongs = false});
+  final bool fetchRecentlyPlayedTracks;
+  const TrackList(
+      {super.key,
+      this.playlist,
+      this.fetchLikedSongs = false,
+      this.fetchRecentlyPlayedTracks = false});
 
   @override
   _TrackListState createState() => _TrackListState();
@@ -44,8 +49,11 @@ class _TrackListState extends State<TrackList>
   Future<List<Song>> loadSongs() async {
     if (widget.fetchLikedSongs) {
       return await loadLikedSongs();
-    } else {
-      return await getTracksFromPlaylist();
+    } else if (widget.fetchRecentlyPlayedTracks){
+      return await loadRecentlyPlayedSongs();
+    }
+    else {
+      return loadTracksFromPlaylist();
     }
   }
 
@@ -69,7 +77,19 @@ class _TrackListState extends State<TrackList>
     return likedSongs; // Return the list of all fetched songs
   }
 
-  Future<List<Song>> getTracksFromPlaylist() async {
+  Future<List<Song>> loadRecentlyPlayedSongs() async {
+    List<Song> recentlyPlayedSongs = [];
+
+    List<Song>? fetchedSongs =
+        await musicServiceHandler.getRecentlyPlayedTracks(limit: 25);
+    if (fetchedSongs != null && fetchedSongs.isNotEmpty) {
+      recentlyPlayedSongs.addAll(fetchedSongs);
+      filteredSongs.addAll(fetchedSongs);
+    }
+    return recentlyPlayedSongs; // Return the list of all fetched songs
+  }
+
+  Future<List<Song>> loadTracksFromPlaylist() async {
     int offset = 0;
     List<Song> tracks = [];
 
@@ -135,6 +155,18 @@ class _TrackListState extends State<TrackList>
                     : Icon(Icons.music_note, color: Colors.white);
               }
 
+              String title = "";
+
+              if (widget.fetchRecentlyPlayedTracks) {
+                title = 'Recently Played Tracks';
+              } else if (widget.fetchLikedSongs) {
+                title = 'Liked Songs';
+              }
+              else {
+                title = widget.playlist!.name;
+              }
+                   
+              
               return Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
@@ -145,9 +177,7 @@ class _TrackListState extends State<TrackList>
                     ListTile(
                       leading: leading,
                       title: Text(
-                          widget.fetchLikedSongs
-                              ? 'Liked Songs'
-                              : widget.playlist!.name,
+                          title,
                           style: TextStyle(fontSize: 22, color: Colors.white)),
                       subtitle: Text('${snapshot.data!.length} songs',
                           style: TextStyle(fontSize: 14, color: Colors.white)),
