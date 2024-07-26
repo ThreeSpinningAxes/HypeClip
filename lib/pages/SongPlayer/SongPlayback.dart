@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
-import 'package:hypeclip/Pages/SongPlayer/Song.dart';
+import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
 
@@ -35,6 +35,16 @@ class _SongPlaybackState extends State<SongPlayback> {
   @override
   void initState() {
     _isLoading = true;
+    WidgetsBinding.instance.addPostFrameCallback((_){
+    _asyncInit();
+  });
+    _isLoading = false;
+
+    super.initState();
+    //imageColor =  await getImagePalette(NetworkImage(widget.artworkUrl));
+  }
+
+  _asyncInit() async {
     SpotifyService().isSpotifyAppOpen().then((isOpen) async {
       if (!isOpen) {
         ShowSnackBar.showSnackbarError(
@@ -42,7 +52,7 @@ class _SongPlaybackState extends State<SongPlayback> {
             "Make sure the ${widget.service.name.toCapitalized()} app is running on your device and is active",
             5);
       } else {
-        await SpotifyService().playTrack(widget.song.trackId, position: 0).then((response) {
+        await SpotifyService().playTrack(widget.song.trackURI, position: 0).then((response) {
           if (response.statusCode == 204 || response.statusCode == 200) {
             resumePlayback();
           } else {
@@ -52,10 +62,6 @@ class _SongPlaybackState extends State<SongPlayback> {
         });
       }
     });
-    _isLoading = false;
-
-    super.initState();
-    //imageColor =  await getImagePalette(NetworkImage(widget.artworkUrl));
   }
 
   @override
@@ -67,6 +73,7 @@ class _SongPlaybackState extends State<SongPlayback> {
     void startProgressTimer() {
     progressTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
       if (currentProgress < widget.song.duration!) {
+        
         setState(() {
           currentProgress = Duration(milliseconds: currentProgress.inMilliseconds + 100);
         });
@@ -78,18 +85,25 @@ class _SongPlaybackState extends State<SongPlayback> {
 
     void pausePlayback() {
     // Implement pause functionality
+    if (mounted) {
     setState(() {
       paused = true;
+      progressTimer?.cancel();
     });
-    progressTimer?.cancel(); // Stop the progress timer
+     // Stop the progress timer
   }
+    }
 
    void resumePlayback() {
     // Implement resume functionality
-    setState(() {
+    if (mounted) {
+      setState(() {
       paused = false;
+      startProgressTimer();
     });
-    startProgressTimer(); // Resume the progress timer
+    }
+    
+     // Resume the progress timer
   }
 
   @override
@@ -110,7 +124,10 @@ class _SongPlaybackState extends State<SongPlayback> {
               color: Colors.white,
             ),
             onPressed: () {
-              progressTimer?.cancel();
+              setState(() {
+                progressTimer?.cancel();
+              });
+              
               context.pop();
             },
           ),
@@ -123,7 +140,7 @@ class _SongPlaybackState extends State<SongPlayback> {
                 SizedBox(
                   height: 20,
                 ),
-                Image.network(widget.song.songImage ?? widget.song.artistImage!,
+                Image.network(widget.song.songImage ?? widget.song.albumImage!,
                     height: 300),
                 SizedBox(
                   height: 20,
@@ -158,14 +175,14 @@ class _SongPlaybackState extends State<SongPlayback> {
                         onPressed: () async {
                           if (paused) {
                             Response response = await SpotifyService()
-                                .playTrack(widget.song.trackId, position: currentProgress.inMilliseconds);
+                                .playTrack(widget.song.trackURI, position: currentProgress.inMilliseconds);
                             if (response.statusCode == 204 ||
                                 response.statusCode == 200) {
                               resumePlayback();
                             } else {
                               ShowSnackBar.showSnackbarError(
                                   context,
-                                  "Make sure the ${widget.service.name.toCapitalized()} app is running on your device!",
+                                  "Make sure the ${widget.service.name.toCapitalized()} app is running on your device! ${response.statusCode}",
                                   5);
                             }
                           } else {
@@ -193,8 +210,9 @@ class _SongPlaybackState extends State<SongPlayback> {
                     progress: currentProgress,
                     //buffered: Duration(milliseconds: 2000),
                     total: widget.song.duration!,
+                    
                     onSeek: (duration) async {
-                      await SpotifyService().playTrack(widget.song.trackId,
+                      await SpotifyService().playTrack(widget.song.trackURI,
                           position: duration.inMilliseconds);
                       setState(() {
                         currentProgress = duration;               

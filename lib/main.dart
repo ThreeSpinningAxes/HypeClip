@@ -12,8 +12,9 @@ import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 import 'package:hypeclip/Pages/ConnectMusicServicesPage.dart';
 import 'package:hypeclip/Pages/Explore/ConnectedAccounts.dart';
 import 'package:hypeclip/Pages/Explore/GenericExplorePage.dart';
+import 'package:hypeclip/Pages/Explore/UserPlaylists.dart';
 import 'package:hypeclip/Pages/Explore/explore.dart';
-import 'package:hypeclip/Pages/Explore/likedSongs.dart';
+import 'package:hypeclip/Pages/Explore/TrackList.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
 import 'package:hypeclip/Pages/home.dart';
 import 'package:hypeclip/Pages/library.dart';
@@ -133,7 +134,17 @@ final GoRouter _router = GoRouter(
                               pageBuilder: (context, state) {
                                 // later change so that you can pass in any service
                                 return NoTransitionPage(
-                                    key: state.pageKey, child: LikedSongs());
+                                    key: state.pageKey, child: TrackList(fetchLikedSongs: true,));
+                              },
+                            ),
+                             GoRoute(
+                              path: 'userPlaylists',
+                              name:
+                                  'explore/connectedAccounts/browseMusicPlatform/userPlaylists',
+                              pageBuilder: (context, state) {
+                                // later change so that you can pass in any service
+                                return NoTransitionPage(
+                                    key: state.pageKey, child: UserPlaylistsPage());
                               },
                             ),
                           ]),

@@ -90,7 +90,7 @@ class _GenericExplorePageState extends State<GenericExplorePage> {
                   'Saved playlists on ${widget.service.name.toCapitalized()}',
                   style: TextStyle(fontSize: 14, color: Colors.white)),
               onTap: () {
-                // Add your action for Playlists here
+                context.pushNamed('explore/connectedAccounts/browseMusicPlatform/userPlaylists');
                 print('Playlists tapped');
               },
             ),

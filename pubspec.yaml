@@ -86,6 +86,7 @@ flutter:
     - assets/android_dark_rd_na.svg
     - assets/youtubeMusicIcon.svg
     - assets/app_icon_music_round_192.svg
+    - assets/loading_placeholder.gif
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
