@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
 import 'package:hypeclip/Providers/musicServicesProvider.dart';
 import 'package:hypeclip/Pages/Explore/ConnectedAccounts.dart';

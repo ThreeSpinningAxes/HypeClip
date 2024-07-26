@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
-import 'package:hypeclip/Pages/Explore/likedSongs.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
 
 class GenericExplorePage extends StatefulWidget {
@@ -91,7 +90,7 @@ class _GenericExplorePageState extends State<GenericExplorePage> {
                   'Saved playlists on ${widget.service.name.toCapitalized()}',
                   style: TextStyle(fontSize: 14, color: Colors.white)),
               onTap: () {
-                // Add your action for Playlists here
+                context.pushNamed('explore/connectedAccounts/browseMusicPlatform/userPlaylists');
                 print('Playlists tapped');
               },
             ),
@@ -110,7 +109,8 @@ class _GenericExplorePageState extends State<GenericExplorePage> {
                   style: TextStyle(fontSize: 14, color: Colors.white)),
               onTap: () {
                 // Add your action for Playlists here
-                print('Playlists tapped');
+                context.pushNamed('explore/connectedAccounts/browseMusicPlatform/userRecentlyPlayedTracks');
+                print('recently tapped');
               },
             ),
           ],

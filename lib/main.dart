@@ -1,3 +1,4 @@
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -5,22 +6,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/OnBoarding/Registration/PasswordSetupPage.dart';
-import 'package:hypeclip/OnBoarding/Registration/connectMusicLibrariesRegistrationPage.dart';
 import 'package:hypeclip/OnBoarding/Registration/registrationUsernameEmailPage.dart';
 import 'package:hypeclip/OnBoarding/loginPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
 import 'package:hypeclip/Pages/ConnectMusicServicesPage.dart';
 import 'package:hypeclip/Pages/Explore/ConnectedAccounts.dart';
 import 'package:hypeclip/Pages/Explore/GenericExplorePage.dart';
+import 'package:hypeclip/Pages/Explore/UserPlaylists.dart';
 import 'package:hypeclip/Pages/Explore/explore.dart';
-import 'package:hypeclip/Pages/Explore/likedSongs.dart';
+import 'package:hypeclip/Pages/Explore/TrackList.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
 import 'package:hypeclip/Pages/home.dart';
 import 'package:hypeclip/Pages/library.dart';
 import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/firebase_options.dart';
 
 Future<void> initUser() async {
+  
   User? user = FirebaseAuth.instance.currentUser;
 
   if (user != null) {
@@ -41,8 +44,10 @@ Future main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await initUser();
+  await DeviceInfoManager().initDeviceId();
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     _router.refresh();
+
   });
   runApp(const ProviderScope(child: MyApp()));
   //run app takes in a root widget that displays on your device. The root widget is described by a class
@@ -96,7 +101,7 @@ final GoRouter _router = GoRouter(
                   pageBuilder: (context, state) {
                     return NoTransitionPage(
                         key: state.pageKey,
-                        child: ConnectMusicServicesPage(key: state.pageKey));
+                        child: ConnectMusicServicesPage(key: state.pageKey, showBackButton: true, showContinue: false, showDescription: true,));
                   },
                 ),
                 GoRoute(
@@ -129,7 +134,27 @@ final GoRouter _router = GoRouter(
                               pageBuilder: (context, state) {
                                 // later change so that you can pass in any service
                                 return NoTransitionPage(
-                                    key: state.pageKey, child: LikedSongs());
+                                    key: state.pageKey, child: TrackList(fetchLikedSongs: true,));
+                              },
+                            ),
+                             GoRoute(
+                              path: 'userPlaylists',
+                              name:
+                                  'explore/connectedAccounts/browseMusicPlatform/userPlaylists',
+                              pageBuilder: (context, state) {
+                                // later change so that you can pass in any service
+                                return NoTransitionPage(
+                                    key: state.pageKey, child: UserPlaylistsPage());
+                              },
+                            ),
+                            GoRoute(
+                              path: 'userRecentlyPlayedTracks',
+                              name:
+                                  'explore/connectedAccounts/browseMusicPlatform/userRecentlyPlayedTracks',
+                              pageBuilder: (context, state) {
+                                // later change so that you can pass in any service
+                                return NoTransitionPage(
+                                    key: state.pageKey, child: TrackList(fetchRecentlyPlayedTracks: true,));
                               },
                             ),
                           ]),
@@ -165,9 +190,9 @@ final GoRouter _router = GoRouter(
                 path: 'connectMusicServices',
                 name: 'register/connectMusicServices',
                 builder: (context, state) {
-                  return ConnectMusicLibrariesRegistrationPage(
-                    addSkipButton: true,
-                    addBackButton: false,
+                  return ConnectMusicServicesPage(
+                    showBackButton: false,
+                    showContinue: true,
                   );
                 })
           ])

@@ -1,10 +1,21 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'package:http/http.dart';
+import 'package:hypeclip/Entities/Playlist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
+import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/Utilities/RandomGen.dart';
+import 'package:spotify_sdk/models/library_state.dart';
+import 'package:spotify_sdk/models/player_context.dart';
+import 'package:spotify_sdk/models/player_state.dart';
+import 'package:spotify_sdk/spotify_sdk.dart';
+import 'dart:developer' as developer;
 
 /*
   This class is responsible for handling all the spotify related operations.
@@ -31,7 +42,7 @@ class SpotifyService {
   final String BASE_API_URL = 'https://api.spotify.com/v1/';
 
   final String SCOPES =
-      'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming playlist-read-private user-read-playback-position user-library-read user-read-email';
+      'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing streaming playlist-read-private user-read-playback-position user-library-read user-read-email user-read-recently-played';
 
   final String TRACKS_URL = 'me/tracks';
 
@@ -43,10 +54,31 @@ class SpotifyService {
 
   final String PAUSE_PLAYBACK = 'me/player/pause';
 
+  final String USER_PLAYLISTS_URL = 'me/playlists';
+
+  final String RECENTLY_PLAYED = 'me/player/recently-played';
+
+  String deviceID = "NO_DEVICE";
+
+  static final SpotifyService _instance = SpotifyService._internal();
+
+  SpotifyService._internal();
+
+  factory SpotifyService() {
+    return _instance;
+  }
+
+  static SpotifyService get instance => _instance;
+
+  Future<bool> connectToSpotifyRemote() async {
+    return await SpotifySdk.connectToSpotifyRemote(
+        clientId: CLIENT_ID, redirectUrl: REDIRECT_URI, scope: SCOPES);
+  }
+
   Future<Map<String, dynamic>?> authorize() async {
     String? authCode = await getAuthorizationToken();
     if (authCode != null) {
-      Map<String, dynamic>? accessData = await getAccessData(authCode);
+      Map<String, dynamic>? accessData = await _getAccessData(authCode);
       if (accessData != null) {
         Userservice.addMusicService(MusicLibraryService.spotify, accessData);
         return accessData;
@@ -54,10 +86,20 @@ class SpotifyService {
         return null;
       }
     }
-    return null;
+    // try {
+    //   String accessToken = await SpotifySdk.getAccessToken(
+    //       clientId: CLIENT_ID, redirectUrl: REDIRECT_URI, scope: SCOPES);
+    //   await setAccessTokenToStorage(accessToken);
+    //   Map<String, dynamic> data = {'access_token': accessToken};
+    //   Userservice.addMusicService(MusicLibraryService.spotify, data);
+    //   return data;
+    // } catch (e) {
+    //   developer.log(e.toString());
+    //   return null;
+    // }
   }
 
-  Future<String?> getAccessTokenFromStroage() async {
+  Future<String?> getAccessTokenFromStorage() async {
     Map<String, dynamic>? data =
         await Userservice.getMusicServiceData(MusicLibraryService.spotify);
     if (data != null) {
@@ -131,7 +173,7 @@ class SpotifyService {
   }
 
   //Get all the data after completing authorization. This includes the access token, and the refresh token.
-  Future<Map<String, dynamic>?> getAccessData(String authCode) async {
+  Future<Map<String, dynamic>?> _getAccessData(String authCode) async {
     final url = Uri.https(BASE_AUTH_API_URL, ACCESS_TOKEN_URL);
 
     final response = await http.post(url, body: {
@@ -174,8 +216,8 @@ class SpotifyService {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      setNewAccessRefreshTokens(data[ACCESS_TOKEN_VAR_NAME],
-          refreshToken, data[ACCESS_TOKEN_EXP_VAR_NAME]);
+      await setNewAccessRefreshTokens(data[ACCESS_TOKEN_VAR_NAME], refreshToken,
+          data[ACCESS_TOKEN_EXP_VAR_NAME]);
     } else {
       // Handle error: invalid refresh token, network error, etc.
       print('Failed to refresh token: ${response.body}');
@@ -196,8 +238,11 @@ class SpotifyService {
     Get the user's tracks from spotify. This includes the songs that the user has liked. 
     The limit parameter specifies the number of tracks to fetch, and the offset parameter specifies the index to start fetching from.
   */
-  Future<List<dynamic>?> getUserTracks(int limit, int offset) async {
-    String? accessToken = await getAccessTokenFromStroage();
+  Future<List<Song>?> getUserTracks(
+    int limit,
+    int offset,
+  ) async {
+    String? accessToken = await getAccessTokenFromStorage();
     if (accessToken == null) {
       print('Access Token is null');
       return null;
@@ -220,7 +265,24 @@ class SpotifyService {
     if (response.statusCode == 200) {
       Map<String, dynamic> data = json.decode(response.body);
       List<dynamic> tracks = data['items'];
-      return tracks;
+      List<Song> songs = [];
+      for (dynamic item in tracks) {
+        String trackURI = item['track']['uri'];
+        String songName = item['track']['name'];
+        List artists = item['track']['artists'];
+        String albumName = item['track']['album']['name'];
+        String albumImage = item['track']['album']['images'][0]['url'];
+        int duration = item['track']['duration_ms'];
+        Song song = Song(
+            trackURI: trackURI,
+            songName: songName,
+            artistName: artists.map((artist) => artist['name']).join(', '),
+            albumName: albumName,
+            albumImage: albumImage,
+            duration: Duration(milliseconds: duration));
+        songs.add(song);
+      }
+      return songs;
     } else if (response.statusCode == 401) {
       await refreshAccessToken();
       return await getUserTracks(limit, offset);
@@ -230,8 +292,146 @@ class SpotifyService {
     //code error codes 403 and 429
   }
 
+  Future<List<Playlist>?> getUserPlaylists(int limit, int offset) async {
+    String? accessToken = await getAccessTokenFromStorage();
+
+    if (accessToken == null) {
+      developer.log("No access token");
+      return null;
+    }
+
+    String url = '$BASE_API_URL$USER_PLAYLISTS_URL?limit=$limit&offset=$offset';
+
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      List<Playlist> playlists = (data['items'] as List)
+          .map((item) => Playlist(
+                id: item['id'],
+                name: item['name'],
+                ownerName: item['owner']['display_name'] ?? 'Unknown',
+                imageUrl:
+                    item['images'].isNotEmpty ? item['images'][0]['url'] : null,
+                totalTracks: item['tracks']['total'],
+              ))
+          .toList();
+      return playlists;
+    } else if (response.statusCode == 401) {
+      await refreshAccessToken();
+      return await getUserPlaylists(limit, offset);
+    } else {
+      developer.log('Failed to get playlists: ${response.statusCode}');
+      return null;
+    }
+  }
+
+  Future<List<Song>?> getTracksFromPlaylist(
+      Playlist playlist, limit, offset) async {
+    String? accessToken = await getAccessTokenFromStorage();
+
+    if (accessToken == null) {
+      developer.log("No access token");
+      return null;
+    }
+
+    String url = '${BASE_API_URL}playlists/${playlist.id}/tracks';
+
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      List<Song> tracks = (data['items'] as List)
+          .map((item) => Song(
+                trackURI: item['track']['uri'],
+                songName: item['track']['name'],
+                artistName: item['track']['artists']
+                    .map((artist) => artist['name'])
+                    .join(', '),
+                albumName: item['track']['album']['name'],
+                albumImage: item['track']['album']['images'].isNotEmpty
+                    ? item['track']['album']['images'][0]['url']
+                    : null,
+                duration: item['track']['duration_ms'] != null
+                    ? Duration(milliseconds: item['track']['duration_ms'])
+                    : null,
+              ))
+          .toList();
+      return tracks;
+    } else if (response.statusCode == 401) {
+      await refreshAccessToken();
+      return await getTracksFromPlaylist(playlist, limit, offset);
+    } else {
+      developer.log('Failed to get tracks: ${response.statusCode}');
+      return null;
+    }
+  }
+
+  Future<List<Song>?> getRecentlyPlayedTracks({int limit = 25, int? time}) async {
+    String? accessToken = await getAccessTokenFromStorage();
+
+    time = time ?? DateTime.now().millisecondsSinceEpoch;
+    String url = '$BASE_API_URL$RECENTLY_PLAYED?limit=$limit';
+    
+
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+    
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      List<Song> tracks = (data['items'] as List)
+          .map((item) => Song(
+                trackURI: item['track']['uri'],
+                songName: item['track']['name'],
+                artistName: item['track']['artists']
+                    .map((artist) => artist['name'])
+                    .join(', '),
+                albumName: item['track']['album']['name'],
+                albumImage: item['track']['album']['images'].isNotEmpty
+                    ? item['track']['album']['images'][0]['url']
+                    : null,
+                duration: item['track']['duration_ms'] != null
+                    ? Duration(milliseconds: item['track']['duration_ms'])
+                    : null,
+              ))
+          .toList();
+      return tracks;
+    } else if (response.statusCode == 401) {
+      // Assuming refreshAccessToken is a method that refreshes the token
+      await refreshAccessToken();
+      // Retry fetching the recently played tracks after refreshing the token
+      return await getRecentlyPlayedTracks();
+    } else {
+      // Handle other status codes appropriately
+      print('Failed to fetch recently played tracks: ${response.statusCode}');
+      return null;
+    }
+  }
+
+  Future<void> getSongsFromLibrary(String uri) async {
+    try {} on PlatformException catch (e) {
+      developer.log("Failed to get library state: '${e.message}'.");
+      return;
+    }
+  }
+
   Future<Map<String, dynamic>?> getCurrentPlaybackState() async {
-    String? accessToken = await getAccessTokenFromStroage();
+    String? accessToken = await getAccessTokenFromStorage();
 
     String url = '$BASE_API_URL$PLAYBACK_STATE_URL';
 
@@ -257,8 +457,63 @@ class SpotifyService {
     }
   }
 
+  Future<String> setDeviceID() async {
+    List<dynamic>? availableDevices = await getAvailableDevices();
+    if (availableDevices == null) {
+      return deviceID;
+    }
+    for (dynamic device in availableDevices) {
+      if (device['type'] == 'Smartphone' &&
+          device['name'] == DeviceInfoManager().model) {
+        deviceID = device['id'];
+        return deviceID;
+      }
+    }
+    return deviceID;
+  }
+
+  // Checks if Spotify app is open on mobile device. If it is not, make this device the current active device.
+  Future<bool> isSpotifyAppOpen() async {
+    List<dynamic>? availableDevices = await getAvailableDevices();
+    if (availableDevices != null) {
+      for (dynamic device in availableDevices) {
+        if (device['type'] == 'Smartphone' &&
+            device['name'] == DeviceInfoManager().model) {
+          deviceID = device['id'];
+          return await transferPlaybackToCurrentDevice().then((resp) {
+            if (resp.statusCode == 200 || resp.statusCode == 204) {
+              return true;
+            } else {
+              return false;
+            }
+          });
+        }
+      }
+      return false;
+    } else {
+      print(
+          "Spotify must be active on current device. Make sure the Spotify app is open");
+      return false;
+    }
+  }
+
+  Future<Response> transferPlaybackToCurrentDevice() async {
+    String? accessToken = await getAccessTokenFromStorage();
+
+    String url = '$BASE_API_URL$PLAYBACK_STATE_URL';
+
+    var response = await http.put(Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode({
+          'device_ids': [deviceID]
+        }));
+    return response;
+  }
+
   Future<List<dynamic>?> getAvailableDevices() async {
-    String? accessToken = await getAccessTokenFromStroage();
+    String? accessToken = await getAccessTokenFromStorage();
 
     String url = '$BASE_API_URL$AVAILABLE_DEVICES';
 
@@ -292,69 +547,81 @@ class SpotifyService {
     }
   }
 
-  Future<void> playTrack(String trackURI) async {
-    String? accessToken = await getAccessTokenFromStroage();
+  Future<bool> checkIfAppIsActive() async {
+    try {
+      return await SpotifySdk.isSpotifyAppActive;
+    } on PlatformException catch (e) {
+      developer
+          .log("Failed to check if Spotify app is active: '${e.message}'.");
+      return false;
+    } on MissingPluginException catch (e) {
+      developer.log("Not implemented on platform:  '${e.message}'.");
+      return false;
+    }
+  }
 
-    String url = '$BASE_API_URL$PLAY_TRACK';
+  Future<Response> playTrack(String trackURI, {required int position}) async {
+    if (deviceID == 'NO_DEVICE') {
+      await setDeviceID();
+    }
+    String? accessToken = await getAccessTokenFromStorage();
 
-  
+    String url = '$BASE_API_URL$PLAY_TRACK?device_id=$deviceID';
+
+    print(DeviceInfoManager().deviceId.toString());
+    var response = await http.put(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'uris': [trackURI],
+        'position_ms': position,
+      }),
+    );
+
+    if (response.statusCode == 401) {
+      print('refresh token');
+      await refreshAccessToken();
+      await playTrack(trackURI, position: position);
+    } else if (response.statusCode == 404) {
+      print('device is not active');
+    }
+    return response;
+  }
+
+  Future<bool> pausePlayback() async {
+    String? accessToken = await getAccessTokenFromStorage();
+
+    String url = '$BASE_API_URL$PAUSE_PLAYBACK';
 
     var response = await http.put(
       Uri.parse(url),
       headers: {
         'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json'
       },
-      body: jsonEncode({
-        'uris': [trackURI],
-        //'position_ms': position_ms ?? 0,
-      }),
     );
 
-    if (response.statusCode == 204) {
-      print('success');
-    }
-    else if (response.statusCode == 401) {
-      print('asd');
+    if (response.statusCode == 200) {
+      // The request has succeeded and the playback has been paused
+      return true;
+    } else if (response.statusCode == 401) {
+      // Assuming refreshAccessToken is a method that refreshes the token
       await refreshAccessToken();
-      await playTrack(trackURI);
-    }
-    else {
-      print('failed 403');
+      // Retry pausing the playback after refreshing the token
+      return await pausePlayback();
+    } else if (response.statusCode == 403) {
+      print('Access forbidden: The user is not allowed to access this data.');
+      return false;
+    } else if (response.statusCode == 429) {
+      print('Too many requests: Rate limiting has been applied.');
+      // You might want to handle retry-after logic here
+      return false;
+    } else {
+      // Handle other status codes appropriately
+      print('Failed to pause playback: ${response.statusCode}');
+      return false;
     }
   }
-
-  Future<bool> pausePlayback() async {
-  String? accessToken = await getAccessTokenFromStroage();
-
-  String url = '$BASE_API_URL$PAUSE_PLAYBACK';
-
-  var response = await http.put(
-    Uri.parse(url),
-    headers: {
-      'Authorization': 'Bearer $accessToken',
-    },
-  );
-
-  if (response.statusCode == 200) {
-    // The request has succeeded and the playback has been paused
-    return true;
-  } else if (response.statusCode == 401) {
-    // Assuming refreshAccessToken is a method that refreshes the token
-    await refreshAccessToken();
-    // Retry pausing the playback after refreshing the token
-    return await pausePlayback();
-  } else if (response.statusCode == 403) {
-    print('Access forbidden: The user is not allowed to access this data.');
-    return false;
-  } else if (response.statusCode == 429) {
-    print('Too many requests: Rate limiting has been applied.');
-    // You might want to handle retry-after logic here
-    return false;
-  } else {
-    // Handle other status codes appropriately
-    print('Failed to pause playback: ${response.statusCode}');
-    return false;
-  }
-}
 }

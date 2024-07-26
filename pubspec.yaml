@@ -55,6 +55,8 @@ dependencies:
   audio_video_progress_bar: ^2.0.3
   palette_generator: ^0.3.3+3
   flutter_riverpod: ^2.5.1
+  device_info_plus: ^10.1.0
+  spotify_sdk: ^3.0.0-dev.3
 
 
 
@@ -67,7 +69,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^3.0.0
+  flutter_lints: ^4.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -75,12 +77,16 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
+    - assets/appleMusicLogo/standard.svg
+    - assets/appleMusicLogo/white.svg
+    - assets/appleMusicLogo/black.svg
     - assets/continuewithgoogledark.png
     - assets/googleicondark.png
     - assets/Spotify_Icon_RGB_Green.svg
     - assets/android_dark_rd_na.svg
     - assets/youtubeMusicIcon.svg
     - assets/app_icon_music_round_192.svg
+    - assets/loading_placeholder.gif
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
