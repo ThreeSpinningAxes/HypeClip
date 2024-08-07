@@ -81,8 +81,10 @@ class _TrackListState extends State<TrackList>
     List<Song> recentlyPlayedSongs = [];
 
     List<Song>? fetchedSongs =
-        await musicServiceHandler.getRecentlyPlayedTracks(limit: 25);
+        await musicServiceHandler.getRecentlyPlayedTracks(limit: 50);
     if (fetchedSongs != null && fetchedSongs.isNotEmpty) {
+      final Set uniqueFetchedSongs = Set();
+      fetchedSongs.retainWhere((song) => uniqueFetchedSongs.add(song.trackURI));
       recentlyPlayedSongs.addAll(fetchedSongs);
       filteredSongs.addAll(fetchedSongs);
     }
@@ -228,10 +230,11 @@ class _TrackListState extends State<TrackList>
                                   )
                                 : Icon(Icons.music_note, color: Colors.white),
 
-                            onTap: () {
+                            onTap: () async {
+                              List<Song>? songs = await trackList;
                               Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) =>
-                                      SongPlayback(song: song)));
+                                      SongPlayback(songs: songs!, songIndex: index)));
                             },
                             title: Text(song.songName ?? 'Unknown',
                                 style: TextStyle(

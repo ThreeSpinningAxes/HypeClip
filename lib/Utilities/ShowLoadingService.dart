@@ -7,7 +7,7 @@ class ShowLoadingService {
     if (_currentOverlayEntry != null) return; // Prevent duplicate overlays
 
     _currentOverlayEntry = createLoadingOverlay(context, message);
-    Overlay.of(context)?.insert(_currentOverlayEntry!);
+    Overlay.of(context).insert(_currentOverlayEntry!);
   }
 
   static void hideOverlay() {

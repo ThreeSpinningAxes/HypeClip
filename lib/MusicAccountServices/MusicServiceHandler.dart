@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:hypeclip/Entities/Playlist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
@@ -10,7 +9,7 @@ class MusicServiceHandler {
   final SpotifyService spotifyService = SpotifyService();
   final AppleMusicService appleMusicService = AppleMusicService();
 
-  final MusicLibraryService service;
+  MusicLibraryService service;
 
   MusicServiceHandler({required this.service});
 
@@ -23,6 +22,10 @@ class MusicServiceHandler {
     } else {
       throw Exception("Unsupported service");
     }
+  }
+
+  void setMusicService(MusicLibraryService service) {
+    this.service = service;
   }
 
   Future<void> refreshAccessToken() async {
@@ -47,15 +50,15 @@ class MusicServiceHandler {
     return null;
   }
 
-  Future<bool?> isStreaingServiceAppOpen() async {
+  Future<Response> isStreaingServiceAppOpen() async {
     if (service == MusicLibraryService.spotify) {
-      return await spotifyService.isSpotifyAppOpen();
+      return await spotifyService.isSpotifyAppOpenResponse();
     } else if (service == MusicLibraryService.appleMusic) {
       //return appleMusicService.refreshAccessToken();
     } else {
-      throw Exception("Unsupported service");
+      return Response("Unsopported device", 500);
     }
-    return null;
+    return Response("Device not supported", 500);
   }
 
   Future<List<dynamic>?> getAvailableDevices(
@@ -70,15 +73,16 @@ class MusicServiceHandler {
     return null;
   }
 
-  Future<Response?> playTrack( trackURI, {required int position}) async {
+  Future<Response> playTrack( trackURI, {required int position}) async {
     if (service == MusicLibraryService.spotify) {
       return await spotifyService.playTrack(trackURI, position: position);
     } else if (service == MusicLibraryService.appleMusic) {
       //return appleMusicService.refreshAccessToken();
     } else {
-      throw Exception("Unsupported service");
+      return Response("Unsopported device", 500);
     }
-    return null;
+    return Response("Device not supported", 500);
+
   }
 
   Future<bool?> pausePlayback() async {

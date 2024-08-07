@@ -2,8 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Services/UserService.dart';
-import 'package:hypeclip/Utilities/RandomGen.dart';
-import 'dart:developer' as developer;
 
 class AppleMusicService {
   final String DEVELOPER_TOKEN = 'YOUR_DEVELOPER_TOKEN_HERE';

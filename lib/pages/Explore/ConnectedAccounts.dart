@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
-import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
 import 'package:hypeclip/Services/UserService.dart';
-import 'package:hypeclip/Utilities/ShowLoading.dart';
-import 'package:hypeclip/Utilities/ShowLoadingService.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
-import 'package:spotify_sdk/spotify_sdk.dart';
 import 'dart:developer' as debug;
 
 class ConnectedAccounts extends StatefulWidget {

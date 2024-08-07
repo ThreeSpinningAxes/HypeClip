@@ -99,5 +99,6 @@ class Auth {
   } catch (e) {
     ShowSnackBar.showSnackbarError(context, "An error occurred. Please try again.", 3);
   }
+    return null;
   }
 }
