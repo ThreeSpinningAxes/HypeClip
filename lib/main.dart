@@ -44,10 +44,12 @@ Future main() async {
   );
   await initUser();
   await DeviceInfoManager().initDeviceId();
+  await Future.delayed(const Duration(milliseconds: 500));
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     _router.refresh();
 
   });
+  
   runApp(const ProviderScope(child: MyApp()));
   //run app takes in a root widget that displays on your device. The root widget is described by a class
 }

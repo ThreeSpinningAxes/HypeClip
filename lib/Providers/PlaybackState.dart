@@ -1,5 +1,4 @@
 
-import 'package:hypeclip/Entities/ProgressTimer.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 
@@ -29,6 +28,17 @@ class PlaybackState {
       songs: songs ?? this.songs, currentSongIndex: currentSongIndex ?? 0, 
       currentSong: currentSong ?? this.currentSong,
       musicLibraryService: musicLibraryService ?? this.musicLibraryService,
+    );
+  }
+
+  PlaybackState copyState(PlaybackState newPlaybackState) {
+    return PlaybackState(
+      currentProgress: newPlaybackState.currentProgress,
+      paused: newPlaybackState.paused,
+      songs: newPlaybackState.songs,
+      currentSongIndex: newPlaybackState.currentSongIndex,
+      currentSong: newPlaybackState.currentSong,
+      musicLibraryService: newPlaybackState.musicLibraryService,
     );
   }
 

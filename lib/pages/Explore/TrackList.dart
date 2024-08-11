@@ -5,8 +5,12 @@ import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hypeclip/Providers/PlaybackProvider.dart';
+import 'package:hypeclip/Providers/PlaybackState.dart';
 
-class TrackList extends StatefulWidget {
+
+class TrackList extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
   final Playlist? playlist;
   final bool fetchLikedSongs;
@@ -16,12 +20,13 @@ class TrackList extends StatefulWidget {
       this.playlist,
       this.fetchLikedSongs = false,
       this.fetchRecentlyPlayedTracks = false});
+      
 
-  @override
-  _TrackListState createState() => _TrackListState();
+ @override
+ ConsumerState<ConsumerStatefulWidget> createState() => _TrackListState();
 }
 
-class _TrackListState extends State<TrackList>
+class _TrackListState extends ConsumerState<TrackList>
     with AutomaticKeepAliveClientMixin {
   int offset = 0;
   late MusicServiceHandler musicServiceHandler;
@@ -83,7 +88,7 @@ class _TrackListState extends State<TrackList>
     List<Song>? fetchedSongs =
         await musicServiceHandler.getRecentlyPlayedTracks(limit: 50);
     if (fetchedSongs != null && fetchedSongs.isNotEmpty) {
-      final Set uniqueFetchedSongs = Set();
+      final Set uniqueFetchedSongs = {};
       fetchedSongs.retainWhere((song) => uniqueFetchedSongs.add(song.trackURI));
       recentlyPlayedSongs.addAll(fetchedSongs);
       filteredSongs.addAll(fetchedSongs);
@@ -121,6 +126,7 @@ class _TrackListState extends State<TrackList>
     });
   }
 
+  @override
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -232,6 +238,13 @@ class _TrackListState extends State<TrackList>
 
                             onTap: () async {
                               List<Song>? songs = await trackList;
+                              ref.read(playbackProvider).init(PlaybackState(
+                                  currentSong: song,
+                                  currentProgress: Duration.zero,
+                                  paused: true,
+                                  currentSongIndex: index,
+                                  songs: songs,
+                                  musicLibraryService: widget.service));
                               Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) =>
                                       SongPlayback(songs: songs!, songIndex: index)));
