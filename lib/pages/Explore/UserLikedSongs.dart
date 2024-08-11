@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class UserLikedSongs extends StatelessWidget {
-const UserLikedSongs({ Key? key }) : super(key: key);
+const UserLikedSongs({ super.key });
 
   @override
   Widget build(BuildContext context){

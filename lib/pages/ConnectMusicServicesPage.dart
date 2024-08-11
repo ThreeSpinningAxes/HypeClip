@@ -106,7 +106,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                               });
                               Map<String, dynamic>? data = await SpotifyService().authorize();
                               if (data !=null && Userservice.hasMusicService(MusicLibraryService.spotify)) {
-                                afterSuccessfulConnection(MusicLibraryService.spotify, data!);
+                                afterSuccessfulConnection(MusicLibraryService.spotify, data);
                               }
                              
                                 setState(() {

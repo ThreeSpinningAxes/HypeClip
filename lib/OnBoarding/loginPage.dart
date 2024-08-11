@@ -174,7 +174,12 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
-    } catch (e) {
+    } on FirebaseException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message??'An error occurred. Please try again.')),
+      );
+    }
+    catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred. Please try again.')),
       );

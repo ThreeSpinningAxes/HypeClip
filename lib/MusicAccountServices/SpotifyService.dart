@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
@@ -11,9 +10,6 @@ import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Services/UserService.dart';
 import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/Utilities/RandomGen.dart';
-import 'package:spotify_sdk/models/library_state.dart';
-import 'package:spotify_sdk/models/player_context.dart';
-import 'package:spotify_sdk/models/player_state.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'dart:developer' as developer;
 
@@ -86,6 +82,7 @@ class SpotifyService {
         return null;
       }
     }
+    return null;
     // try {
     //   String accessToken = await SpotifySdk.getAccessToken(
     //       clientId: CLIENT_ID, redirectUrl: REDIRECT_URI, scope: SCOPES);
@@ -497,6 +494,24 @@ class SpotifyService {
     }
   }
 
+  Future<Response> isSpotifyAppOpenResponse() async {
+    List<dynamic>? availableDevices = await getAvailableDevices();
+    if (availableDevices != null) {
+      for (dynamic device in availableDevices) {
+        if (device['type'] == 'Smartphone' &&
+            device['name'] == DeviceInfoManager().model) {
+          deviceID = device['id'];
+          return await transferPlaybackToCurrentDevice();
+        }
+      }
+      return Response("Your phone is not active with Spotify", 500);
+    } else {
+      print(
+          "Spotify must be active on current device. Make sure the Spotify app is open");
+      return Response('Spotify must be active on current device', 500);
+  }
+  }
+
   Future<Response> transferPlaybackToCurrentDevice() async {
     String? accessToken = await getAccessTokenFromStorage();
 
@@ -584,7 +599,7 @@ class SpotifyService {
     if (response.statusCode == 401) {
       print('refresh token');
       await refreshAccessToken();
-      await playTrack(trackURI, position: position);
+      return await playTrack(trackURI, position: position);
     } else if (response.statusCode == 404) {
       print('device is not active');
     }
@@ -624,4 +639,7 @@ class SpotifyService {
       return false;
     }
   }
+
+
 }
+
