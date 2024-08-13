@@ -6,6 +6,7 @@ import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Providers/PlaybackState.dart';
 
@@ -245,9 +246,8 @@ class _TrackListState extends ConsumerState<TrackList>
                                   currentSongIndex: index,
                                   songs: songs,
                                   musicLibraryService: widget.service));
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) =>
-                                      SongPlayback(songs: songs!, songIndex: index)));
+                              ref.watch(miniPlayerVisibilityProvider.notifier).state = false;
+                              context.pushNamed('songPlayer');
                             },
                             title: Text(song.songName ?? 'Unknown',
                                 style: TextStyle(
