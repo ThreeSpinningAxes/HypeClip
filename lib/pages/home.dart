@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Pages/ConnectMusicServicesPage.dart';
+import 'package:hypeclip/Pages/SongPlayer/MiniPlayerView.dart';
 
 import 'package:hypeclip/Services/UserService.dart';
 
@@ -52,6 +53,8 @@ class _HomeState extends State<Home> {
               );}
               ),
             ),
+            bottomSheet: MiniPlayerView(),
+            
             bottomNavigationBar: BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
               items: const [

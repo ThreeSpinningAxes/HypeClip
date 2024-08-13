@@ -10,6 +10,7 @@ import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
 import 'package:hypeclip/Entities/Song.dart';
+import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Providers/PlaybackState.dart';
 import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
@@ -17,37 +18,26 @@ import 'package:hypeclip/Utilities/StringExtensions.dart';
 import 'package:palette_generator/palette_generator.dart';
 
 class SongPlayback extends ConsumerStatefulWidget {
-  final List songs;
-  final int songIndex;
-
   final MusicLibraryService service = MusicLibraryService.spotify;
 
-  const SongPlayback({super.key, required this.songs, required this.songIndex});
+  const SongPlayback({super.key});
 
   @override
   _SongPlaybackState createState() => _SongPlaybackState();
 }
 
 class _SongPlaybackState extends ConsumerState<SongPlayback> {
-  Duration currentProgress = Duration.zero;
   bool _isLoading = true;
   late final MusicServiceHandler musicServiceHandler;
-  LinearGradient? domColorLinGradient;
   bool insideEvenHandler = false;
 
   @override
   void initState() {
-    setState(() {
-      _isLoading = true;
-    });
-    _isLoading = true;
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _asyncInit();
     });
 
     super.initState();
-    _isLoading = false;
   }
 
   _asyncInit() async {
@@ -59,20 +49,30 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                 context,
                 "Make sure the ${widget.service.name.toCapitalized()} app is running on your device and is active",
                 5);
+            _isLoading = false;
           });
         }
       } else {
-        domColorLinGradient = await getImagePalette(
-            ref.read(playbackProvider).playbackState.currentSong!.albumImage);
-        Response? r = await ref.watch(playbackProvider).playCurrentTrack(0);
-        if (r.statusCode != 200 && r.statusCode != 204) {
-          if (mounted) {
-            setState(() {
-              ShowSnackBar.showSnackbarError(
-                  context, jsonDecode(r.body)['error']['message'], 5);
-            });
+        PlaybackState playbackState = ref.read(playbackProvider).playbackState;
+        if (playbackState.domColorLinGradient == null) {
+          ref.read(playbackProvider).setImagePalette();
+        }
+        if (playbackState.currentProgress == null || 
+        playbackState.currentProgress!.inMilliseconds == Duration.zero.inMilliseconds) {
+          Response? r = await ref.watch(playbackProvider).playCurrentTrack(0);
+          if (r.statusCode != 200 && r.statusCode != 204) {
+            if (mounted) {
+              setState(() {
+                ShowSnackBar.showSnackbarError(
+                    context, jsonDecode(r.body)['error']['message'], 5);
+              });
+            }
           }
         }
+
+        setState(() {
+          _isLoading = false;
+        });
       }
     });
   }
@@ -103,7 +103,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
     } else {
       return Container(
         decoration: BoxDecoration(
-          gradient: domColorLinGradient,
+          gradient: playbackState.domColorLinGradient,
         ),
         child: Column(
           children: [
@@ -117,6 +117,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                 ),
                 onPressed: () {
                   context.pop();
+                  ref.read(miniPlayerVisibilityProvider.notifier).state = true;
                 },
               ),
             ),
@@ -142,7 +143,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(currentSong.songName!,
+                            Text(currentSong.songName ?? 'Unknown Song Name',
                                 style: TextStyle(
                                     fontSize: 24,
                                     color: Colors.white,
@@ -227,9 +228,6 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                           insideEvenHandler = true;
 
                           await _seek(seek: duration.inMilliseconds);
-                          setState(() {
-                            currentProgress = duration;
-                          });
                           insideEvenHandler = false;
                         },
                       ),
@@ -257,8 +255,8 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       setState(() {
         _isLoading = true;
       });
-      domColorLinGradient = await getImagePalette(
-          ref.read(playbackProvider).playbackState.currentSong!.albumImage);
+     
+          ref.read(playbackProvider).setImagePalette();
       setState(() {
         _isLoading = false;
       });
@@ -279,8 +277,8 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       setState(() {
         _isLoading = true;
       });
-      domColorLinGradient = await getImagePalette(
-          ref.read(playbackProvider).playbackState.currentSong!.albumImage);
+     
+          ref.read(playbackProvider).setImagePalette();
       setState(() {
         _isLoading = false;
       });

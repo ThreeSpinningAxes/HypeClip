@@ -6,6 +6,7 @@ import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Providers/PlaybackState.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 
 final playbackProvider = ChangeNotifierProvider(
@@ -23,6 +24,41 @@ class PlaybackNotifier extends ChangeNotifier {
 
   Duration get currentProgress => timer.currentProgress;
 
+
+  Future<LinearGradient?> setImagePalette() async {
+    String? imageURL = playbackState.currentSong?.albumImage;
+    if (imageURL == null) {
+      return null;
+    }
+    final ImageProvider imageProvider = NetworkImage(imageURL);
+    final PaletteGenerator paletteGenerator =
+        await PaletteGenerator.fromImageProvider(imageProvider);
+    Color? domColor = paletteGenerator.dominantColor?.color;
+    LinearGradient linearGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Colors.transparent,
+        domColor?.withOpacity(0.33) ?? Colors.black.withOpacity(0.1),
+        domColor?.withOpacity(0.66) ?? Colors.black.withOpacity(0.3),
+        domColor ?? Colors.black,
+        domColor?.withOpacity(0.66) ?? Colors.black.withOpacity(0.7),
+        domColor?.withOpacity(0.33) ?? Colors.black.withOpacity(0.3),
+        Colors.transparent,
+      ],
+      stops: [
+        0.0,
+        0.175,
+        0.3125,
+        0.5,
+        0.6875,
+        0.825,
+        1.0,
+      ],
+    );
+    playbackState.domColorLinGradient = linearGradient;
+    return linearGradient;
+  }
  
 
   Future<Response> playNewTrack(PlaybackState newPlaybackState) async {

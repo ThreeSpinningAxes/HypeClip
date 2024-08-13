@@ -1,4 +1,5 @@
 
+import 'package:flutter/material.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 
@@ -9,8 +10,9 @@ class PlaybackState {
   int? currentSongIndex;
   List<Song>? songs = [];
   MusicLibraryService? musicLibraryService;
+  LinearGradient? domColorLinGradient;
 
-  PlaybackState({this.currentSong,this.currentProgress,this.paused, this.currentSongIndex, this.songs, this.musicLibraryService}) ;
+  PlaybackState({this.currentSong,this.currentProgress,this.paused, this.currentSongIndex, this.songs, this.musicLibraryService, this.domColorLinGradient}) ;
 
    PlaybackState copyWith({
     Duration? currentProgress,

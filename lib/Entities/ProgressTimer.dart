@@ -30,6 +30,7 @@ class ProgressTimer extends ChangeNotifier  {
       } else {
         timer.cancel();
         trackFinished = true;
+        playbackState!.paused = true;
         notifyListeners(); // Stop the timer if the song ends
       }
     });
@@ -51,6 +52,7 @@ class ProgressTimer extends ChangeNotifier  {
     } else {
       currentProgress = trackLength;
       trackFinished = true;
+      playbackState!.paused = true;
     }
   }
 

@@ -57,6 +57,7 @@ dependencies:
   flutter_riverpod: ^2.5.1
   device_info_plus: ^10.1.0
   spotify_sdk: ^3.0.0-dev.3
+  text_marquee: ^0.0.2
 
 
 

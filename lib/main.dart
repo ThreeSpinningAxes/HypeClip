@@ -15,6 +15,7 @@ import 'package:hypeclip/Pages/Explore/UserPlaylists.dart';
 import 'package:hypeclip/Pages/Explore/explore.dart';
 import 'package:hypeclip/Pages/Explore/TrackList.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
+import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
 import 'package:hypeclip/Pages/home.dart';
 import 'package:hypeclip/Pages/library.dart';
 import 'package:hypeclip/Services/UserService.dart';
@@ -44,7 +45,7 @@ Future main() async {
   );
   await initUser();
   await DeviceInfoManager().initDeviceId();
-  await Future.delayed(const Duration(milliseconds: 500));
+  await Future.delayed(const Duration(milliseconds: 1200));
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     _router.refresh();
 
@@ -74,8 +75,16 @@ final GoRouter _router = GoRouter(
                   ));
             },
           ),
+          GoRoute(path: '/songPlayer', name: 'songPlayer', pageBuilder: (context, state) {
+            return NoTransitionPage(
+                key: state.pageKey,
+                child: SongPlayback(
+                  key: state.pageKey,
+                ));
+          }),
         ]),
         StatefulShellBranch(routes: <RouteBase>[
+         
           GoRoute(
               path: '/explore',
               pageBuilder: (context, state) {
