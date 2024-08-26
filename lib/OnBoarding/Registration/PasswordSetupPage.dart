@@ -6,7 +6,7 @@ import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
 import 'package:hypeclip/OnBoarding/widgets/PasswordStrengthValidation.dart';
 import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/formSubmissionButton.dart';
-import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/ShowLoading.dart';
 
 class PasswordSetupPage extends StatefulWidget {
@@ -48,7 +48,7 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
       await UserProfileFireStoreService().addNewUser(
           FirebaseAuth.instance.currentUser!, widget.username);
           
-      Userservice.setUser(
+      UserProfileService.setUser(
           FirebaseAuth.instance.currentUser!.uid,
           FirebaseAuth.instance.currentUser!.displayName ?? '',
           FirebaseAuth.instance.currentUser!.email ?? '',

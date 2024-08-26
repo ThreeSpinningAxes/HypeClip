@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:hypeclip/Providers/PlaybackState.dart';
+import 'package:hypeclip/Providers/PlaybackProvider.dart';
+import 'package:hypeclip/Entities/PlaybackState.dart';
+
+
 
 class ProgressTimer extends ChangeNotifier  {
   final Duration interval = Duration(milliseconds: 100);
@@ -9,10 +12,12 @@ class ProgressTimer extends ChangeNotifier  {
   Duration trackLength;
   Duration currentProgress;
   bool trackFinished = false;
+
   late PlaybackState? playbackState = PlaybackState();
+  late PlaybackNotifier? playbackNotifier;
 
 
-  ProgressTimer({required this.trackLength, required this.currentProgress, this.playbackState});
+  ProgressTimer({required this.trackLength, required this.currentProgress, this.playbackState, this.playbackNotifier});
 
   void setPlaybackState(PlaybackState playbackState) {
     this.playbackState = playbackState;
@@ -21,6 +26,10 @@ class ProgressTimer extends ChangeNotifier  {
   void start({int? seek}) {
     if (seek != null) {
       currentProgress = Duration(milliseconds: seek);
+      playbackState!.currentProgress = currentProgress;
+    }
+    if (currentProgress.inMilliseconds < trackLength.inMilliseconds) {
+      trackFinished = false;
     }
     _timer = Timer.periodic(interval, (timer) {
       if (currentProgress.inMilliseconds < trackLength.inMilliseconds) {         
@@ -28,9 +37,12 @@ class ProgressTimer extends ChangeNotifier  {
           playbackState!.currentProgress = currentProgress;
           notifyListeners();         
       } else {
-        timer.cancel();
-        trackFinished = true;
-        playbackState!.paused = true;
+          playbackState!.currentProgress = trackLength;
+          playbackState!.paused = true; //set early so UI updates faster
+          playbackNotifier!.pauseTrack();
+          trackFinished = true;
+          timer.cancel();
+        
         notifyListeners(); // Stop the timer if the song ends
       }
     });
@@ -40,21 +52,6 @@ class ProgressTimer extends ChangeNotifier  {
     _timer.cancel();
   }
 
-  void resetToBeginning() {
-    currentProgress = Duration.zero;
-    trackFinished = false;
-  }
-
-  void seek(Duration seekPosition) {
-    // Seek to a specific time
-    if (seekPosition.inMilliseconds <= trackLength.inMilliseconds) {
-      currentProgress = seekPosition;
-    } else {
-      currentProgress = trackLength;
-      trackFinished = true;
-      playbackState!.paused = true;
-    }
-  }
 
   void resetForNewTrack(Duration newTrackLength) {
     _timer.cancel();

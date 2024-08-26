@@ -1,15 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
-import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 
 final musicServicesProvider = StateNotifierProvider<MusicServicesNotifier, Set<MusicLibraryService>>((ref) {
   return MusicServicesNotifier();
 });
 
 class MusicServicesNotifier extends StateNotifier<Set<MusicLibraryService>> {
-  MusicServicesNotifier() : super(Userservice.getConnectedMusicLibraries());
+  MusicServicesNotifier() : super(UserProfileService.getConnectedMusicLibraries());
 
   void updateMusicServices() {
-    state = Userservice.getConnectedMusicLibraries();
+    state = UserProfileService.getConnectedMusicLibraries();
+  }
+
+  bool containsAnyService() {
+   
+    return state.isNotEmpty;
   }
 }

@@ -1,13 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Pages/ConnectMusicServicesPage.dart';
 import 'package:hypeclip/Pages/SongPlayer/MiniPlayerView.dart';
+import 'package:hypeclip/Providers/musicServicesProvider.dart';
 
-import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 
 
-class Home extends StatefulWidget {
+class Home extends ConsumerStatefulWidget {
   final StatefulNavigationShell child;
   const Home({super.key, required this.child});
 
@@ -15,10 +17,20 @@ class Home extends StatefulWidget {
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends ConsumerState<Home> {
   List pageNames = ["Library", "Explore"];
 
-
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    
+  }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    ref.watch(musicServicesProvider.notifier).updateMusicServices();
+  }
   @override
   Widget build(BuildContext context) {
     User? user = FirebaseAuth.instance.currentUser;
@@ -89,7 +101,7 @@ class _HomeState extends State<Home> {
                 padding: EdgeInsets.zero,
                 children: [
             UserAccountsDrawerHeader(
-              accountName: Text(Userservice.user.username ?? Userservice.user.email!),
+              accountName: Text(UserProfileService.userProfile.username ?? UserProfileService.userProfile.email!),
               accountEmail: null, // You can also display the user's email here if you want
               currentAccountPicture: profilePicUrl != null
                   ? CircleAvatar(
@@ -124,7 +136,7 @@ class _HomeState extends State<Home> {
                     title: const Text('Log out'),
                     leading: Icon(Icons.logout),
                     onTap: () async {
-                      await Userservice.logout();
+                      await UserProfileService.logout();
                       // Update the state of the app.
                       // ...
                     },

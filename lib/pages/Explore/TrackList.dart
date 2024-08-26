@@ -8,7 +8,7 @@ import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
-import 'package:hypeclip/Providers/PlaybackState.dart';
+import 'package:hypeclip/Entities/PlaybackState.dart';
 
 
 class TrackList extends ConsumerStatefulWidget {
@@ -111,23 +111,27 @@ class _TrackListState extends ConsumerState<TrackList>
     return tracks; // Return the list of all fetched songs
   }
 
-  void updateSearchQuery(String newQuery) {
+  void updateSearchQuery(String searchString) {
     setState(() {
-      if (newQuery.isNotEmpty) {
+      if (searchString.isNotEmpty) {
         trackList!.then((songs) {
           //print(songs.length);
           filteredSongs = songs.where((song) {
-            return song.songName
-                .toString()
-                .toLowerCase()
-                .contains(search.text.toLowerCase());
+             final songNameContainsSearch = song.songName
+              .toString()
+              .toLowerCase()
+              .contains(searchString.toLowerCase());
+            final artistNameContainsSearch = song.artistName
+              .toString()
+              .toLowerCase()
+              .contains(searchString.toLowerCase());
+            return songNameContainsSearch || artistNameContainsSearch;
           }).toList();
         });
       }
     });
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -225,7 +229,25 @@ class _TrackListState extends ConsumerState<TrackList>
 
                           return ListTile(
                             trailing:
-                                Icon(Icons.cut_outlined, color: Colors.white),
+                                IconButton(icon: Icon(Icons.cut_outlined, color: Colors.white, ), onPressed: () async {
+                                  List<Song>? songs = await trackList;
+                              // if (ref.read(playbackProvider).playbackState.currentSong != null && ref.read(playbackProvider).playbackState.currentSong!.trackURI == song.trackURI) {
+                              //   ref.read(playbackProvider).state.currentSong!.isPlaying = false;
+                              // }
+                              ref.read(playbackProvider).init(PlaybackState(
+                                  currentSong: song,
+                                  currentProgress: Duration.zero,
+                                  paused: true,
+                                  currentTrackIndex: index,
+                                  songs: songs,
+                                  musicLibraryService: widget.service,
+                                  inSongPlaybackMode: true,
+                                  inTrackClipPlaybackMode: false));
+                              ref.watch(miniPlayerVisibilityProvider.notifier).state = false;
+                              
+                              context.pushNamed('clipEditor');
+
+                                },),
                             leading: song.albumImage != null
                                 ? FadeInImage.assetNetwork(
                                     placeholder:
@@ -243,9 +265,11 @@ class _TrackListState extends ConsumerState<TrackList>
                                   currentSong: song,
                                   currentProgress: Duration.zero,
                                   paused: true,
-                                  currentSongIndex: index,
+                                  currentTrackIndex: index,
                                   songs: songs,
-                                  musicLibraryService: widget.service));
+                                  musicLibraryService: widget.service,
+                                  inSongPlaybackMode: true,
+                                  inTrackClipPlaybackMode: false));
                               ref.watch(miniPlayerVisibilityProvider.notifier).state = false;
                               context.pushNamed('songPlayer');
                             },

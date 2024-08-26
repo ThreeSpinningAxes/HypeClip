@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
-import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 
 class AppleMusicService {
   final String DEVELOPER_TOKEN = 'YOUR_DEVELOPER_TOKEN_HERE';
@@ -22,7 +22,7 @@ class AppleMusicService {
     String? userToken = await getUserTokenFromStorage();
     if (userToken != null) {
       Map<String, dynamic> accessData = {USER_TOKEN_VAR_NAME: userToken};
-      Userservice.addMusicService(MusicLibraryService.appleMusic, accessData);
+      UserProfileService.addMusicService(MusicLibraryService.appleMusic, accessData);
       return accessData;
     } else {
       return null;
@@ -31,7 +31,7 @@ class AppleMusicService {
 
   Future<String?> getUserTokenFromStorage() async {
     Map<String, dynamic>? data =
-        await Userservice.getMusicServiceData(MusicLibraryService.appleMusic);
+        await UserProfileService.getMusicServiceData(MusicLibraryService.appleMusic);
     if (data != null) {
       return data[USER_TOKEN_VAR_NAME];
     }
@@ -40,7 +40,7 @@ class AppleMusicService {
 
   Future<void> setUserTokenToStorage(String userToken) async {
     Map<String, dynamic> data = {USER_TOKEN_VAR_NAME: userToken};
-    await Userservice.addMusicService(MusicLibraryService.appleMusic, data);
+    await UserProfileService.addMusicService(MusicLibraryService.appleMusic, data);
   }
 
   Future<List<dynamic>?> getUserLibrarySongs(

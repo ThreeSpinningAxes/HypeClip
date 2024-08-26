@@ -26,4 +26,34 @@ class Song {
       this.albumImage,
       this.albumName,
       this.imageURL});
+
+      factory Song.fromJson(Map<String, dynamic> json) {
+        return Song(
+          duration: json['duration'] != null ? Duration(milliseconds: json['duration']) : null,
+          trackURI: json['trackURI'],
+          artistName: json['artistName'],
+          songName: json['songName'],
+          songImage: json['songImage'],
+          artistImage: json['artistImage'],
+          songColor: json['songColor'] != null ? Color(json['songColor']) : null,
+          albumImage: json['albumImage'],
+          albumName: json['albumName'],
+          imageURL: json['imageURL'],
+        );
+      }
+
+      Map<String, dynamic> toJson() {
+        return {
+          'duration': duration?.inMilliseconds,
+          'trackURI': trackURI,
+          'artistName': artistName,
+          'songName': songName,
+          'songImage': songImage,
+          'artistImage': artistImage,
+          'songColor': songColor?.value,
+          'albumImage': albumImage,
+          'albumName': albumName,
+          'imageURL': imageURL,
+        };
+      }
 }

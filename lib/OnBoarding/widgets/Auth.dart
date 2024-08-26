@@ -2,7 +2,7 @@ import "package:firebase_auth/firebase_auth.dart";
 import "package:flutter/material.dart";
 import "package:google_sign_in/google_sign_in.dart";
 import "package:hypeclip/OnBoarding/UserProfileFireStoreService.dart";
-import "package:hypeclip/Services/UserService.dart";
+import "package:hypeclip/Services/UserProfileService.dart";
 import "package:hypeclip/Utilities/ShowErrorDialog.dart";
 
 class Auth {
@@ -60,14 +60,14 @@ class Auth {
       final User? user =
           userCredential.user ?? FirebaseAuth.instance.currentUser;
 
-      Userservice.setUser(user!.uid, user.displayName!, user.email!, true);
-      await Userservice.initMusicServicesForStorage();
+      UserProfileService.setUser(user!.uid, user.displayName!, user.email!, true);
+      await UserProfileService.initMusicServicesForStorage();
       if (userCredential.additionalUserInfo!.isNewUser) {
         UserProfileFireStoreService().addNewExternealSignInPlatformUser(user);
       }
 
       if (!userCredential.additionalUserInfo!.isNewUser) {
-        await Userservice.fetchAndStoreConnectedMusicLibrariesFromFireStore();
+        await UserProfileService.fetchAndStoreConnectedMusicLibrariesFromFireStore();
       }
 
       return userCredential;

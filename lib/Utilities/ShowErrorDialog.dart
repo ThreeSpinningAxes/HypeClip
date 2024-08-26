@@ -26,7 +26,7 @@ class ShowSnackBar  {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-     static void showSnackbar(BuildContext context, String message, int? seconds) {
+     static void showSnackbar(BuildContext context, {required String message, int? seconds, TextStyle? textStyle}) {
     
     final snackBar = SnackBar(
       backgroundColor: Colors.black,
@@ -35,7 +35,7 @@ class ShowSnackBar  {
         children: <Widget>[
           //Icon(Icons.error_outline, color: Colors.white), // Error icon with red color
           SizedBox(width: 8), // Space between icon and text
-          Expanded(child: Text(message, style: TextStyle(color: Colors.white))),
+          Expanded(child: Text(message, style: textStyle ?? TextStyle(color: Colors.white))),
         ],
       ),
       action: SnackBarAction(

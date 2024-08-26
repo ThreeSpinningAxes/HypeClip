@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
-import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
 import 'dart:developer' as debug;
 
@@ -19,7 +19,7 @@ class _ConnectedAccountsState extends State<ConnectedAccounts> {
   @override
   void initState() {
     super.initState();
-    connectedServices = Userservice.getConnectedMusicLibraries();
+    connectedServices = UserProfileService.getConnectedMusicLibraries();
   }
 
   @override

@@ -8,6 +8,7 @@ import 'package:hypeclip/OnBoarding/Registration/PasswordSetupPage.dart';
 import 'package:hypeclip/OnBoarding/Registration/registrationUsernameEmailPage.dart';
 import 'package:hypeclip/OnBoarding/loginPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
+import 'package:hypeclip/Pages/ClipEditor/ClipEditor.dart';
 import 'package:hypeclip/Pages/ConnectMusicServicesPage.dart';
 import 'package:hypeclip/Pages/Explore/ConnectedAccounts.dart';
 import 'package:hypeclip/Pages/Explore/GenericExplorePage.dart';
@@ -15,10 +16,11 @@ import 'package:hypeclip/Pages/Explore/UserPlaylists.dart';
 import 'package:hypeclip/Pages/Explore/explore.dart';
 import 'package:hypeclip/Pages/Explore/TrackList.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
+import 'package:hypeclip/Pages/Library/ListOfTrackClips.dart';
 import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
 import 'package:hypeclip/Pages/home.dart';
-import 'package:hypeclip/Pages/library.dart';
-import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Pages/Library/library.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/firebase_options.dart';
 
@@ -27,30 +29,37 @@ Future<void> initUser() async {
   User? user = FirebaseAuth.instance.currentUser;
 
   if (user != null) {
-    Userservice.setUser(
+    UserProfileService.setUser(
      user.uid,
       user.displayName ?? '',
       user.email ?? '',
       true,
     );
-    await Userservice.fetchAndStoreConnectedMusicLibrariesFromFireStore();
+    await UserProfileService.fetchAndStoreConnectedMusicLibrariesFromFireStore();
+    await UserProfileService.initMusicServicesForStorage();
+    await UserProfileService.loadUserTrackClipPlaylistsFromPreferences();
   }
 }
 
 Future main() async {
   //main method is where the root of the application runs
   WidgetsFlutterBinding.ensureInitialized();
+  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await initUser();
+   
   await DeviceInfoManager().initDeviceId();
-  await Future.delayed(const Duration(milliseconds: 1200));
+  await initUser();
+  await Future.delayed(const Duration(milliseconds: 3200));
+  
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    
     _router.refresh();
 
   });
   
+
   runApp(const ProviderScope(child: MyApp()));
   //run app takes in a root widget that displays on your device. The root widget is described by a class
 }
@@ -74,12 +83,31 @@ final GoRouter _router = GoRouter(
                     key: state.pageKey,
                   ));
             },
+            routes: [
+              GoRoute(path: 'savedClips', name: "savedClips", pageBuilder: (context, state) {
+                return NoTransitionPage(
+                    key: state.pageKey,
+                    child: ListOfTrackClips(
+                      key: state.pageKey,
+                    ));
+              }),
+              
+              ],
           ),
           GoRoute(path: '/songPlayer', name: 'songPlayer', pageBuilder: (context, state) {
             return NoTransitionPage(
                 key: state.pageKey,
                 child: SongPlayback(
                   key: state.pageKey,
+                ));
+          }),
+          GoRoute(path: '/clipEditor', name: 'clipEditor', pageBuilder: (context, state) {
+            final bool showMiniOnExit = state.uri.queryParameters['fromMiniPlayer'] == 'true' ? true : false;
+            return NoTransitionPage(
+                key: state.pageKey,
+                child: ClipEditor(
+                  key: state.pageKey,
+                  showMiniPlayerOnExit: showMiniOnExit,
                 ));
           }),
         ]),
@@ -93,6 +121,7 @@ final GoRouter _router = GoRouter(
                     child: Explore(
                       key: state.pageKey,
                     ));
+                
               },
               routes: [
                 GoRoute(

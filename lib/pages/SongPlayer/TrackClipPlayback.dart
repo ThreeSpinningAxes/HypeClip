@@ -37,11 +37,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
 
   @override
   void initState() {
-    super.initState();
-    musicServiceHandler = MusicServiceHandler(service: widget.service);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _asyncInit();
     });
+
+    super.initState();
   }
 
   void _refresh() async {
@@ -56,10 +56,6 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
     if (r.statusCode != 200 && r.statusCode != 204) {
       if (mounted) {
         setState(() {
-          // ShowSnackBar.showSnackbarError(
-          //     context,
-          //     "Make sure the ${widget.service.name.toCapitalized()} app is running on your device and is active",
-          //     5);
           print(r.statusCode);
           errorPage = GenericErrorPage(
             errorHeader: "Error with ${widget.service.name.toCapitalized()}",
@@ -402,6 +398,4 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       error = false;
     }
   }
-
-
 }

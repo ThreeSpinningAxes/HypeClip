@@ -7,12 +7,13 @@ import 'package:hypeclip/Pages/Explore/ConnectedAccounts.dart';
 class Explore extends ConsumerWidget {
   Explore({super.key});
 
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectedMusicLibraries = ref.watch(musicServicesProvider);
-    final page = connectedMusicLibraries.isEmpty
-        ? NoConnectedAccounts()
-        : ConnectedAccounts();
+    Widget page = ref.watch(musicServicesProvider.notifier).containsAnyService()
+
+        ? ConnectedAccounts()
+        : NoConnectedAccounts();
 
     return Scaffold(
         body: Padding(

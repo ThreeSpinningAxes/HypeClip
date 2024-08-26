@@ -9,8 +9,9 @@ import 'package:hypeclip/ErrorPages/GenericErrorPage.dart';
 import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
-import 'package:hypeclip/Providers/PlaybackState.dart';
-import 'package:text_marquee/text_marquee.dart';
+import 'package:hypeclip/Entities/PlaybackState.dart';
+import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:marquee/marquee.dart';
 
 class MiniPlayerView extends ConsumerStatefulWidget {
   final MusicLibraryService? service = MusicLibraryService.spotify;
@@ -25,10 +26,12 @@ class MiniPlayerView extends ConsumerStatefulWidget {
 
 class _MiniPlayerViewState extends ConsumerState<MiniPlayerView> {
   bool insideEvenHandler = false;
+  double marqueeVelocity = 25;
 
   @override
   Widget build(BuildContext context) {
     final bool miniPlayerVisibility = ref.watch(miniPlayerVisibilityProvider);
+    marqueeVelocity = 25;
     if (!miniPlayerVisibility) {
       return SizedBox.shrink();
     }
@@ -69,10 +72,8 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView> {
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              
               children: [
                 Row(
-                  
                   children: [
                     // Album Image
                     Padding(
@@ -86,36 +87,61 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView> {
                     ),
                     SizedBox(width: 20.0),
                     Expanded(
-                      
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          //mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextMarquee(
-                              delay: Duration(seconds: 0),
-                              currentSong.songName!,
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold)
-                                  ),
-                            
-                            SizedBox(height: 4),
-                            TextMarquee(currentSong.artistName!,
-                                style: TextStyle(fontSize: 12, color: Colors.white,
-                                
-                                )),
-                          ],
-                        ),
-                      
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // SizedBox(
+                          //   height: 20, // Set a fixed height
+                          //   child: Marquee(
+                          //     crossAxisAlignment: CrossAxisAlignment.start,
+                          //     textDirection: TextDirection.ltr,
+                          //     text: "${currentSong.songName!} | ${currentSong.artistName!}",
+                          //     numberOfRounds: 3,
+                          //     onDone: () {
+                          //       marqueeVelocity *= -1;
+                          //     },
+                          //     velocity: marqueeVelocity,
+                          //     pauseAfterRound: Duration(seconds: 1),
+                          //     startAfter: Duration(seconds: 1),
+
+                          //     style: TextStyle(
+                          //       fontSize: 14,
+
+                          //       color: Colors.white,
+                          //       fontWeight: FontWeight.bold,
+                          //     ),
+                          //   ),
+                          // ),
+
+                          Text(
+                            currentSong.songName!,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(
+                            height: 4,
+                          ),
+                          Text(
+                            currentSong.artistName!,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                    
-                
+
                     // Song Name and Artist
-                
+
                     // Play/Pause Button
-                    
-                    
+
                     IconButton(
                       icon: Icon(
                         playbackState.paused! ? Icons.play_arrow : Icons.pause,
@@ -123,75 +149,78 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView> {
                       ),
                       onPressed: () async {
                         if (!insideEvenHandler) {
-                          insideEvenHandler = true;
+                          setState(() {
+                            insideEvenHandler = true;
+                          });
+
                           if (playbackState.paused!) {
-                            await _playSong(
-                                position:
-                                    playBack.timer.currentProgress.inMilliseconds);
+                            if (playBack.timer.trackFinished) {
+                              await _playSong(position: 0);
+                            } else {
+                              await _playSong(
+                                  position: playBack
+                                      .timer.currentProgress.inMilliseconds);
+                            }
                           } else {
-                            bool? r = await playBack.pauseSong();
+                            bool? r = await playBack.pauseTrack();
                             if (r == false) {
-                              //error
+                              ShowSnackBar.showSnackbarError(
+                                  context, 'Error pausing song', 5);
                             }
                           }
-                          insideEvenHandler = false;
+                          setState(() {
+                            insideEvenHandler = false;
+                          });
                         }
-                
+
                         // var x = await SpotifyService().getAvailableDevices();
                         // print(x);
                       },
                     ),
-                    IconButton(onPressed: () {}, icon: Icon(Icons.cut, color: Colors.white, size: 16,)),
-                
-                    
+                    IconButton(
+                        onPressed: () {
+                          Map<String, String> map = {'fromMiniPlayer': 'true'};
+                          context.pushNamed('clipEditor', queryParameters: map);
+
+                          ref
+                              .read(miniPlayerVisibilityProvider.notifier)
+                              .state = false;
+                        },
+                        icon: Icon(
+                          Icons.cut,
+                          color: Colors.white,
+                          size: 16,
+                        )),
                   ],
                 ),
-                
                 ProgressBar(
-                      progress: playbackState.currentProgress!,
-                      total: currentSong.duration!,
-                      onSeek: (duration) {
-                        _seek(seek: duration.inMilliseconds);
-                      },
-                      baseBarColor: Colors.black,
-                      progressBarColor: Colors.white,
-                      thumbColor: Colors.white,
-                      thumbRadius: 3.0,
-                      timeLabelLocation: TimeLabelLocation.none,
-                      barHeight: 3.0,
-                      
-                    )
+                  progress: playbackState.currentProgress!,
+                  total: currentSong.duration!,
+                  onSeek: (duration) async {
+                    if (!insideEvenHandler) {
+                      setState(() {
+                        insideEvenHandler = true;
+                      });
+
+                      await _seek(seek: duration.inMilliseconds);
+                      setState(() {
+                        insideEvenHandler = false;
+                      });
+                    }
+                  },
+                  baseBarColor: Colors.black,
+                  progressBarColor: Colors.white,
+                  thumbColor: Colors.white,
+                  thumbRadius: 3.0,
+                  timeLabelLocation: TimeLabelLocation.none,
+                  barHeight: 3.0,
+                )
               ],
             ),
           ),
         ),
       ),
     );
-  }
-
-  Future<void> _playNextSong() async {
-    Response r = await ref.read(playbackProvider).playNextTrack();
-    if (r.statusCode != 200 && r.statusCode != 204) {
-      if (mounted) {
-        //error
-      }
-    } else {
-      ref.read(playbackProvider).playbackState.currentSong!.albumImage;
-    }
-  }
-
-  Future<void> _playPreviousSong() async {
-    insideEvenHandler = true;
-    Response r = await ref.read(playbackProvider).playPreviousTrack();
-    if (r.statusCode != 200 && r.statusCode != 204) {
-      if (mounted) {
-        setState(() {
-          //error
-        });
-      }
-    } else {
-      ref.read(playbackProvider).playbackState.currentSong!.albumImage;
-    }
   }
 
   Future<void> _playSong({int? position}) async {
