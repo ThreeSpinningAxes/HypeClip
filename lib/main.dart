@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
@@ -43,6 +44,9 @@ Future<void> initUser() async {
 
 Future main() async {
   //main method is where the root of the application runs
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  
   WidgetsFlutterBinding.ensureInitialized();
   
   await Firebase.initializeApp(
@@ -51,15 +55,13 @@ Future main() async {
    
   await DeviceInfoManager().initDeviceId();
   await initUser();
-  await Future.delayed(const Duration(milliseconds: 3200));
-  
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     
     _router.refresh();
 
   });
-  
-
+  await Future.delayed(const Duration(milliseconds: 3200));
+  FlutterNativeSplash.remove();
   runApp(const ProviderScope(child: MyApp()));
   //run app takes in a root widget that displays on your device. The root widget is described by a class
 }
@@ -69,6 +71,23 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 final GoRouter _router = GoRouter(
   initialLocation: '/auth/login',
   routes: [
+    GoRoute(path: '/songPlayer', name: 'songPlayer', pageBuilder: (context, state) {
+            return NoTransitionPage(
+                key: state.pageKey,
+                child: SongPlayback(
+                  key: state.pageKey,
+                ));
+          }),
+                GoRoute(path: '/clipEditor', name: 'clipEditor', pageBuilder: (context, state) {
+            final bool showMiniOnExit = state.uri.queryParameters['fromMiniPlayer'] == 'true' ? true : false;
+            return NoTransitionPage(
+                key: state.pageKey,
+                child: ClipEditor(
+                  key: state.pageKey,
+                  showMiniPlayerOnExit: showMiniOnExit,
+                ));
+          }),
+     
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           Home(key: state.pageKey, child: navigationShell),
@@ -94,22 +113,7 @@ final GoRouter _router = GoRouter(
               
               ],
           ),
-          GoRoute(path: '/songPlayer', name: 'songPlayer', pageBuilder: (context, state) {
-            return NoTransitionPage(
-                key: state.pageKey,
-                child: SongPlayback(
-                  key: state.pageKey,
-                ));
-          }),
-          GoRoute(path: '/clipEditor', name: 'clipEditor', pageBuilder: (context, state) {
-            final bool showMiniOnExit = state.uri.queryParameters['fromMiniPlayer'] == 'true' ? true : false;
-            return NoTransitionPage(
-                key: state.pageKey,
-                child: ClipEditor(
-                  key: state.pageKey,
-                  showMiniPlayerOnExit: showMiniOnExit,
-                ));
-          }),
+
         ]),
         StatefulShellBranch(routes: <RouteBase>[
          

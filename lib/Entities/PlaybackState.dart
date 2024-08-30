@@ -12,16 +12,22 @@ class PlaybackState {
   TrackClip? currentTrackClip;
 
   Song? currentSong;
+  Duration? startPosition = Duration.zero;
   Duration? currentProgress;
   bool? paused;
   int? currentTrackIndex;
   List<Song>? songs = [];
 
   List<TrackClip>? trackClipQueue = [];
+  List<Object>? originalTrackQueue = []; //used if shuffle is undone
+
   List<Song>? trackQueue = [];
 
   MusicLibraryService? musicLibraryService;
-  LinearGradient? domColorLinGradient;
+  RadialGradient? domColorLinGradient;
+
+  bool isShuffleMode = false;
+  bool isRepeatMode = false;
 
   PlaybackState({
     this.currentSong,
@@ -31,12 +37,16 @@ class PlaybackState {
     this.songs,
     this.musicLibraryService,
     this.domColorLinGradient,
-    this.inTrackClipPlaybackMode,
+    this.inTrackClipPlaybackMode = false,
     this.trackClipPlaylist,
     this.currentTrackClip,
     this.inSongPlaybackMode,
     this.trackClipQueue,
     this.trackQueue,
+    this.startPosition,
+    this.isShuffleMode = false, 
+    this.isRepeatMode = false, 
+    this.originalTrackQueue,
   });
 
   PlaybackState copyWith({
@@ -52,9 +62,11 @@ class PlaybackState {
     TrackClipPlaylist? trackClipPlaylist,
     TrackClip? currentTrackClip,
     List<TrackClip>? trackClipQueue,
-    List<Song>? soneQueue,
-    LinearGradient? domColorLinGradient
-
+    RadialGradient? domColorLinGradient,
+    Duration? startPosition,
+    bool? isShuffleMode, 
+    bool? isRepeatMode,
+    List<Object>? originalTrackQueue,  
   }) {
     return PlaybackState(
       currentProgress: currentProgress ?? this.currentProgress,
@@ -67,8 +79,14 @@ class PlaybackState {
       currentTrackClip: currentTrackClip ?? this.currentTrackClip,
       inSongPlaybackMode: inSongPlaybackMode ?? this.inSongPlaybackMode,
       trackClipQueue: trackClipQueue ?? this.trackClipQueue,
-      trackQueue: soneQueue ?? this.trackQueue,
+      trackQueue: trackQueue ?? this.trackQueue,
       domColorLinGradient: domColorLinGradient ?? this.domColorLinGradient,
+      inTrackClipPlaybackMode:
+          inTrackClipPlaybackMode ?? this.inTrackClipPlaybackMode,
+      startPosition: startPosition ?? this.startPosition,
+      isShuffleMode: isShuffleMode ?? this.isShuffleMode,
+      isRepeatMode: isRepeatMode ?? this.isRepeatMode,
+      originalTrackQueue: originalTrackQueue ?? this.originalTrackQueue,
     );
   }
 
@@ -87,7 +105,10 @@ class PlaybackState {
       trackClipQueue: newPlaybackState.trackClipQueue,
       trackQueue: newPlaybackState.trackQueue,
       domColorLinGradient: newPlaybackState.domColorLinGradient,
-      
+      startPosition: newPlaybackState.startPosition,
+       isShuffleMode: isShuffleMode,
+      isRepeatMode: isRepeatMode,
+      originalTrackQueue: originalTrackQueue,
     );
   }
 }

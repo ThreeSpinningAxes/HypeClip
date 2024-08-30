@@ -24,13 +24,31 @@ class UserProfileService {
       userProfile.ID = user.uid;
       userProfile.email = user.email;
       userProfile.isLoggedIn = true;
+      userProfile.username = user.displayName ?? '';
 
-      await UserProfileService.fetchAndStoreConnectedMusicLibrariesFromFireStore();
+      await initUserMusicData();
 
       return true;
     }
 
     return false;
+  }
+
+  static Future<void> initUserMusicData(
+      {bool fetchDataFromFirebase = false}) async {
+    await UserProfileService.initMusicServicesForStorage();
+    if (fetchDataFromFirebase) {
+      await UserProfileService
+          .fetchAndStoreConnectedMusicLibrariesFromFireStore();
+    }
+    await UserProfileService.loadUserTrackClipPlaylistsFromPreferences();
+  }
+
+  static Future<void> initNewUser(
+      String id, String username, String email, bool isLoggedIn) async {
+    setUser(id, username, email, isLoggedIn);
+    await initMusicServicesForStorage();
+    await loadUserTrackClipPlaylistsFromPreferences();
   }
 
   static void setUser(
@@ -41,7 +59,6 @@ class UserProfileService {
     userProfile.setEmail = email;
     userProfile.setLoggedIn = isLoggedIn;
     //print('user now after logging in:${user.ID}${user.username}${user.email}${user.isLoggedIn}');
-  
   }
 
   static void login(String id, String username, String email) {
@@ -97,7 +114,8 @@ class UserProfileService {
     });
   }
 
-  static Future<void> addMusicService(MusicLibraryService musicService, Map<String, dynamic> data) async {
+  static Future<void> addMusicService(
+      MusicLibraryService musicService, Map<String, dynamic> data) async {
     //remove service if already connected
     // FlutterSecureStorage storage = FlutterSecureStorage();
     // user.connectedMusicLibraries[service] = storage;
@@ -181,36 +199,38 @@ class UserProfileService {
     // return storedData.containsKey(service.name);
   }
 
-
-  static Future<void> saveNewTrackClip({String? playlistName, required TrackClip trackClip}) async {
+  static Future<void> saveNewTrackClip(
+      {String? playlistName, required TrackClip trackClip}) async {
     if (playlistName == null) {
-      userProfile.playlists[TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY]!.clips.add(trackClip);
-    }
-    else {
+      userProfile.playlists[TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY]!.clips
+          .add(trackClip);
+    } else {
       userProfile.playlists[playlistName]!.clips.add(trackClip);
     }
     await saveUserTrackClipPlaylistToPreferencs();
   }
 
 // OPTIMIZE SO THAT YOU DONT HAVE TO REWRITE THE ENTIRE PLAYLIST TO PREFERENCES EVERY UPDATE. USE ID OF PLAYLISTS
-static Future<void> saveUserTrackClipPlaylistToPreferencs() async {
-  final SharedPreferencesAsync prefs = SharedPreferencesAsync();
-  Map<String, String> jsonPlaylists = userProfile.playlists.map((key, playlist) => MapEntry(key, jsonEncode(playlist.toJson())));
-  await prefs.setString('playlists', jsonEncode(jsonPlaylists));
-}
+  static Future<void> saveUserTrackClipPlaylistToPreferencs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    Map<String, String> jsonPlaylists = userProfile.playlists
+        .map((key, playlist) => MapEntry(key, jsonEncode(playlist.toJson())));
+    await prefs.setString('playlists', jsonEncode(jsonPlaylists));
+  }
 
-static Future<void> loadUserTrackClipPlaylistsFromPreferences() async {
+  static Future<void> loadUserTrackClipPlaylistsFromPreferences() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? jsonString = prefs.getString('playlists');
     if (jsonString != null) {
       Map<String, dynamic> jsonMap = jsonDecode(jsonString);
-      userProfile.playlists = jsonMap.map((key, playlistJson) => MapEntry(key, TrackClipPlaylist.fromJson(jsonDecode(playlistJson))));
+      userProfile.playlists = jsonMap.map((key, playlistJson) =>
+          MapEntry(key, TrackClipPlaylist.fromJson(jsonDecode(playlistJson))));
     }
     userProfile.loadedTrackClips = true;
-    
   }
 
-  static TrackClipPlaylist? getTrackClipPlaylist({required String playlistName}) {
+  static TrackClipPlaylist? getTrackClipPlaylist(
+      {required String playlistName}) {
     if (userProfile.playlists.containsKey(playlistName)) {
       return userProfile.playlists[playlistName]!;
     }
@@ -221,13 +241,15 @@ static Future<void> loadUserTrackClipPlaylistsFromPreferences() async {
     return userProfile.playlists;
   }
 
-  static Future<bool> deleteTrackClipFromPlaylist(String playlistName, TrackClip clip,) async {
+  static Future<bool> deleteTrackClipFromPlaylist(
+    String playlistName,
+    TrackClip clip,
+  ) async {
     if (userProfile.playlists.containsKey(playlistName)) {
       userProfile.playlists[playlistName]!.removeClip(clip);
       await saveUserTrackClipPlaylistToPreferencs();
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   }
@@ -240,5 +262,4 @@ static Future<void> loadUserTrackClipPlaylistsFromPreferences() async {
     }
     return false;
   }
-
 }

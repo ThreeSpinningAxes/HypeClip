@@ -4,6 +4,7 @@ import "package:google_sign_in/google_sign_in.dart";
 import "package:hypeclip/OnBoarding/UserProfileFireStoreService.dart";
 import "package:hypeclip/Services/UserProfileService.dart";
 import "package:hypeclip/Utilities/ShowErrorDialog.dart";
+import "package:hypeclip/main.dart";
 
 class Auth {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -61,13 +62,10 @@ class Auth {
           userCredential.user ?? FirebaseAuth.instance.currentUser;
 
       UserProfileService.setUser(user!.uid, user.displayName!, user.email!, true);
-      await UserProfileService.initMusicServicesForStorage();
-      if (userCredential.additionalUserInfo!.isNewUser) {
-        UserProfileFireStoreService().addNewExternealSignInPlatformUser(user);
-      }
+      await UserProfileService.initUserMusicData(fetchDataFromFirebase: !userCredential.additionalUserInfo!.isNewUser);
 
-      if (!userCredential.additionalUserInfo!.isNewUser) {
-        await UserProfileService.fetchAndStoreConnectedMusicLibrariesFromFireStore();
+      if (userCredential.additionalUserInfo!.isNewUser) {
+        await UserProfileFireStoreService().addNewExternealSignInPlatformUser(user);
       }
 
       return userCredential;
@@ -95,6 +93,7 @@ class Auth {
       default:
         errorMessage = "An undefined Error happened.";
     }
+    
     ShowSnackBar.showSnackbarError(context, errorMessage, 3);
   } catch (e) {
     ShowSnackBar.showSnackbarError(context, "An error occurred. Please try again.", 3);

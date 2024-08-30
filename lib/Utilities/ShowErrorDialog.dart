@@ -29,14 +29,20 @@ class ShowSnackBar  {
      static void showSnackbar(BuildContext context, {required String message, int? seconds, TextStyle? textStyle}) {
     
     final snackBar = SnackBar(
+      behavior: SnackBarBehavior.floating, // Set behavior to floating
+     
+      width: context.size?.width, // Set margin to adjust height
       backgroundColor: Colors.black,
       duration: seconds == null ? Duration(seconds: 10) : Duration(seconds: seconds),
-      content: Row(
-        children: <Widget>[
-          //Icon(Icons.error_outline, color: Colors.white), // Error icon with red color
-          SizedBox(width: 8), // Space between icon and text
-          Expanded(child: Text(message, style: textStyle ?? TextStyle(color: Colors.white))),
-        ],
+      content: Container(
+        height: 40,
+        child: Row(
+          children: <Widget>[
+            //Icon(Icons.error_outline, color: Colors.white), // Error icon with red color
+            SizedBox(width: 8), // Space between icon and text
+            Expanded(child: Text(message, style: textStyle ?? TextStyle(color: Colors.white))),
+          ],
+        ),
       ),
       action: SnackBarAction(
         textColor: Colors.white,

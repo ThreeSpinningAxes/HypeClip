@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
-
+import 'package:hypeclip/Providers/TrackClipProvider.dart';
 
 class TrackList extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
@@ -21,10 +21,9 @@ class TrackList extends ConsumerStatefulWidget {
       this.playlist,
       this.fetchLikedSongs = false,
       this.fetchRecentlyPlayedTracks = false});
-      
 
- @override
- ConsumerState<ConsumerStatefulWidget> createState() => _TrackListState();
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _TrackListState();
 }
 
 class _TrackListState extends ConsumerState<TrackList>
@@ -35,6 +34,7 @@ class _TrackListState extends ConsumerState<TrackList>
   List<Song> filteredSongs = [];
   TextEditingController search = TextEditingController();
   ScrollController _scrollController = ScrollController();
+  Map<String, int>? originalTrackIndexFromPlaylist;
 
   @override
   void initState() {
@@ -53,14 +53,16 @@ class _TrackListState extends ConsumerState<TrackList>
   }
 
   Future<List<Song>> loadSongs() async {
+    Future<List<Song>> songs;
     if (widget.fetchLikedSongs) {
-      return await loadLikedSongs();
-    } else if (widget.fetchRecentlyPlayedTracks){
-      return await loadRecentlyPlayedSongs();
+      songs = loadLikedSongs();
+    } else if (widget.fetchRecentlyPlayedTracks) {
+      songs = loadRecentlyPlayedSongs();
+    } else {
+      songs = loadTracksFromPlaylist();
     }
-    else {
-      return loadTracksFromPlaylist();
-    }
+
+    return songs;
   }
 
   Future<List<Song>> loadLikedSongs() async {
@@ -80,6 +82,7 @@ class _TrackListState extends ConsumerState<TrackList>
         break;
       }
     }
+
     return likedSongs; // Return the list of all fetched songs
   }
 
@@ -117,14 +120,14 @@ class _TrackListState extends ConsumerState<TrackList>
         trackList!.then((songs) {
           //print(songs.length);
           filteredSongs = songs.where((song) {
-             final songNameContainsSearch = song.songName
-              .toString()
-              .toLowerCase()
-              .contains(searchString.toLowerCase());
+            final songNameContainsSearch = song.songName
+                .toString()
+                .toLowerCase()
+                .contains(searchString.toLowerCase());
             final artistNameContainsSearch = song.artistName
-              .toString()
-              .toLowerCase()
-              .contains(searchString.toLowerCase());
+                .toString()
+                .toLowerCase()
+                .contains(searchString.toLowerCase());
             return songNameContainsSearch || artistNameContainsSearch;
           }).toList();
         });
@@ -160,6 +163,18 @@ class _TrackListState extends ConsumerState<TrackList>
               return Center(child: Text('Error: ${snapshot.error}'));
             } else {
               // Once data is fetched, build the entire page content
+
+              // store the index of the original track in the playlist
+              List<Song> trackList = snapshot.data as List<Song>;
+              if (originalTrackIndexFromPlaylist == null) {
+                if (trackList.isNotEmpty) {
+                  originalTrackIndexFromPlaylist = {
+                    for (var song in trackList)
+                      song.trackURI: trackList.indexOf(song)
+                  };
+                }
+              }
+
               Widget? leading; // Assign a default value
               if (widget.playlist != null) {
                 leading = widget.playlist!.imageUrl != null ||
@@ -174,12 +189,10 @@ class _TrackListState extends ConsumerState<TrackList>
                 title = 'Recently Played Tracks';
               } else if (widget.fetchLikedSongs) {
                 title = 'Liked Songs';
-              }
-              else {
+              } else {
                 title = widget.playlist!.name;
               }
-                   
-              
+
               return Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
@@ -189,8 +202,7 @@ class _TrackListState extends ConsumerState<TrackList>
                     ),
                     ListTile(
                       leading: leading,
-                      title: Text(
-                          title,
+                      title: Text(title,
                           style: TextStyle(fontSize: 22, color: Colors.white)),
                       subtitle: Text('${snapshot.data!.length} songs',
                           style: TextStyle(fontSize: 14, color: Colors.white)),
@@ -228,26 +240,39 @@ class _TrackListState extends ConsumerState<TrackList>
                           //var artistImage = song['artists'][0]['images'][0]['url'];
 
                           return ListTile(
-                            trailing:
-                                IconButton(icon: Icon(Icons.cut_outlined, color: Colors.white, ), onPressed: () async {
-                                  List<Song>? songs = await trackList;
-                              // if (ref.read(playbackProvider).playbackState.currentSong != null && ref.read(playbackProvider).playbackState.currentSong!.trackURI == song.trackURI) {
-                              //   ref.read(playbackProvider).state.currentSong!.isPlaying = false;
-                              // }
-                              ref.read(playbackProvider).init(PlaybackState(
-                                  currentSong: song,
-                                  currentProgress: Duration.zero,
-                                  paused: true,
-                                  currentTrackIndex: index,
-                                  songs: songs,
-                                  musicLibraryService: widget.service,
-                                  inSongPlaybackMode: true,
-                                  inTrackClipPlaybackMode: false));
-                              ref.watch(miniPlayerVisibilityProvider.notifier).state = false;
-                              
-                              context.pushNamed('clipEditor');
+                            trailing: IconButton(
+                              icon: Icon(
+                                Icons.cut_outlined,
+                                color: Colors.white,
+                              ),
+                              onPressed: () async {
+                                List<Song>? songs = trackList;
 
-                                },),
+                                // if (ref.read(playbackProvider).playbackState.currentSong != null && ref.read(playbackProvider).playbackState.currentSong!.trackURI == song.trackURI) {
+                                //   ref.read(playbackProvider).state.currentSong!.isPlaying = false;
+                                // }
+
+                                ref.read(playbackProvider).init(PlaybackState(
+                                    currentSong: song,
+                                    currentProgress: Duration.zero,
+                                    paused: true,
+                                    currentTrackIndex:
+                                        originalTrackIndexFromPlaylist?[
+                                                song.trackURI] ??
+                                            0,
+                                    songs: songs,
+                                    musicLibraryService: widget.service,
+                                    inSongPlaybackMode: true,
+                                    inTrackClipPlaybackMode: false,
+                                    originalTrackQueue: []));
+                                ref
+                                    .watch(
+                                        miniPlayerVisibilityProvider.notifier)
+                                    .state = false;
+
+                                context.pushNamed('clipEditor');
+                              },
+                            ),
                             leading: song.albumImage != null
                                 ? FadeInImage.assetNetwork(
                                     placeholder:
@@ -262,15 +287,24 @@ class _TrackListState extends ConsumerState<TrackList>
                             onTap: () async {
                               List<Song>? songs = await trackList;
                               ref.read(playbackProvider).init(PlaybackState(
-                                  currentSong: song,
-                                  currentProgress: Duration.zero,
-                                  paused: true,
-                                  currentTrackIndex: index,
-                                  songs: songs,
-                                  musicLibraryService: widget.service,
-                                  inSongPlaybackMode: true,
-                                  inTrackClipPlaybackMode: false));
-                              ref.watch(miniPlayerVisibilityProvider.notifier).state = false;
+                                    currentSong: song,
+                                    currentProgress: Duration.zero,
+                                    paused: true,
+                                    currentTrackIndex:
+                                        originalTrackIndexFromPlaylist?[song.trackURI] ??
+                                            0,
+                                    trackQueue: songs,
+                                    songs: songs,
+                                    musicLibraryService: widget.service,
+                                    inSongPlaybackMode: true,
+                                    inTrackClipPlaybackMode: false,
+                                    originalTrackQueue: [],
+                                    isShuffleMode: false,
+                                    isRepeatMode: false,
+                                  ));
+                              ref
+                                  .watch(miniPlayerVisibilityProvider.notifier)
+                                  .state = false;
                               context.pushNamed('songPlayer');
                             },
                             title: Text(song.songName ?? 'Unknown',

@@ -8,7 +8,7 @@ import 'package:hypeclip/Entities/PlaybackState.dart';
 
 class ProgressTimer extends ChangeNotifier  {
   final Duration interval = Duration(milliseconds: 100);
-  late Timer _timer;
+  Timer? _timer;
   Duration trackLength;
   Duration currentProgress;
   bool trackFinished = false;
@@ -31,7 +31,7 @@ class ProgressTimer extends ChangeNotifier  {
     if (currentProgress.inMilliseconds < trackLength.inMilliseconds) {
       trackFinished = false;
     }
-    _timer = Timer.periodic(interval, (timer) {
+    _timer = Timer.periodic(interval, (timer) async {
       if (currentProgress.inMilliseconds < trackLength.inMilliseconds) {         
           currentProgress = Duration(milliseconds: currentProgress.inMilliseconds + 100);
           playbackState!.currentProgress = currentProgress;
@@ -49,19 +49,22 @@ class ProgressTimer extends ChangeNotifier  {
   }
 
   void stop() {
-    _timer.cancel();
+    _timer!.cancel();
   }
 
 
   void resetForNewTrack(Duration newTrackLength) {
-    _timer.cancel();
+    _timer!.cancel();
     trackLength = newTrackLength;
     currentProgress = Duration.zero;
     trackFinished = false;
   }
 
   bool isActive() {
-    return _timer.isActive;
+    if (_timer == null) {
+      return false;
+    }
+    return _timer!.isActive;
   }
 
 

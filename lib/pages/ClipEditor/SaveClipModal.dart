@@ -4,8 +4,7 @@ import 'package:hypeclip/Entities/TrackClip.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Providers/TrackClipProvider.dart';
-import 'package:hypeclip/Services/UserProfileService.dart';
-import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+
 import 'package:hypeclip/Utilities/StringUtils.dart';
 
 class SaveClipModal extends ConsumerStatefulWidget {
@@ -44,11 +43,21 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
       height: MediaQuery.of(context).size.height * 0.4,
       child: AlertDialog(
         title: Stack(
+        fit: StackFit.loose,
         children: [
-          
+          Positioned(
+            left: 0,
+            top: 0,
+            child: IconButton(
+                  icon: Icon(Icons.close, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+          ),
           Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
               child: Text(
                 'Save Clip',
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -60,143 +69,139 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
         scrollable: true,
         
         insetPadding: EdgeInsets.all(20),
-        content: Stack(children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            child: IconButton(
-              icon: Icon(Icons.close, color: Colors.white),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ),
-          Form(
-            key: _formKey,
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height * 0.4,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(height: 10),
-                  buildSongCard(),
-                  SizedBox(height: 20),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Clip name (optional)",
-                      style: TextStyle(fontSize: 14, color: Colors.white),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    autocorrect: false,
-                    decoration: InputDecoration(
-                      errorStyle: TextStyle(color: Colors.red),
-                      hintText: 'Enter your own name for your clip (optional)',
-                      hintStyle: TextStyle(color: Colors.grey,  fontSize: 14),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 1.6),
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white, width: 2.0),
-                        borderRadius: BorderRadius.circular(20),
+        content: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Column(
+            
+            children: [
+            
+            Form(
+              key: _formKey,
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height * 0.4,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 10),
+                    buildSongCard(),
+                    SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Clip name (optional)",
+                        style: TextStyle(fontSize: 14, color: Colors.white),
                       ),
                     ),
-                    controller: clipNameController,
-                    onSaved: (val) {
-                      String? value = val?.trim();
-                      if (value != null || value != '') {
-                        clipName = value;
-                      } else {
-                        clipName = defaultClipName;
-                      }
-                      
-                    },
-                    validator: (clipName) {
-                      if (clipName!.length > 32) {
-                        return 'Clip name must be less than or equal to 32 characters.';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Clip Description (optional)",
-                      style: TextStyle(fontSize: 14, color: Colors.white),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    autocorrect: false,
-                    controller: clipDescriptionController,
-                    decoration: InputDecoration(
-                      errorStyle: TextStyle(color: Colors.red),
-                      hintText: 'Enter clip description',
-                      hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 1.6),
-                        borderRadius: BorderRadius.circular(20.0),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      autocorrect: false,
+                      decoration: InputDecoration(
+                        errorStyle: TextStyle(color: Colors.red),
+                        hintText: 'Enter your own name for your clip (optional)',
+                        hintStyle: TextStyle(color: Colors.grey,  fontSize: 14),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black, width: 1.6),
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white, width: 2.0),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white, width: 2.0),
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                    ),
-                    onSaved: (value) {
-                      clipDescription = value;
-                    },
-                    validator: (clipDescription) {
-                      if (clipDescription != null && clipDescription.length > 120) {
-                        return 'Clip description must be less than or equal to 120 characters.';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                          TrackClip clip = TrackClip(
-                            song: widget.song,
-                            clipName: clipNameController.text == '' ? defaultClipName : clipNameController.text,
-                            clipDescription: clipDescriptionController.text,
-                            clipPoints: widget.clipPoints,
-                            dateCreated: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day), 
-                            musicLibraryService: widget.musicLibraryService,
-                          );
-                          await ref.read(trackClipProvider.notifier).addClipToPlaylist(trackClip: clip);     
-                          if (context.mounted) {
-                            Navigator.of(context).pop();
-                            showSuccessDialog(context);
-                          }            
-                             // Handle form submission
+                      controller: clipNameController,
+                      onSaved: (val) {
+                        String? value = val?.trim();
+                        if (value != null || value != '') {
+                          clipName = value;
+                        } else {
+                          clipName = defaultClipName;
                         }
+                        
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        shape: RoundedRectangleBorder(
+                      validator: (clipName) {
+                        if (clipName!.length > 32) {
+                          return 'Clip name must be less than or equal to 32 characters.';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Clip Description (optional)",
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    TextFormField(
+                      autocorrect: false,
+                      controller: clipDescriptionController,
+                      decoration: InputDecoration(
+                        errorStyle: TextStyle(color: Colors.red),
+                        hintText: 'Enter clip description',
+                        hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black, width: 1.6),
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white, width: 2.0),
                           borderRadius: BorderRadius.circular(20.0),
                         ),
                       ),
-                      child: Text(
-                        'Save to library',
-                        style: TextStyle(color: Colors.white),
+                      onSaved: (value) {
+                        clipDescription = value;
+                      },
+                      validator: (clipDescription) {
+                        if (clipDescription != null && clipDescription.length > 120) {
+                          return 'Clip description must be less than or equal to 120 characters.';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            _formKey.currentState!.save();
+                            TrackClip clip = TrackClip(
+                              song: widget.song,
+                              clipName: clipNameController.text == '' ? defaultClipName : clipNameController.text,
+                              clipDescription: clipDescriptionController.text,
+                              clipPoints: widget.clipPoints,
+                              dateCreated: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day), 
+                              musicLibraryService: widget.musicLibraryService,
+                            );
+                            await ref.read(trackClipProvider.notifier).addClipToPlaylist(trackClip: clip);     
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                              showSuccessDialog(context);
+                            }            
+                               // Handle form submission
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                        ),
+                        child: Text(
+                          'Save to library',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-         
-        ]),
+           
+          ]),
+        ),
       ),
     );
   }

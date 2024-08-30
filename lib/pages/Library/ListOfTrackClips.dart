@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hypeclip/Entities/PlaybackState.dart';
 import 'package:hypeclip/Entities/TrackClip.dart';
 import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Entities/Song.dart';
+import 'package:hypeclip/Enums/MusicLibraryServices.dart';
+import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
+import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/Services/UserProfileService.dart';
+import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Widgets/TrackUI.dart';
+import 'package:spotify_sdk/models/track.dart';
 
 class ListOfTrackClips extends ConsumerStatefulWidget {
   final String? playlistName;
-  const ListOfTrackClips({super.key, this.playlistName});
+  final MusicLibraryService service = MusicLibraryService.spotify;
+  const ListOfTrackClips({
+    super.key,
+    this.playlistName,
+  });
 
   @override
   _ListOfTrackClipsState createState() => _ListOfTrackClipsState();
@@ -32,108 +43,225 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
     filterClips('');
   }
 
- @override
-Widget build(BuildContext context) {
-  final Map<String, TrackClipPlaylist> trackClipPlaylists = ref.watch(trackClipProvider);
-  final int totalClipsLength = trackClipPlaylists[playlistName]!.clips.length;
-
-  return SafeArea(
-    child: Column(
-      children: [
-        // AppBar replacement
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
+  @override
+  Widget build(BuildContext context) {
+    final Map<String, TrackClipPlaylist> trackClipPlaylists =
+        ref.watch(trackClipProvider);
+    final int totalClipsLength = trackClipPlaylists[playlistName]!.clips.length;
+    return SafeArea(
+      child: Column(
+        children: [
+          // AppBar replacement
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  context.pop();
+                },
               ),
-              onPressed: () {
-                context.pop();
-              },
-            ),
-          ],
-        ),
-        // Main content
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 20),
-            child: Column(
-              children: [
-                
-                ListTile(
-                  title: Text(widget.playlistName ?? 'Saved Clips',
-                      style: TextStyle(
+            ],
+          ),
+          // Main content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                  top: 10, left: 20, right: 20, bottom: 20),
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text(widget.playlistName ?? 'Saved Clips',
+                        style: TextStyle(
                           fontSize: 22,
                           color: Colors.white,
-                          )),
-                  subtitle: Text('$totalClipsLength clips',
-                      style: TextStyle(fontSize: 14, color: Colors.white)),
-                ),
-                SizedBox(height: 15),
-                SearchBar(
-                  controller: search,
-                  hintText: 'Search',
-                  hintStyle:
-                      WidgetStateProperty.all(TextStyle(color: Colors.black)),
-                  leading: Icon(Icons.search_outlined, color: Colors.black),
-                  backgroundColor:
-                      WidgetStateProperty.all(Colors.grey.shade200),
-                  shadowColor: WidgetStateProperty.all(Colors.black),
-                  constraints: BoxConstraints(minHeight: 40),
-                  textStyle:
-                      WidgetStateProperty.all(TextStyle(color: Colors.black)),
-                  shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                        12), // Adjust the corner radius as needed
-                    side: BorderSide(color: Colors.grey.shade200),
-                  )),
-                ),
-                SizedBox(height: 20),
-                Container(
-                  height: 400,
-                  child: ListView.builder(
-                    itemCount: filteredClips.length,
-                    itemBuilder: (context, index) {
-                      Song song = filteredClips[index].song;
-                      return ListTile(
-                        title: Text(
-                          filteredClips[index].clipName,
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                        ),
-                        leading: song.albumImage != null
-                            ? FadeInImage.assetNetwork(
-                                placeholder:
-                                    'assets/loading_placeholder.gif', // Path to your placeholder image
-                                image: song.albumImage!,
-                                fit: BoxFit.cover,
-                                width: 50.0, // Adjust the width as needed
-                                height: 50.0, // Adjust the height as needed
-                              )
-                            : Icon(Icons.music_note, color: Colors.white),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${song.songName!} - ${song.artistName!}',
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontSize: 12, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                        )),
+                    subtitle: Text('$totalClipsLength clips',
+                        style: TextStyle(fontSize: 14, color: Colors.white)),
                   ),
-                ),
-              ],
+                  SizedBox(height: 15),
+                  SearchBar(
+                    controller: search,
+                    hintText: 'Search',
+                    hintStyle:
+                        WidgetStateProperty.all(TextStyle(color: Colors.black)),
+                    leading: Icon(Icons.search_outlined, color: Colors.black),
+                    backgroundColor:
+                        WidgetStateProperty.all(Colors.grey.shade200),
+                    shadowColor: WidgetStateProperty.all(Colors.black),
+                    constraints: BoxConstraints(minHeight: 40),
+                    textStyle:
+                        WidgetStateProperty.all(TextStyle(color: Colors.black)),
+                    shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                          12), // Adjust the corner radius as needed
+                      side: BorderSide(color: Colors.grey.shade200),
+                    )),
+                  ),
+                  SizedBox(height: 20),
+                  SizedBox(
+                      height: 400,
+                      child: ListView.builder(
+                        itemCount: filteredClips.length,
+                        itemBuilder: (context, index) {
+                          TrackClip clip = filteredClips[index];
+                          Song song = clip.song;
+                          return ListTile(
+                            title: Text(
+                              filteredClips[index].clipName,
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 14),
+                            ),
+                            leading: song.albumImage != null
+                                ? FadeInImage.assetNetwork(
+                                    placeholder:
+                                        'assets/loading_placeholder.gif', // Path to your placeholder image
+                                    image: song.albumImage!,
+                                    fit: BoxFit.cover,
+                                    width: 50.0, // Adjust the width as needed
+                                    height: 50.0, // Adjust the height as needed
+                                  )
+                                : Icon(Icons.music_note, color: Colors.white),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${song.songName!} - ${song.artistName!}',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                            onTap: () {
+                              int originalIndex =
+                                  trackClipPlaylists[playlistName]!
+                                      .clips
+                                      .indexWhere((clip) =>
+                                          clip.ID == filteredClips[index].ID);
+                              ref.read(playbackProvider).init(PlaybackState(
+                                  currentProgress: Duration.zero,
+                                  currentSong: clip.song,
+                                  startPosition: Duration(
+                                      milliseconds: clip.clipPoints[0].toInt()),
+                                  paused: true,
+                                  currentTrackIndex: originalIndex,
+                                  trackClipPlaylist:
+                                      ref.read(trackClipProvider)[playlistName],
+                                  currentTrackClip: clip,
+                                  inTrackClipPlaybackMode: true,
+                                  musicLibraryService: widget.service,
+                                  isShuffleMode: false,
+                                  isRepeatMode: false,
+                                  trackClipQueue:
+                                      trackClipPlaylists[playlistName]!.clips,
+                                  originalTrackQueue:  trackClipPlaylists[playlistName]!.clips));
+
+                              ref
+                                  .watch(miniPlayerVisibilityProvider.notifier)
+                                  .state = false;
+                              context.pushNamed('songPlayer');
+                            },
+                            trailing: IconButton(
+                              onPressed: () {
+                                showTrackOptions(clip);
+                              },
+                              icon: Icon(
+                                Icons.more_horiz,
+                                color: Colors.white,
+                              ),
+                            ),
+                          );
+                        },
+                      )),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
+
+  void showTrackOptions(
+      TrackClip clip) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 10,
+      builder: (BuildContext context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.25,
+          maxChildSize: 0.5,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16.0),
+                  topRight: Radius.circular(16.0),
+                ),
+              ),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  Container(
+                    height: 70,
+                    child: Trackui.buildTrackCard(context,
+                        trackName: clip.clipName,
+                        artistName: clip.song.artistName ?? 'Unknown Artist',
+                        albumImageURL: clip.song.albumImage ?? ''),
+                    ),
+                    
+                  if (clip.clipDescription != null && clip.clipDescription!.trim().isNotEmpty)
+                  ListTile(
+                    
+                    title: Text("Description", style: TextStyle(color:Colors.white, fontSize: 14, fontWeight: FontWeight.bold),),
+                    subtitle:  Text(clip.clipDescription!, style: TextStyle(color: Colors.white, fontSize: 14),),
+                  ),
+                  
+
+                  ListTile(
+                    leading: Icon(Icons.queue_music_outlined, color: Colors.white),
+                    title: Text('Add to queue', style: TextStyle(color: Colors.white, fontSize: 14)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      ref.read(playbackProvider).addTrackClipToQueue(clip);
+                      ShowSnackBar.showSnackbar(context, message: 'Added to queue', seconds: 3);
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.queue_play_next, color: Colors.white),
+                    title: Text('Play next', style: TextStyle(color: Colors.white, fontSize: 14)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      ref.read(playbackProvider).addTrackCLipNextInQueue(clip);
+                      ShowSnackBar.showSnackbar(context, message: 'Added in queue to play next', seconds: 3);
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.delete_outline, color: Colors.white,),
+                    title: Text('Delete clip', style: TextStyle(color: Colors.white, fontSize: 14)),
+                    onTap: () async {
+                      Navigator.pop(context);
+                     await ref.read(trackClipProvider.notifier).removeClipFromPlaylist(
+                          playlistName: playlistName, trackClip: clip);
+                      ShowSnackBar.showSnackbar(context, message: 'Deleted clip', seconds: 3);
+                    },
+                  ),
+                  // Add more options here
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   void filterClips(String searchString) {
     searchString = searchString.trim().toLowerCase();
@@ -142,8 +270,7 @@ Widget build(BuildContext context) {
 
     if (searchString.isNotEmpty) {
       //print(songs.length);
-      List<TrackClip> filtered =
-          trackClips.where((clip) {
+      List<TrackClip> filtered = trackClips.where((clip) {
         final clipNameContainsSearch = clip.clipName
             .toString()
             .toLowerCase()
@@ -163,12 +290,11 @@ Widget build(BuildContext context) {
       setState(() {
         this.filteredClips = filtered;
       });
+    } else {
+      // Reset to original clips if search string is empty
+      setState(() {
+        this.filteredClips = trackClips;
+      });
     }
-    else {
-    // Reset to original clips if search string is empty
-    setState(() {
-      this.filteredClips = trackClips;
-    });
-  }
   }
 }

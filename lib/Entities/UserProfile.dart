@@ -1,7 +1,7 @@
 import "package:hypeclip/Entities/TrackClip.dart";
 import "package:hypeclip/Entities/TrackClipPlaylist.dart";
 import "package:hypeclip/Enums/MusicLibraryServices.dart";
-import "package:shared_preferences/shared_preferences.dart";
+
 
 class UserProfile {
   String? username;

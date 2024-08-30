@@ -97,6 +97,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                 errorDescription: jsonDecode(r.body)['error']['message'],
                 buttonText: "Retry",
                 buttonAction: _refresh,
+                padding: EdgeInsets.all(20),
               );
               error = true;
               initError = true;
@@ -139,6 +140,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
   @override
   void dispose() {
     super.dispose();
+    
   }
 
   @override
@@ -187,369 +189,381 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
       }
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: playbackState.domColorLinGradient,
-      ),
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.topLeft,
-            heightFactor: 1,
-            child: IconButton(
-              icon: const Icon(
-                Icons.keyboard_arrow_down,
-                color: Colors.white,
-              ),
-              onPressed: () async {
-                context.pop();
-                if (widget.showMiniPlayerOnExit == true) {
-                  ref.read(miniPlayerVisibilityProvider.notifier).state = true;
-                }
-              },
-            ),
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: playbackState.domColorLinGradient,
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 20,
-                  ),
-                  Image.network(
-                    currentSong.songImage ?? currentSong.albumImage!,
-                    height: 300,
-                  ),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 35),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(currentSong.songName ?? 'Unknown Song Name',
-                              style: TextStyle(
-                                  fontSize: 24,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold)),
-                          SizedBox(height: 4),
-                          Text(currentSong.artistName!,
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.white)),
-                        ],
-                      ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 10, top: 20),
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  heightFactor: 1,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.white,
+                      size: 28,
                     ),
+                    onPressed: () async {
+                      context.pop();
+                      if (widget.showMiniPlayerOnExit == true) {
+                        ref.read(miniPlayerVisibilityProvider.notifier).state = true;
+                      }
+                      else {
+                        await ref.read(playbackProvider).pauseTrack();
+                      }
+                    },
                   ),
-                  SizedBox(height: 20),
-                  Row(
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      IconButton(
-                          icon: Icon(
-                              playbackState.paused!
-                                  ? Icons.play_arrow
-                                  : Icons.pause,
-                              color: Colors.white,
-                              size: 36),
-                          onPressed: () async {
-                            if (!inEvent) {
-                              setState(() {
-                                inEvent = true;
-                              });
-                              if (playbackState.paused! &&
-                                  trackProgress[0] >= clipValues[1].toInt()) {
-                                setState(() {
-                                  playbackState.currentProgress = Duration(
-                                      milliseconds: clipValues[0].toInt());
-                                });
-
-                                await _seek(seek: clipValues[0].toInt());
-                                setState(() {
-                                  trackProgress[0] = clipValues[0];
-                                });
-                              } else if (playbackState.paused!) {
-                                await _playSong(
-                                    position: trackProgress[0].toInt());
-                              } else {
-                                bool? r = await playBack.pauseTrack();
-                                if (r == false) {
-                                  ShowSnackBar.showSnackbarError(
-                                      context, "Failed to pause playback", 5);
+                      
+                    
+                      Image.network(
+                        currentSong.songImage ?? currentSong.albumImage!,
+                        height: 300,
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 35),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(currentSong.songName ?? 'Unknown Song Name',
+                                  style: TextStyle(
+                                      fontSize: 24,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 1,),
+                              SizedBox(height: 4),
+                              Text(currentSong.artistName!,
+                                  style:
+                                      TextStyle(fontSize: 16, color: Colors.white), overflow: TextOverflow.ellipsis, maxLines: 1,),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                              icon: Icon(
+                                  playbackState.paused!
+                                      ? Icons.play_arrow
+                                      : Icons.pause,
+                                  color: Colors.white,
+                                  size: 36),
+                              onPressed: () async {
+                                if (!inEvent) {
+                                  setState(() {
+                                    inEvent = true;
+                                  });
+                                  if (playbackState.paused! &&
+                                      trackProgress[0] >= clipValues[1].toInt()) {
+                                    setState(() {
+                                      playbackState.currentProgress = Duration(
+                                          milliseconds: clipValues[0].toInt());
+                                    });
+        
+                                    await _seek(seek: clipValues[0].toInt());
+                                    setState(() {
+                                      trackProgress[0] = clipValues[0];
+                                    });
+                                  } else if (playbackState.paused!) {
+                                    await _playSong(
+                                        position: trackProgress[0].toInt());
+                                  } else {
+                                    bool? r = await playBack.pauseTrack();
+                                    if (r == false) {
+                                      ShowSnackBar.showSnackbarError(
+                                          context, "Failed to pause playback", 5);
+                                    }
+                                  }
+                                  setState(() {
+                                    inEvent = false;
+                                  });
                                 }
+        
+                                // var x = await SpotifyService().getAvailableDevices();
+                                // print(x);
+                              }),
+                          IconButton(
+                              icon: Icon(Icons.refresh,
+                                  color: Colors.white, size: 36),
+                              onPressed: () async {
+                                if (!inEvent) {
+                                  setState(() {
+                                    inEvent = true;
+                                  });
+        
+                                  await _seek(seek: clipValues[0].toInt());
+        
+                                  setState(() {
+                                    trackProgress[0] = clipValues[0];
+                                    inEvent = false;
+                                  });
+                                }
+        
+                                // var x = await SpotifyService().getAvailableDevices();
+                                // print(x);
+                              }),
+                          IconButton(
+                            icon: Icon(Icons.save, color: Colors.green, size: 36),
+                            onPressed: () {
+                              _showSaveClipModal();
+                            },
+                          )
+                        ],
+                      ),
+                      SizedBox(height: 20),
+        
+                      // PROGRESS BAR
+                      MultiSlider(
+                          values: trackProgress,
+                          rangeColors: [
+                            Colors.white,
+                            Colors.white.withOpacity(0.4)
+                          ],
+                          trackbarBuilder: (value) => TrackbarOptions(
+                              color: Colors.black, isActive: true, size: 5.0),
+                          min: 0.0,
+                          max: currentSong.duration!.inMilliseconds.toDouble(),
+                          thumbBuilder: (value) => ThumbOptions(
+                                color: Colors.white,
+                                radius: 8.0,
+                              ),
+                          selectedIndicator: (value) => IndicatorOptions(
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.normal),
+                                // Customize the selected indicator options based on the value
+                                formatter: (v) => getTimeformat(v.toInt()),
+                                // Add other properties as needed
+                              ),
+                          indicator: (value) {
+                            return IndicatorOptions(
+                              style: TextStyle(
+                                fontWeight: FontWeight.normal,
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                              // Customize the indicator options based on the value
+                              formatter: (v) => getTimeformat(v.toInt()),
+        
+                              // Add other properties as needed
+                            );
+                          },
+                          onChanged: (updatedTrackProgress) async {
+                            if (!insideClipSlider) {
+                              if (updatedTrackProgress[0] >= clipValues[1]) {
+                                updatedTrackProgress[0] = clipValues[1];
+                              } else if (updatedTrackProgress[0] <= clipValues[0]) {
+                                updatedTrackProgress[0] = clipValues[0];
                               }
                               setState(() {
-                                inEvent = false;
+                                trackProgress = updatedTrackProgress;
                               });
                             }
-
-                            // var x = await SpotifyService().getAvailableDevices();
-                            // print(x);
-                          }),
-                      IconButton(
-                          icon: Icon(Icons.refresh,
-                              color: Colors.white, size: 36),
-                          onPressed: () async {
-                            if (!inEvent) {
+                          },
+                          onChangeStart: (value) {
+                            if (!insideClipSlider) {
                               setState(() {
+                                insidePlaybackSlider = true;
                                 inEvent = true;
                               });
-
-                              await _seek(seek: clipValues[0].toInt());
-
-                              setState(() {
-                                trackProgress[0] = clipValues[0];
-                                inEvent = false;
-                              });
                             }
-
-                            // var x = await SpotifyService().getAvailableDevices();
-                            // print(x);
+                          },
+                          onChangeEnd: (updatedTrackProgress) async {
+                            if (!insideClipSlider) {
+                              // if you seek past the end of the clip, set the progress to the end of the clip and pause the song
+                              if (updatedTrackProgress[0] >= clipValues[1]) {
+                                if (!playbackState.paused!) {
+                                  setState(() {
+                                    playbackState.paused = true;
+                                  });
+                                  await playBack.pauseTrack();
+                                }
+        
+                                setState(() {
+                                  playbackState.currentProgress = Duration(
+                                      milliseconds:
+                                          updatedTrackProgress[0].toInt());
+                                });
+                              }
+                              // if you seek before the start of the clip, set the progress to the start of the clip
+                              // else if (updatedTrackProgress[0] < clipValues[0]) {
+                              //   await _seek(
+                              //       seek: Duration(seconds: updatedTrackProgress[0].toInt())
+                              //           .inMilliseconds);
+                              else {
+                                setState(() {
+                                  playbackState.currentProgress = Duration(
+                                      milliseconds:
+                                          updatedTrackProgress[0].toInt());
+                                });
+                                if (!playbackState.paused!) {
+                                  await _seek(
+                                      seek: updatedTrackProgress[0].toInt());
+                                }
+                              }
+                            }
+                            setState(() {
+                              insidePlaybackSlider = false;
+                              inEvent = false;
+                            });
                           }),
-                      IconButton(
-                        icon: Icon(Icons.save, color: Colors.green, size: 36),
-                        onPressed: () {
-                          _showSaveClipModal();
+                      SizedBox(
+                        height: 20,
+                      ),
+        
+                      //CLIP SLIDER
+                      MultiSlider(
+                        values: clipValues,
+                        height: 25,
+                        rangeColors: [
+                          Colors.black,
+                          Color.fromARGB(255, 8, 104, 187),
+                          Colors.black
+                        ],
+                        trackbarBuilder: (value) => TrackbarOptions(
+                            color: Colors.black, isActive: true, size: 5.0),
+                        min: 0.0,
+                        max: currentSong.duration!.inMilliseconds.toDouble(),
+                        thumbBuilder: (value) {
+                          if (value.index == 0) {
+                            return ThumbOptions(
+                              color: Colors.white,
+                              radius: 8.0,
+                            );
+                          } else {
+                            return ThumbOptions(
+                              color: Colors.white,
+                              radius: 8.0,
+                            );
+                          }
                         },
-                      )
-                    ],
-                  ),
-                  SizedBox(height: 20),
-
-                  // PROGRESS BAR
-                  MultiSlider(
-                      values: trackProgress,
-                      rangeColors: [
-                        Colors.white,
-                        Colors.white.withOpacity(0.4)
-                      ],
-                      trackbarBuilder: (value) => TrackbarOptions(
-                          color: Colors.black, isActive: true, size: 5.0),
-                      min: 0.0,
-                      max: currentSong.duration!.inMilliseconds.toDouble(),
-                      thumbBuilder: (value) => ThumbOptions(
-                            color: Colors.white,
-                            radius: 8.0,
-                          ),
-                      selectedIndicator: (value) => IndicatorOptions(
+                        selectedIndicator: (value) {
+                          return IndicatorOptions(
                             style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 19,
                                 color: Colors.white,
                                 fontWeight: FontWeight.normal),
                             // Customize the selected indicator options based on the value
                             formatter: (v) => getTimeformat(v.toInt()),
                             // Add other properties as needed
-                          ),
-                      indicator: (value) {
-                        return IndicatorOptions(
-                          style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            fontSize: 16,
-                            color: Colors.white,
-                          ),
-                          // Customize the indicator options based on the value
-                          formatter: (v) => getTimeformat(v.toInt()),
-
-                          // Add other properties as needed
-                        );
-                      },
-                      onChanged: (updatedTrackProgress) async {
-                        if (!insideClipSlider) {
-                          if (updatedTrackProgress[0] >= clipValues[1]) {
-                            updatedTrackProgress[0] = clipValues[1];
-                          } else if (updatedTrackProgress[0] <= clipValues[0]) {
-                            updatedTrackProgress[0] = clipValues[0];
+                          );
+                        },
+                        indicator: (value) {
+                          return IndicatorOptions(
+                            style: TextStyle(
+                              fontWeight: FontWeight.normal,
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                            // Customize the indicator options based on the value
+                            formatter: (v) => getTimeformat(v.toInt()),
+        
+                            // Add other properties as needed
+                          );
+                        },
+                        onChanged: (updatedClipValues) async {
+                          if (!insidePlaybackSlider) {
+                            setState(() {
+                              clipValues = updatedClipValues;
+                            });
                           }
-                          setState(() {
-                            trackProgress = updatedTrackProgress;
-                          });
-                        }
-                      },
-                      onChangeStart: (value) {
-                        if (!insideClipSlider) {
-                          setState(() {
-                            insidePlaybackSlider = true;
-                            inEvent = true;
-                          });
-                        }
-                      },
-                      onChangeEnd: (updatedTrackProgress) async {
-                        if (!insideClipSlider) {
-                          // if you seek past the end of the clip, set the progress to the end of the clip and pause the song
-                          if (updatedTrackProgress[0] >= clipValues[1]) {
-                            if (!playbackState.paused!) {
+                        },
+                        onChangeStart: (value) {
+                          if (!inEvent && !insidePlaybackSlider) {
+                            setState(() {
+                              insideClipSlider = true;
+                              inEvent = true;
+                            });
+                          }
+                        },
+                        onChangeEnd: (value) async {
+                          if (!insidePlaybackSlider) {
+                            if (clipValues[0] > trackProgress[0]) {
+                              if (!playbackState.paused!) {
+                                await _seek(
+                                    seek: Duration(
+                                            milliseconds: clipValues[0].toInt())
+                                        .inMilliseconds);
+                              }
+        
                               setState(() {
+                                playbackState.currentProgress =
+                                    Duration(milliseconds: clipValues[0].toInt());
+                                trackProgress[0] = playbackState
+                                    .currentProgress!.inMilliseconds
+                                    .toDouble();
+                              });
+                            } else if (clipValues[1] < trackProgress[0]) {
+                              // await _seek(
+                              //   seek: Duration(seconds: clipValues[0].toInt())
+                              //       .inMilliseconds);
+                              setState(() {
+                                playbackState.currentProgress =
+                                    Duration(milliseconds: clipValues[1].toInt());
                                 playbackState.paused = true;
                               });
                               await playBack.pauseTrack();
-                            }
-
-                            setState(() {
-                              playbackState.currentProgress = Duration(
-                                  milliseconds:
-                                      updatedTrackProgress[0].toInt());
-                            });
-                          }
-                          // if you seek before the start of the clip, set the progress to the start of the clip
-                          // else if (updatedTrackProgress[0] < clipValues[0]) {
-                          //   await _seek(
-                          //       seek: Duration(seconds: updatedTrackProgress[0].toInt())
-                          //           .inMilliseconds);
-                          else {
-                            setState(() {
-                              playbackState.currentProgress = Duration(
-                                  milliseconds:
-                                      updatedTrackProgress[0].toInt());
-                            });
-                            if (!playbackState.paused!) {
-                              await _seek(
-                                  seek: updatedTrackProgress[0].toInt());
+                              setState(() {
+                                trackProgress[0] = clipValues[1];
+                              });
                             }
                           }
-                        }
-                        setState(() {
-                          insidePlaybackSlider = false;
-                          inEvent = false;
-                        });
-                      }),
-                  SizedBox(
-                    height: 20,
-                  ),
-
-                  //CLIP SLIDER
-                  MultiSlider(
-                    values: clipValues,
-                    height: 25,
-                    rangeColors: [
-                      Colors.black,
-                      Color.fromARGB(255, 8, 104, 187),
-                      Colors.black
+                          setState(() {
+                            inEvent = false;
+                            insideClipSlider = false;
+                          });
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 26, right: 26),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          //crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              getTimeformat(clipValues[0].toInt()),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              getTimeformat(clipValues[1].toInt()),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
                     ],
-                    trackbarBuilder: (value) => TrackbarOptions(
-                        color: Colors.black, isActive: true, size: 5.0),
-                    min: 0.0,
-                    max: currentSong.duration!.inMilliseconds.toDouble(),
-                    thumbBuilder: (value) {
-                      if (value.index == 0) {
-                        return ThumbOptions(
-                          color: Colors.white,
-                          radius: 8.0,
-                        );
-                      } else {
-                        return ThumbOptions(
-                          color: Colors.white,
-                          radius: 8.0,
-                        );
-                      }
-                    },
-                    selectedIndicator: (value) {
-                      return IndicatorOptions(
-                        style: TextStyle(
-                            fontSize: 19,
-                            color: Colors.white,
-                            fontWeight: FontWeight.normal),
-                        // Customize the selected indicator options based on the value
-                        formatter: (v) => getTimeformat(v.toInt()),
-                        // Add other properties as needed
-                      );
-                    },
-                    indicator: (value) {
-                      return IndicatorOptions(
-                        style: TextStyle(
-                          fontWeight: FontWeight.normal,
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                        // Customize the indicator options based on the value
-                        formatter: (v) => getTimeformat(v.toInt()),
-
-                        // Add other properties as needed
-                      );
-                    },
-                    onChanged: (updatedClipValues) async {
-                      if (!insidePlaybackSlider) {
-                        setState(() {
-                          clipValues = updatedClipValues;
-                        });
-                      }
-                    },
-                    onChangeStart: (value) {
-                      if (!inEvent && !insidePlaybackSlider) {
-                        setState(() {
-                          insideClipSlider = true;
-                          inEvent = true;
-                        });
-                      }
-                    },
-                    onChangeEnd: (value) async {
-                      if (!insidePlaybackSlider) {
-                        if (clipValues[0] > trackProgress[0]) {
-                          if (!playbackState.paused!) {
-                            await _seek(
-                                seek: Duration(
-                                        milliseconds: clipValues[0].toInt())
-                                    .inMilliseconds);
-                          }
-
-                          setState(() {
-                            playbackState.currentProgress =
-                                Duration(milliseconds: clipValues[0].toInt());
-                            trackProgress[0] = playbackState
-                                .currentProgress!.inMilliseconds
-                                .toDouble();
-                          });
-                        } else if (clipValues[1] < trackProgress[0]) {
-                          // await _seek(
-                          //   seek: Duration(seconds: clipValues[0].toInt())
-                          //       .inMilliseconds);
-                          setState(() {
-                            playbackState.currentProgress =
-                                Duration(milliseconds: clipValues[1].toInt());
-                            playbackState.paused = true;
-                          });
-                          await playBack.pauseTrack();
-                          setState(() {
-                            trackProgress[0] = clipValues[1];
-                          });
-                        }
-                      }
-                      setState(() {
-                        inEvent = false;
-                        insideClipSlider = false;
-                      });
-                    },
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 26, right: 26),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      //crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          getTimeformat(clipValues[0].toInt()),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          getTimeformat(clipValues[1].toInt()),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -599,6 +613,13 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
               context, jsonDecode(response.body)['error']['message'], 5);
         });
       }
+    }
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    if (mounted) {
+      super.setState(fn);
     }
   }
 }

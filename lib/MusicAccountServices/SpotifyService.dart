@@ -597,7 +597,7 @@ class SpotifyService {
       await refreshAccessToken();
       return await playTrack(trackURI, position: position);
     } else if (response.statusCode == 404) {
-      print('device is not active');
+      print(response.body);
     }
     return response;
   }

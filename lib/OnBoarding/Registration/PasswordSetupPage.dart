@@ -48,12 +48,12 @@ class _PasswordSetupPageState extends State<PasswordSetupPage> {
       await UserProfileFireStoreService().addNewUser(
           FirebaseAuth.instance.currentUser!, widget.username);
           
-      UserProfileService.setUser(
+      await UserProfileService.initNewUser(
           FirebaseAuth.instance.currentUser!.uid,
           FirebaseAuth.instance.currentUser!.displayName ?? '',
           FirebaseAuth.instance.currentUser!.email ?? '',
           true);
-
+       
       //Navigator.of(context).popUntil((route) => route.isFirst);
       GoRouter.of(context).goNamed('register/connectMusicServices');
     } on FirebaseAuthException catch (e) {
