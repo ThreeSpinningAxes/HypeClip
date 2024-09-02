@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_slider/flutter_multi_slider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/ErrorPages/GenericErrorPage.dart';
-import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Pages/ClipEditor/SaveClipModal.dart';
@@ -18,7 +16,6 @@ import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
 import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
-import 'package:palette_generator/palette_generator.dart';
 
 class ClipEditor extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
@@ -101,17 +98,15 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
               );
               error = true;
               initError = true;
+              return;
             });
           }
-        } else {
-          setState(() {
-            error = false;
-            initError = false;
-          });
         }
       }
 
       setState(() {
+        error = false;
+        initError = false;
         clipValues = [
           0,
           ref
@@ -140,7 +135,6 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
   @override
   void dispose() {
     super.dispose();
-    
   }
 
   @override
@@ -210,11 +204,14 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                       size: 28,
                     ),
                     onPressed: () async {
+                      if (inEvent) {
+                        return;
+                      } 
                       context.pop();
                       if (widget.showMiniPlayerOnExit == true) {
-                        ref.read(miniPlayerVisibilityProvider.notifier).state = true;
-                      }
-                      else {
+                        ref.read(miniPlayerVisibilityProvider.notifier).state =
+                            true;
+                      } else {
                         await ref.read(playbackProvider).pauseTrack();
                       }
                     },
@@ -227,8 +224,6 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      
-                    
                       Image.network(
                         currentSong.songImage ?? currentSong.albumImage!,
                         height: 300,
@@ -243,15 +238,23 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(currentSong.songName ?? 'Unknown Song Name',
-                                  style: TextStyle(
-                                      fontSize: 24,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 1,),
+                              Text(
+                                currentSong.songName ?? 'Unknown Song Name',
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
                               SizedBox(height: 4),
-                              Text(currentSong.artistName!,
-                                  style:
-                                      TextStyle(fontSize: 16, color: Colors.white), overflow: TextOverflow.ellipsis, maxLines: 1,),
+                              Text(
+                                currentSong.artistName!,
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.white),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
                             ],
                           ),
                         ),
@@ -273,12 +276,13 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                                     inEvent = true;
                                   });
                                   if (playbackState.paused! &&
-                                      trackProgress[0] >= clipValues[1].toInt()) {
+                                      trackProgress[0] >=
+                                          clipValues[1].toInt()) {
                                     setState(() {
                                       playbackState.currentProgress = Duration(
                                           milliseconds: clipValues[0].toInt());
                                     });
-        
+
                                     await _seek(seek: clipValues[0].toInt());
                                     setState(() {
                                       trackProgress[0] = clipValues[0];
@@ -289,15 +293,15 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                                   } else {
                                     bool? r = await playBack.pauseTrack();
                                     if (r == false) {
-                                      ShowSnackBar.showSnackbarError(
-                                          context, "Failed to pause playback", 5);
+                                      ShowSnackBar.showSnackbarError(context,
+                                          "Failed to pause playback", 5);
                                     }
                                   }
                                   setState(() {
                                     inEvent = false;
                                   });
                                 }
-        
+
                                 // var x = await SpotifyService().getAvailableDevices();
                                 // print(x);
                               }),
@@ -309,20 +313,21 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                                   setState(() {
                                     inEvent = true;
                                   });
-        
+
                                   await _seek(seek: clipValues[0].toInt());
-        
+
                                   setState(() {
                                     trackProgress[0] = clipValues[0];
                                     inEvent = false;
                                   });
                                 }
-        
+
                                 // var x = await SpotifyService().getAvailableDevices();
                                 // print(x);
                               }),
                           IconButton(
-                            icon: Icon(Icons.save, color: Colors.green, size: 36),
+                            icon:
+                                Icon(Icons.save, color: Colors.green, size: 36),
                             onPressed: () {
                               _showSaveClipModal();
                             },
@@ -330,7 +335,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                         ],
                       ),
                       SizedBox(height: 20),
-        
+
                       // PROGRESS BAR
                       MultiSlider(
                           values: trackProgress,
@@ -364,7 +369,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                               ),
                               // Customize the indicator options based on the value
                               formatter: (v) => getTimeformat(v.toInt()),
-        
+
                               // Add other properties as needed
                             );
                           },
@@ -372,7 +377,8 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                             if (!insideClipSlider) {
                               if (updatedTrackProgress[0] >= clipValues[1]) {
                                 updatedTrackProgress[0] = clipValues[1];
-                              } else if (updatedTrackProgress[0] <= clipValues[0]) {
+                              } else if (updatedTrackProgress[0] <=
+                                  clipValues[0]) {
                                 updatedTrackProgress[0] = clipValues[0];
                               }
                               setState(() {
@@ -398,7 +404,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                                   });
                                   await playBack.pauseTrack();
                                 }
-        
+
                                 setState(() {
                                   playbackState.currentProgress = Duration(
                                       milliseconds:
@@ -430,7 +436,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                       SizedBox(
                         height: 20,
                       ),
-        
+
                       //CLIP SLIDER
                       MultiSlider(
                         values: clipValues,
@@ -477,7 +483,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                             ),
                             // Customize the indicator options based on the value
                             formatter: (v) => getTimeformat(v.toInt()),
-        
+
                             // Add other properties as needed
                           );
                         },
@@ -505,10 +511,10 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                                             milliseconds: clipValues[0].toInt())
                                         .inMilliseconds);
                               }
-        
+
                               setState(() {
-                                playbackState.currentProgress =
-                                    Duration(milliseconds: clipValues[0].toInt());
+                                playbackState.currentProgress = Duration(
+                                    milliseconds: clipValues[0].toInt());
                                 trackProgress[0] = playbackState
                                     .currentProgress!.inMilliseconds
                                     .toDouble();
@@ -518,8 +524,8 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                               //   seek: Duration(seconds: clipValues[0].toInt())
                               //       .inMilliseconds);
                               setState(() {
-                                playbackState.currentProgress =
-                                    Duration(milliseconds: clipValues[1].toInt());
+                                playbackState.currentProgress = Duration(
+                                    milliseconds: clipValues[1].toInt());
                                 playbackState.paused = true;
                               });
                               await playBack.pauseTrack();

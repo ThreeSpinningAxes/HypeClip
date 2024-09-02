@@ -6,6 +6,7 @@ import 'package:http/http.dart';
 import 'package:hypeclip/Entities/ProgressTimer.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Entities/TrackClip.dart';
+import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
@@ -56,24 +57,34 @@ class PlaybackNotifier extends ChangeNotifier {
       analogousColor = Colors.grey[300]!;
     } else {
       HSLColor hslColor = HSLColor.fromColor(domColor);
-    // Adjust the hue to get an analogous color (e.g., +30 degrees)
-    double newHue = (hslColor.hue + 15) % 360;
-    analogousColor = hslColor.withHue(newHue).toColor();
+      // Adjust the hue to get an analogous color (e.g., +15 degrees)
+      double newHue = (hslColor.hue + 15) % 360;
+      analogousColor = hslColor.withHue(newHue).toColor();
     }
-   
+
+    // Convert to HSL and decrease lightness to make colors darker
+    HSLColor hslDomColor = HSLColor.fromColor(domColor).withLightness(
+        (HSLColor.fromColor(domColor).lightness * 0.7).clamp(0.0, 1.0));
+    HSLColor hslAnalogousColor = HSLColor.fromColor(analogousColor)
+        .withLightness((HSLColor.fromColor(analogousColor).lightness * 0.7)
+            .clamp(0.0, 1.0));
+
     RadialGradient radialGradient = RadialGradient(
       center: Alignment.center,
       radius: 1,
       colors: [
-
-        domColor,
-        analogousColor
+        hslDomColor.toColor(),
+        hslAnalogousColor.toColor(),
       ],
-      
-    
     );
     playbackState.domColorLinGradient = radialGradient;
     return radialGradient;
+  }
+
+  void setCurrentProgress({required Duration progress}) {
+    timer.setCurrentProgress(progress);
+    playbackState.currentProgress = progress;
+    notifyListeners();
   }
 
   void init(PlaybackState newPlaybackState) {
@@ -116,17 +127,17 @@ class PlaybackNotifier extends ChangeNotifier {
       }
       song = playbackState.currentSong!;
     }
-    
-    Response r =
-        await musicServiceHandler.playTrack(song.trackURI, position: playbackOffset);
+
+    Response r = await musicServiceHandler.playTrack(song.trackURI,
+        position: playbackOffset);
     if (r.statusCode == 200 || r.statusCode == 204) {
       playbackState.paused = false;
-      
+
       if (!timer.isActive()) {
         timer.start(seek: seek);
-      }
-      else {
-        timer.currentProgress = Duration(milliseconds: seek ?? timer.currentProgress.inMilliseconds);
+      } else {
+        timer.currentProgress = Duration(
+            milliseconds: seek ?? timer.currentProgress.inMilliseconds);
       }
     } else {
       playbackState.paused = true;
@@ -141,24 +152,22 @@ class PlaybackNotifier extends ChangeNotifier {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
       song = playbackState.currentTrackClip!.song;
       playbackOffset += playbackState.currentTrackClip!.clipPoints[0].toInt();
-    }
-    else {
+    } else {
       song = playbackState.currentSong!;
     }
     Response r;
     if (seek != null) {
-       r = await musicServiceHandler.playTrack(song.trackURI,
-        position: playbackOffset);
-    }
-    else {
+      r = await musicServiceHandler.playTrack(song.trackURI,
+          position: playbackOffset);
+    } else {
       int position = playbackState.currentProgress!.inMilliseconds;
       if (playbackState.inTrackClipPlaybackMode ?? false) {
         position += playbackOffset;
       }
       r = await musicServiceHandler.playTrack(song.trackURI,
-        position: position);
+          position: position);
     }
-    
+
     if (r.statusCode == 200 || r.statusCode == 204) {
       playbackState.paused = false;
       timer.currentProgress = Duration(milliseconds: seek!);
@@ -196,12 +205,14 @@ class PlaybackNotifier extends ChangeNotifier {
         return Response('No track clips in queue', 500);
       }
       newTrack = playbackState.trackClipQueue![index].song;
-      trackStartPosition = playbackState.trackClipQueue![index].clipPoints[0].toInt();
+      trackStartPosition =
+          playbackState.trackClipQueue![index].clipPoints[0].toInt();
       trackLength = (playbackState.trackClipQueue![index].clipPoints[1] -
               playbackState.trackClipQueue![index].clipPoints[0])
           .toInt();
     } else {
-      if (playbackState.trackQueue == null || playbackState.trackQueue!.isEmpty) {
+      if (playbackState.trackQueue == null ||
+          playbackState.trackQueue!.isEmpty) {
         return Response('No songs in queue', 500);
       }
       newTrack = playbackState.trackQueue![index];
@@ -218,7 +229,6 @@ class PlaybackNotifier extends ChangeNotifier {
 
       if (playbackState.inTrackClipPlaybackMode ?? false) {
         playbackState.currentTrackClip = playbackState.trackClipQueue![index];
-        
       }
       timer.resetForNewTrack(Duration(milliseconds: trackLength));
       timer.start();
@@ -226,8 +236,6 @@ class PlaybackNotifier extends ChangeNotifier {
     }
     return r;
   }
-
-  
 
   Future<Response> playNextTrack() async {
     int trackQueueLength = playbackState.inTrackClipPlaybackMode!
@@ -246,7 +254,7 @@ class PlaybackNotifier extends ChangeNotifier {
     int trackQueueLength = playbackState.inTrackClipPlaybackMode!
         ? playbackState.trackClipQueue!.length
         : playbackState.trackQueue!.length;
-     if (trackQueueLength == 1) {
+    if (trackQueueLength == 1) {
       return await playCurrentTrack(0);
     }
     if (playbackState.currentTrackIndex == 0) {
@@ -256,10 +264,10 @@ class PlaybackNotifier extends ChangeNotifier {
   }
 
   void shuffleQueue() {
-    
     playbackState.isShuffleMode = true;
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      playbackState.originalTrackQueue = List.from(playbackState.trackClipQueue!);
+      playbackState.originalTrackQueue =
+          List.from(playbackState.trackClipQueue!);
       playbackState.trackClipQueue?.shuffle();
     } else {
       playbackState.originalTrackQueue = List.from(playbackState.trackQueue!);
@@ -269,10 +277,10 @@ class PlaybackNotifier extends ChangeNotifier {
   }
 
   void undueShuffle() {
-
     playbackState.isShuffleMode = false;
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      playbackState.trackClipQueue = List.from(playbackState.originalTrackQueue!);
+      playbackState.trackClipQueue =
+          List.from(playbackState.originalTrackQueue!);
     } else {
       playbackState.trackQueue = List.from(playbackState.originalTrackQueue!);
     }
@@ -286,10 +294,30 @@ class PlaybackNotifier extends ChangeNotifier {
     }
   }
 
-  void addTrackCLipNextInQueue(TrackClip track) {
+  void addTrackClipNextInQueue(TrackClip track) {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      playbackState.trackClipQueue!.insert(
-          playbackState.currentTrackIndex! + 1, track);
+      playbackState.trackClipQueue!
+          .insert(playbackState.currentTrackIndex! + 1, track);
+      notifyListeners();
+    }
+  }
+
+  void addTrackClipPlaylistToQueue(TrackClipPlaylist playlist) {
+    if (playbackState.inTrackClipPlaybackMode ?? false) {
+      playbackState.trackClipQueue!.addAll(playlist.clips);
+      if (playbackState.isShuffleMode) {
+        playbackState.originalTrackQueue!.addAll(playlist.clips);
+      }
+      notifyListeners();
+    }
+  }
+  
+  void addTrackClipPlaylistNextInQueue(TrackClipPlaylist playlist) {
+    if (playbackState.inTrackClipPlaybackMode ?? false) {
+      playbackState.trackClipQueue!.insertAll(playbackState.currentTrackIndex! + 1, playlist.clips);
+      if (playbackState.isShuffleMode) {
+        playbackState.originalTrackQueue!.insertAll(playbackState.currentTrackIndex! + 1, playlist.clips);
+      }
       notifyListeners();
     }
   }
@@ -299,15 +327,64 @@ class PlaybackNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setProgress(int progress) {
+    timer.currentProgress = Duration(milliseconds: progress);
+    playbackState.currentProgress = Duration(milliseconds: progress);
+    notifyListeners();
+  }
+
   void setShuffleMode(bool shuffle) {
     playbackState.isShuffleMode = shuffle;
     notifyListeners();
   }
+
+
 
   @override
   void dispose() {
     // TODO: implement dispose
     this.timer.dispose();
     super.dispose();
+  }
+
+  void updatePlaybackState({
+    Duration? currentProgress,
+    int? currentSongIndex,
+    List<Song>? songs,
+    bool? paused,
+    MusicLibraryService? musicLibraryService,
+    Song? currentSong,
+    List<TrackClip>? trackClips,
+    bool? inTrackClipPlaybackMode,
+    bool? inSongPlaybackMode,
+    TrackClipPlaylist? trackClipPlaylist,
+    TrackClip? currentTrackClip,
+    List<TrackClip>? trackClipQueue,
+    RadialGradient? domColorLinGradient,
+    Duration? startPosition,
+    bool? isShuffleMode, 
+    bool? isRepeatMode,
+    List<Object>? originalTrackQueue,
+  }) {
+    playbackState = playbackState.copyWith(
+      currentProgress: currentProgress,
+      currentSongIndex: currentSongIndex,
+      songs: songs,
+      paused: paused,
+      musicLibraryService: musicLibraryService,
+      currentSong: currentSong,
+      trackClips: trackClips,
+      inTrackClipPlaybackMode: inTrackClipPlaybackMode,
+      inSongPlaybackMode: inSongPlaybackMode,
+      trackClipPlaylist: trackClipPlaylist,
+      currentTrackClip: currentTrackClip,
+      trackClipQueue: trackClipQueue,
+      domColorLinGradient: domColorLinGradient,
+      startPosition: startPosition,
+      isShuffleMode: isShuffleMode,
+      isRepeatMode: isRepeatMode,
+      originalTrackQueue: originalTrackQueue,
+    );
+    notifyListeners();
   }
 }

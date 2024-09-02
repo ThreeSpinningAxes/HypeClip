@@ -20,19 +20,12 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
   Future<List<Playlist>>? playlists;
   List<Playlist> filteredPlaylists = [];
   TextEditingController search = TextEditingController();
-  ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     musicServiceHandler = MusicServiceHandler(service: widget.service);
     playlists = loadPlaylists();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
-        loadPlaylists();
-      }
-    });
     search.addListener(() {
       updateSearchQuery(search.text);
     });
@@ -42,8 +35,7 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
     int offset = 0;
     List<Playlist> playlists = [];
     while (true) {
-      List<Playlist>? fetchedPlaylists =
-          await musicServiceHandler.getUserPlaylists(50, offset);
+      List<Playlist>? fetchedPlaylists = await musicServiceHandler.getUserPlaylists(50, offset);
       if (fetchedPlaylists != null && fetchedPlaylists.isNotEmpty) {
         playlists.addAll(fetchedPlaylists);
         filteredPlaylists.addAll(fetchedPlaylists);
@@ -152,44 +144,51 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
                     SizedBox(height: 20),
                     // Now, ListView.builder to display the fetched data
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: filteredPlaylists.length,
-                        itemBuilder: (context, index) {
-                          // var song = filteredSongs[index]['track'];
-
-                          Playlist playlist = filteredPlaylists[index];
-                          //var artistImage = song['artists'][0]['images'][0]['url'];
-
-                          return ListTile(
-                            
-                             leading: playlist.imageUrl != null
-                                ? FadeInImage.assetNetwork(
-                                    placeholder:
-                                        'assets/loading_placeholder.gif', // Path to your placeholder image
-                                    image: playlist.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    width: 50.0, // Adjust the width as needed
-                                    height: 50.0, // Adjust the height as needed
-                                  )
-                                : Icon(Icons.music_note, color: Colors.white),
-
-                            onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) =>
-                                      TrackList(playlist: playlist)));
-                            },
-                            title: Text(playlist.name,
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors
-                                        .white)), // Adjust according to your data structure
-                            subtitle: Text(playlist.ownerName ?? 'Unknown',
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                style: TextStyle(
-                                    fontSize: 12, color: Colors.white)),
-                          );
-                        },
+                      child: Container(
+                        height: 400,
+                        child: ListView.builder(
+                          itemCount: filteredPlaylists.length,
+                          itemBuilder: (context, index) {
+                            // var song = filteredSongs[index]['track'];
+                        
+                            Playlist playlist = filteredPlaylists[index];
+                            //var artistImage = song['artists'][0]['images'][0]['url'];
+                        
+                            return ListTile(
+                              
+                               leading: playlist.imageUrl != null
+                                  ? FadeInImage.assetNetwork(
+                                      placeholder:
+                                          'assets/loading_placeholder.gif', // Path to your placeholder image
+                                      image: playlist.imageUrl!,
+                                      fit: BoxFit.cover,
+                                      width: 50.0, // Adjust the width as needed
+                                      height: 50.0, // Adjust the height as needed
+                                    )
+                                  : Container(
+                                    width: 50,
+                                    height: 50,
+                                    child: Icon(Icons.music_note, color: Colors.white),
+                                    ),
+                        
+                              onTap: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) =>
+                                        TrackList(playlist: playlist)));
+                              },
+                              title: Text(playlist.name,
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors
+                                          .white)), // Adjust according to your data structure
+                              subtitle: Text(playlist.ownerName ?? 'Unknown',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.white)),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ],

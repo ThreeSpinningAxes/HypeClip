@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class Trackui {
   static Widget buildTrackCard(BuildContext context, {required String trackName,
-      required String artistName, required String albumImageURL}) {
+      required String artistName, String? albumImageURL}) {
     return Card(
       color: Colors.black,
       child: Column(
@@ -13,11 +13,19 @@ class Trackui {
               // Album Image
               Padding(
                 padding: const EdgeInsets.only(left: 10.0),
-                child: Image.network(
+                child: albumImageURL != null ? Image.network(
                   albumImageURL,
                   width: 40.0,
                   height: 40.0,
                   fit: BoxFit.cover,
+                ) : Container(
+                  width: 40.0,
+                  height: 40.0,
+                  color: Colors.grey,
+                  child: Icon(
+                    Icons.music_note,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               SizedBox(width: 20.0),

@@ -23,6 +23,11 @@ class ProgressTimer extends ChangeNotifier  {
     this.playbackState = playbackState;
   }
 
+  void setCurrentProgress(Duration currentProgress) {
+    this.currentProgress = currentProgress;
+    notifyListeners();
+  }
+
   void start({int? seek}) {
     if (seek != null) {
       currentProgress = Duration(milliseconds: seek);

@@ -220,7 +220,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView> {
                     ],
                   ),
                   ProgressBar(
-                    progress: playbackState.currentProgress!,
+                    progress: ref.read(playbackProvider).playbackState.currentProgress!,
                     total: trackLength,
                     onSeek: (duration) async {
                       if (!insideEvenHandler) {
@@ -254,7 +254,6 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView> {
     if (response.statusCode != 204 && response.statusCode != 200) {
       if (mounted) {
         setState(() {
-          //error
         });
       }
     }

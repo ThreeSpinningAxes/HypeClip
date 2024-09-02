@@ -21,7 +21,7 @@ class UserProfile {
 
   Map<String, TrackClipPlaylist> playlists = {
     TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY: TrackClipPlaylist(
-        playlistName: TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY,
+        playlistName: "Saved Clips",
         clips: <TrackClip>[]),
   };
 

@@ -30,7 +30,7 @@ class _LibraryState extends ConsumerState<Library> {
   }
 
   Widget _buildLibraryUI() {
-    return Column(
+    return ListView(
       
       children: [
 
@@ -58,7 +58,7 @@ class _LibraryState extends ConsumerState<Library> {
               style: TextStyle(fontSize: 14, color: Colors.white)),
           onTap: () {
             // Add your action for Playlists here
-            context.pushNamed('savedClips');
+            context.pushNamed('library/savedClips');
           },
         ),
         SizedBox(height: 20),
@@ -75,7 +75,7 @@ class _LibraryState extends ConsumerState<Library> {
               'Your saved clip playlists',
               style: TextStyle(fontSize: 14, color: Colors.white)),
           onTap: () {
-            context.pushNamed('explore/connectedAccounts/browseMusicPlatform/userPlaylists');
+            context.pushNamed('library/clipPlaylists');
           },
         ),
         SizedBox(height: 20),

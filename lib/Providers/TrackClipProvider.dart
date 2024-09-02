@@ -10,18 +10,18 @@ final trackClipProvider = StateNotifierProvider<TrackClipNotifier, Map<String, T
 
 class TrackClipNotifier extends StateNotifier<Map<String, TrackClipPlaylist>> {
   TrackClipNotifier() : super(<String, TrackClipPlaylist>{}) {
-    _loadClips();
+    updateClips();
   }
 
-void _loadClips() {
+void updateClips() {
     state = Map<String, TrackClipPlaylist>.from(UserProfileService.getAllTrackClipPlaylists());
   }
 
-Future<void> addClipToPlaylist({String? playlistName, required TrackClip trackClip}) async {
+Future<void> addClipToPlaylist({String? playlistName, required TrackClip trackClip, bool? save}) async {
   playlistName ??= TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY;
     if (state.containsKey(playlistName)) {
-      await UserProfileService.saveNewTrackClip(trackClip: trackClip, playlistName: playlistName);
-      _loadClips();
+      await UserProfileService.saveNewTrackClip(trackClip: trackClip, playlistName: playlistName, save: save);
+      updateClips();
     } 
   }
 
@@ -29,10 +29,20 @@ Future<void> addClipToPlaylist({String? playlistName, required TrackClip trackCl
     playlistName ??= TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY;
     if (state.containsKey(playlistName)) {
       bool success = await UserProfileService.deleteTrackClipFromPlaylist(playlistName, trackClip);
-      _loadClips();
+      updateClips();
       return success;
     } 
     return false; 
+  }
+
+  Future<void> addNewPlaylist({required TrackClipPlaylist playlist}) async {
+    await UserProfileService.addNewTrackClipPlaylist(playlist: playlist);
+    updateClips();
+  }
+
+  Future<void> deletePlaylist({required String playlistName, bool? keepClips}) async {
+    await UserProfileService.deletePlaylist(playlist: playlistName, keepClips: keepClips);
+    updateClips();
   }
   
 

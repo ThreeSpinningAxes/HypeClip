@@ -11,6 +11,7 @@ import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Widgets/SaveTrackClipToPlaylistsDialog.dart';
 import 'package:hypeclip/Widgets/TrackUI.dart';
 import 'package:spotify_sdk/models/track.dart';
 
@@ -157,7 +158,8 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
                                   isRepeatMode: false,
                                   trackClipQueue:
                                       trackClipPlaylists[playlistName]!.clips,
-                                  originalTrackQueue:  trackClipPlaylists[playlistName]!.clips));
+                                  originalTrackQueue:
+                                      trackClipPlaylists[playlistName]!.clips));
 
                               ref
                                   .watch(miniPlayerVisibilityProvider.notifier)
@@ -166,7 +168,8 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
                             },
                             trailing: IconButton(
                               onPressed: () {
-                                showTrackOptions(clip);
+                                showTrackOptions(
+                                    trackClipPlaylists[playlistName]!, clip);
                               },
                               icon: Icon(
                                 Icons.more_horiz,
@@ -185,79 +188,130 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
     );
   }
 
-  void showTrackOptions(
-      TrackClip clip) {
+  void showTrackOptions(TrackClipPlaylist playlist, TrackClip clip) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      isDismissible: true,
       backgroundColor: Colors.transparent,
       elevation: 10,
       builder: (BuildContext context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.25,
-          maxChildSize: 0.5,
-          builder: (BuildContext context, ScrollController scrollController) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16.0),
-                  topRight: Radius.circular(16.0),
-                ),
-              ),
-              child: ListView(
-                controller: scrollController,
-                children: [
-                  Container(
-                    height: 70,
-                    child: Trackui.buildTrackCard(context,
-                        trackName: clip.clipName,
-                        artistName: clip.song.artistName ?? 'Unknown Artist',
-                        albumImageURL: clip.song.albumImage ?? ''),
-                    ),
-                    
-                  if (clip.clipDescription != null && clip.clipDescription!.trim().isNotEmpty)
-                  ListTile(
-                    
-                    title: Text("Description", style: TextStyle(color:Colors.white, fontSize: 14, fontWeight: FontWeight.bold),),
-                    subtitle:  Text(clip.clipDescription!, style: TextStyle(color: Colors.white, fontSize: 14),),
-                  ),
-                  
-
-                  ListTile(
-                    leading: Icon(Icons.queue_music_outlined, color: Colors.white),
-                    title: Text('Add to queue', style: TextStyle(color: Colors.white, fontSize: 14)),
-                    onTap: () {
-                      Navigator.pop(context);
-                      ref.read(playbackProvider).addTrackClipToQueue(clip);
-                      ShowSnackBar.showSnackbar(context, message: 'Added to queue', seconds: 3);
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.queue_play_next, color: Colors.white),
-                    title: Text('Play next', style: TextStyle(color: Colors.white, fontSize: 14)),
-                    onTap: () {
-                      Navigator.pop(context);
-                      ref.read(playbackProvider).addTrackCLipNextInQueue(clip);
-                      ShowSnackBar.showSnackbar(context, message: 'Added in queue to play next', seconds: 3);
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.delete_outline, color: Colors.white,),
-                    title: Text('Delete clip', style: TextStyle(color: Colors.white, fontSize: 14)),
-                    onTap: () async {
-                      Navigator.pop(context);
-                     await ref.read(trackClipProvider.notifier).removeClipFromPlaylist(
-                          playlistName: playlistName, trackClip: clip);
-                      ShowSnackBar.showSnackbar(context, message: 'Deleted clip', seconds: 3);
-                    },
-                  ),
-                  // Add more options here
-                ],
-              ),
-            );
+        return GestureDetector(
+          onTap: () {
+            Navigator.of(context).pop();
           },
+          child: Container(
+            color: Colors.transparent,
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.5,
+              minChildSize: 0.3,
+              maxChildSize: 0.5,
+              builder:
+                  (BuildContext context, ScrollController scrollController) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(16.0),
+                      topRight: Radius.circular(16.0),
+                    ),
+                  ),
+                  child: ListView(
+                    controller: scrollController,
+                    children: [
+                      Container(
+                        height: 70,
+                        child: Trackui.buildTrackCard(context,
+                            trackName: clip.clipName,
+                            artistName:
+                                clip.song.artistName ?? 'Unknown Artist',
+                            albumImageURL: clip.song.albumImage ?? ''),
+                      ),
+
+                      if (clip.clipDescription != null &&
+                          clip.clipDescription!.trim().isNotEmpty)
+                        ListTile(
+                          title: Text(
+                            "Description",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            clip.clipDescription!,
+                            style: TextStyle(color: Colors.white, fontSize: 14),
+                          ),
+                        ),
+
+                      ListTile(
+                        leading: Icon(Icons.playlist_add, color: Colors.white),
+                        title: Text('Add to playlist',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 14)),
+                        onTap: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  SaveTrackClipToPlaylistsDialog(
+                                      clip, playlist));
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(Icons.queue_music_outlined,
+                            color: Colors.white),
+                        title: Text('Add to queue',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 14)),
+                        onTap: () {
+                          Navigator.pop(context);
+                          ref.read(playbackProvider).addTrackClipToQueue(clip);
+                          ShowSnackBar.showSnackbar(context,
+                              message: 'Added to queue', seconds: 3);
+                        },
+                      ),
+                      ListTile(
+                        leading:
+                            Icon(Icons.queue_play_next, color: Colors.white),
+                        title: Text('Play next',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 14)),
+                        onTap: () {
+                          Navigator.pop(context);
+                          ref
+                              .read(playbackProvider)
+                              .addTrackClipNextInQueue(clip);
+                          ShowSnackBar.showSnackbar(context,
+                              message: 'Added in queue to play next',
+                              seconds: 3);
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          Icons.delete_outline,
+                          color: Colors.white,
+                        ),
+                        title: Text('Delete clip',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 14)),
+                        onTap: () async {
+                          Navigator.pop(context);
+                          await ref
+                              .read(trackClipProvider.notifier)
+                              .removeClipFromPlaylist(
+                                  playlistName: playlistName, trackClip: clip);
+                          ShowSnackBar.showSnackbar(context,
+                              message: 'Deleted clip', seconds: 3);
+                        },
+                      ),
+
+                      // Add more options here
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
         );
       },
     );

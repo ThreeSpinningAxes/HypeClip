@@ -39,7 +39,13 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
     super.initState();
     musicServiceHandler = MusicServiceHandler(service: widget.service);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _isLoading = true;
+      });
       _asyncInit();
+      setState(() {
+        _isLoading = false;
+      });
     });
   }
 
@@ -48,70 +54,57 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       _isLoading = true;
     });
     await _asyncInit();
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   _asyncInit() async {
     Response r = await musicServiceHandler.isStreaingServiceAppOpen();
     if (r.statusCode != 200 && r.statusCode != 204) {
-      if (mounted) {
-        setState(() {
-          // ShowSnackBar.showSnackbarError(
-          //     context,
-          //     "Make sure the ${widget.service.name.toCapitalized()} app is running on your device and is active",
-          //     5);
-          print(r.statusCode);
-          errorPage = GenericErrorPage(
-            errorHeader: "Error with ${widget.service.name.toCapitalized()}",
+      errorPage = GenericErrorPage(
+        errorHeader: "Error with ${widget.service.name.toCapitalized()}",
+        errorDescription: jsonDecode(r.body)['error']['message'],
+        buttonText: "Retry",
+        buttonAction: _refresh,
+        padding: EdgeInsets.all(20),
+      );
+      setState(() {
+        _isLoading = false;
+        error = true;
+        initError = true;
+      });
+      return;
+    }
+    PlaybackState playbackState = ref.read(playbackProvider).playbackState;
+
+    if (playbackState.domColorLinGradient == null) {
+      ref.read(playbackProvider).setImagePalette();
+    }
+
+    if ((playbackState.currentProgress == null ||
+        playbackState.currentProgress!.inMilliseconds ==
+            Duration.zero.inMilliseconds)) {
+      Response? r = await ref.watch(playbackProvider).playCurrentTrack(0);
+      if (r.statusCode != 200 && r.statusCode != 204) {
+        errorPage = GenericErrorPage(
+            errorHeader:
+                "Failed to play track ${playbackState.currentSong!.songName}",
             errorDescription: jsonDecode(r.body)['error']['message'],
             buttonText: "Retry",
             buttonAction: _refresh,
-            padding: EdgeInsets.all(20),
-          );
-          _isLoading = false;
+            padding: EdgeInsets.all(20));
+
+        setState(() {
           error = true;
           initError = true;
         });
+        return;
       }
-    } else {
-      PlaybackState playbackState = ref.read(playbackProvider).playbackState;
-      if (playbackState.domColorLinGradient == null) {
-        ref.read(playbackProvider).setImagePalette();
-      }
-      if ((playbackState.currentProgress == null ||
-          playbackState.currentProgress!.inMilliseconds ==
-              Duration.zero.inMilliseconds)) {
-        Response? r = await ref.watch(playbackProvider).playCurrentTrack(0);
-        if (r.statusCode != 200 && r.statusCode != 204) {
-          if (mounted) {
-            setState(() {
-              // ShowSnackBar.showSnackbarError(
-              //     context, jsonDecode(r.body)['error']['message'], 5);
-              errorPage = GenericErrorPage(
-                  errorHeader:
-                      "Failed to play track ${playbackState.currentSong!.songName}",
-                  errorDescription: jsonDecode(r.body)['error']['message'],
-                  buttonText: "Retry",
-                  buttonAction: _refresh,
-                  padding: EdgeInsets.all(20));
-              error = true;
-              initError = true;
-            });
-          }
-        } else {
-          if (mounted) {
-            setState(() {
-              error = false;
-              initError = false;
-            });
-          }
-        }
-      }
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        error = false;
+        initError = false;
+      });
     }
   }
 
@@ -192,6 +185,9 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                       size: 28,
                     ),
                     onPressed: () {
+                      if (insideEvenHandler) {
+                        return;
+                      } 
                       context.pop();
                       if (!error) {
                         ref.read(miniPlayerVisibilityProvider.notifier).state =
@@ -246,6 +242,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
+                          
                           IconButton(
                             icon: Icon(Icons.repeat),
                             color: playbackState.isRepeatMode
@@ -316,7 +313,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                                   setState(() {
                                     insideEvenHandler = true;
                                   });
-                                  
+
                                   if (!playbackState.isShuffleMode) {
                                     playBack.shuffleQueue();
                                   } else {
@@ -380,6 +377,15 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                           },
                         ),
                       ),
+                      if (playbackState.inTrackClipPlaybackMode!)
+                            IconButton(
+                              icon: Icon(Icons.refresh, size: 36,),
+                              color: Colors.white,
+                             
+                              onPressed: () async {
+                                await _seek(seek: 0);
+                              },
+                            ),
                     ],
                   ),
                 ),

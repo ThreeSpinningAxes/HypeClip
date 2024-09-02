@@ -33,7 +33,6 @@ class _TrackListState extends ConsumerState<TrackList>
   Future<List<Song>>? trackList;
   List<Song> filteredSongs = [];
   TextEditingController search = TextEditingController();
-  ScrollController _scrollController = ScrollController();
   Map<String, int>? originalTrackIndexFromPlaylist;
 
   @override
@@ -41,12 +40,7 @@ class _TrackListState extends ConsumerState<TrackList>
     super.initState();
     musicServiceHandler = MusicServiceHandler(service: widget.service);
     trackList = loadSongs();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
-        loadSongs();
-      }
-    });
+
     search.addListener(() {
       updateSearchQuery(search.text);
     });
@@ -177,7 +171,7 @@ class _TrackListState extends ConsumerState<TrackList>
 
               Widget? leading; // Assign a default value
               if (widget.playlist != null) {
-                leading = widget.playlist!.imageUrl != null ||
+                leading = widget.playlist!.imageUrl != null &&
                         widget.playlist!.imageUrl!.isNotEmpty
                     ? Image(image: NetworkImage(widget.playlist!.imageUrl!))
                     : Icon(Icons.music_note, color: Colors.white);
@@ -291,8 +285,7 @@ class _TrackListState extends ConsumerState<TrackList>
                                     currentProgress: Duration.zero,
                                     paused: true,
                                     currentTrackIndex:
-                                        originalTrackIndexFromPlaylist?[song.trackURI] ??
-                                            0,
+                                        originalTrackIndexFromPlaylist?[song.trackURI] ?? 0,
                                     trackQueue: songs,
                                     songs: songs,
                                     musicLibraryService: widget.service,

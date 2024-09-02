@@ -7,7 +7,7 @@ class TrackClipPlaylist {
 
   static final Uuid _uuid = Uuid();
 
-  static const String SAVED_CLIPS_PLAYLIST_KEY = 'savedTrackClips';
+  static const String SAVED_CLIPS_PLAYLIST_KEY = 'Saved Clips';
 
   String playlistID;
 

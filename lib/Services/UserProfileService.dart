@@ -44,6 +44,10 @@ class UserProfileService {
     await UserProfileService.loadUserTrackClipPlaylistsFromPreferences();
   }
 
+  static bool isLoggedIn() {
+    return userProfile.isLoggedIn;
+  } 
+
   static Future<void> initNewUser(
       String id, String username, String email, bool isLoggedIn) async {
     setUser(id, username, email, isLoggedIn);
@@ -200,15 +204,20 @@ class UserProfileService {
   }
 
   static Future<void> saveNewTrackClip(
-      {String? playlistName, required TrackClip trackClip}) async {
+      {String? playlistName, required TrackClip trackClip, bool? save}) async {
     if (playlistName == null) {
       userProfile.playlists[TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY]!.clips
           .add(trackClip);
     } else {
       userProfile.playlists[playlistName]!.clips.add(trackClip);
     }
-    await saveUserTrackClipPlaylistToPreferencs();
+    if (save ?? true) {
+      await saveUserTrackClipPlaylistToPreferencs();
+    }
+   
   }
+
+
 
 // OPTIMIZE SO THAT YOU DONT HAVE TO REWRITE THE ENTIRE PLAYLIST TO PREFERENCES EVERY UPDATE. USE ID OF PLAYLISTS
   static Future<void> saveUserTrackClipPlaylistToPreferencs() async {
@@ -262,4 +271,31 @@ class UserProfileService {
     }
     return false;
   }
+
+  static Future<void> addNewTrackClipPlaylist({required TrackClipPlaylist playlist, bool? save}) async {
+      userProfile.playlists[playlist.playlistName] = playlist;
+      if (save ?? true) {
+        await saveUserTrackClipPlaylistToPreferencs();
+      }
+      
+  }
+
+  static Future<void> addTrackClipToMultiplePlaylists(TrackClip clip, List<TrackClipPlaylist> playlists) async {
+      for (TrackClipPlaylist playlist in playlists) {
+        userProfile.playlists[playlist.playlistName]!.clips.add(clip);
+      }
+      await saveUserTrackClipPlaylistToPreferencs();
+
+  }
+
+  static Future<void> deletePlaylist({required String playlist, bool? keepClips}) async {
+      if (keepClips ?? false) {
+        userProfile.playlists[TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY]!.clips.addAll(userProfile.playlists[playlist]!.clips);
+      } 
+      userProfile.playlists.remove(playlist);
+      await saveUserTrackClipPlaylistToPreferencs();
+
+  }
+
+
 }

@@ -314,7 +314,7 @@ class SpotifyService {
                 name: item['name'],
                 ownerName: item['owner']['display_name'] ?? 'Unknown',
                 imageUrl:
-                    item['images'].isNotEmpty ? item['images'][0]['url'] : null,
+                    item['images'] != null && item['images'].isNotEmpty ? item['images'][0]['url'] : null,
                 totalTracks: item['tracks']['total'],
               ))
           .toList();
