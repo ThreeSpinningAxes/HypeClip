@@ -13,7 +13,8 @@ import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
-import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Providers/TrackClipProvider.dart';
+import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
 
 class SongPlayback extends ConsumerStatefulWidget {
@@ -41,10 +42,14 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         _isLoading = true;
+        insideEvenHandler = true;
       });
-      _asyncInit();
+      _asyncInit().then((value) {
+        setState(() {});
+      });
       setState(() {
         _isLoading = false;
+        insideEvenHandler = false;
       });
     });
   }
@@ -52,14 +57,17 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
   void _refresh() async {
     setState(() {
       _isLoading = true;
+      insideEvenHandler = true;
     });
     await _asyncInit();
     setState(() {
       _isLoading = false;
+      insideEvenHandler = false;
     });
   }
 
   _asyncInit() async {
+    insideEvenHandler = true;
     Response r = await musicServiceHandler.isStreaingServiceAppOpen();
     if (r.statusCode != 200 && r.statusCode != 204) {
       errorPage = GenericErrorPage(
@@ -151,14 +159,20 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       trackDuration = currentSong.duration!.inMilliseconds;
     }
 
-    if (playbackState.isRepeatMode && !playbackState.paused!) {
+    if (!playbackState.isRepeatMode &&
+        !playbackState.paused! &&
+        !insideEvenHandler) {
+      if (playbackState.currentProgress!.inMilliseconds >= trackDuration) {
+        _playNextSong();
+      }
+    } else if (playbackState.isRepeatMode && !playbackState.paused!) {
       if (playbackState.currentProgress!.inMilliseconds >= trackDuration) {
         setState(() {
           playbackState.currentProgress = Duration.zero;
           playBack.timer.currentProgress = Duration.zero;
           playbackState.paused = false;
-          _seek(seek: 0);
         });
+        _seek(seek: 0);
       }
     }
 
@@ -187,7 +201,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                     onPressed: () {
                       if (insideEvenHandler) {
                         return;
-                      } 
+                      }
                       context.pop();
                       if (!error) {
                         ref.read(miniPlayerVisibilityProvider.notifier).state =
@@ -242,7 +256,6 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          
                           IconButton(
                             icon: Icon(Icons.repeat),
                             color: playbackState.isRepeatMode
@@ -262,12 +275,21 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                                 IconButton(
                                     icon: Icon(Icons.skip_previous,
                                         color: Colors.white),
+                                         
                                     onPressed: () async {
                                       if (!insideEvenHandler) {
                                         setState(() {
                                           insideEvenHandler = true;
                                         });
-                                        await _playPreviousSong();
+                                        if (playbackState.currentProgress!
+                                                .inMilliseconds <=Duration(seconds: 3).inMilliseconds) {
+                                                  await _playPreviousSong();
+                                          
+                                        } else if (playbackState.currentProgress!
+                                                .inMilliseconds >= Duration(seconds: 3).inMilliseconds) 
+                                             {
+                                          await _seek(seek: 0);
+                                        }
                                         setState(() {
                                           insideEvenHandler = false;
                                         });
@@ -367,6 +389,10 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                                     duration;
                                 playBack.timer.currentProgress = duration;
                               });
+                            } else if (playbackState
+                                    .currentProgress!.inMilliseconds >=
+                                trackDuration) {
+                              await _playNextSong();
                             } else {
                               await _seek(seek: duration.inMilliseconds);
                             }
@@ -378,14 +404,16 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                         ),
                       ),
                       if (playbackState.inTrackClipPlaybackMode!)
-                            IconButton(
-                              icon: Icon(Icons.refresh, size: 36,),
-                              color: Colors.white,
-                             
-                              onPressed: () async {
-                                await _seek(seek: 0);
-                              },
-                            ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.refresh,
+                            size: 36,
+                          ),
+                          color: Colors.white,
+                          onPressed: () async {
+                            await _seek(seek: 0);
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -407,14 +435,15 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       });
     } else {
       setState(() {
-        _isLoading = true;
         error = false;
       });
 
       ref.read(playbackProvider).setImagePalette();
-      setState(() {
-        _isLoading = false;
-      });
+
+      if (ref.read(playbackProvider).playbackState.inTrackClipPlaybackMode!) {
+        ref.read(trackClipProvider.notifier).appendRecentlyListenedToTrack(
+            ref.read(playbackProvider).playbackState.currentTrackClip!);
+      }
     }
   }
 
@@ -437,6 +466,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       setState(() {
         _isLoading = false;
       });
+
+      if (ref.read(playbackProvider).playbackState.inTrackClipPlaybackMode!) {
+        ref.read(trackClipProvider.notifier).appendRecentlyListenedToTrack(
+            ref.read(playbackProvider).playbackState.currentTrackClip!);
+      }
     }
   }
 
@@ -466,7 +500,9 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
         error = true;
       });
     } else {
-      error = false;
+      setState(() {
+        error = false;
+      });
     }
   }
 
@@ -479,7 +515,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       PlaybackState playbackState = ref.read(playbackProvider).playbackState;
       if (playbackState.paused!) {
         if (playbackState.currentProgress!.inMilliseconds >= trackDuration) {
-          await _seek(seek: 0);
+          if (playbackState.isRepeatMode) {
+            await _seek(seek: 0);
+          } else {
+            await _playNextSong();
+          }
         } else {
           await _playSong(position: playBack.currentProgress.inMilliseconds);
         }

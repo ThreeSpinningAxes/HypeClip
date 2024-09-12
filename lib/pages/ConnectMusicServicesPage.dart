@@ -10,7 +10,7 @@ import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
 import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/Services/UserProfileService.dart';
-import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Utilities/ShowLoading.dart';
 
 class ConnectMusicServicesPage extends ConsumerStatefulWidget {

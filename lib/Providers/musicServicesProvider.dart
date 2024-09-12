@@ -7,7 +7,7 @@ final musicServicesProvider = StateNotifierProvider<MusicServicesNotifier, Set<M
 });
 
 class MusicServicesNotifier extends StateNotifier<Set<MusicLibraryService>> {
-  MusicServicesNotifier() : super(UserProfileService.getConnectedMusicLibraries());
+  MusicServicesNotifier() : super(UserProfileService.userProfile.connectedMusicServices);
 
   void updateMusicServices() {
     state = UserProfileService.getConnectedMusicLibraries();

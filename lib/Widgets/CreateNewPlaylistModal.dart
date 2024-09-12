@@ -1,18 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Entities/TrackClip.dart';
-import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
-import 'package:hypeclip/Entities/UserProfile.dart';
-import 'package:hypeclip/Enums/MusicLibraryServices.dart';
-import 'package:hypeclip/ErrorPages/GenericErrorPage.dart';
 import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/Services/UserProfileService.dart';
-import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 
-import 'package:hypeclip/Utilities/StringUtils.dart';
 
 class CreateNewPlaylistModal extends ConsumerStatefulWidget {
   final TrackClip? trackClip;
@@ -57,6 +50,7 @@ class _SaveClipModalState extends ConsumerState<CreateNewPlaylistModal> {
                 },
               ),
             ),
+            
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10.0),

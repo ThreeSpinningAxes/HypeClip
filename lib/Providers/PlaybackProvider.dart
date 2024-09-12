@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart';
@@ -10,6 +8,7 @@ import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:palette_generator/palette_generator.dart';
 
 final playbackProvider = ChangeNotifierProvider(
@@ -81,6 +80,24 @@ class PlaybackNotifier extends ChangeNotifier {
     return radialGradient;
   }
 
+  void removeTrackClipFromQueue(TrackClip track) async {
+    if (playbackState.inTrackClipPlaybackMode ?? false) {
+      if (playbackState.currentTrackClip == track) {
+        pauseTrack();
+        if (playbackState.trackClipQueue!.length > 1) {
+          await playNewTrackInList(playbackState.currentTrackIndex! + 1, autoplay: false);
+          playbackState.currentTrackIndex =
+              playbackState.currentTrackIndex! - 1;
+        } else {
+          
+        }
+      }
+      playbackState.trackClipQueue!.removeWhere((item) => item == track);
+      playbackState.originalTrackQueue!.removeWhere((item) => item == track);
+      notifyListeners();
+    }
+  }
+
   void setCurrentProgress({required Duration progress}) {
     timer.setCurrentProgress(progress);
     playbackState.currentProgress = progress;
@@ -99,6 +116,9 @@ class PlaybackNotifier extends ChangeNotifier {
     } else {
       trackLength = playbackState.currentSong!.duration!;
     }
+    if (timer.isActive()) {
+      timer.stop();
+    }
     timer = ProgressTimer(
         trackLength: trackLength,
         currentProgress: playbackState.currentProgress!,
@@ -109,6 +129,12 @@ class PlaybackNotifier extends ChangeNotifier {
     timer.addListener(() {
       notifyListeners();
     });
+    notifyListeners();
+  }
+
+  void reset() {
+    playbackState = PlaybackState();
+    timer.stop();
     notifyListeners();
   }
 
@@ -195,7 +221,7 @@ class PlaybackNotifier extends ChangeNotifier {
     return pauseSuccessful;
   }
 
-  Future<Response> playNewTrackInList(int index) async {
+  Future<Response> playNewTrackInList(int index, {bool autoplay = true}) async {
     Song? newTrack;
     int trackStartPosition = 0;
     int trackLength = 0;
@@ -218,49 +244,72 @@ class PlaybackNotifier extends ChangeNotifier {
       newTrack = playbackState.trackQueue![index];
       trackLength = newTrack.duration!.inMilliseconds;
     }
-    Response r = await musicServiceHandler.playTrack(newTrack.trackURI,
-        position: trackStartPosition);
-    if (r.statusCode == 200 || r.statusCode == 204) {
-      playbackState.currentSong = newTrack;
-      playbackState.currentTrackIndex = index;
-      playbackState.currentProgress =
-          Duration.zero; //reset progress for new track
-      playbackState.paused = false;
+    if (autoplay) {
+      Response r = await musicServiceHandler.playTrack(newTrack.trackURI,
+          position: trackStartPosition);
+      if (r.statusCode == 200 || r.statusCode == 204) {
+        playbackState.currentProgress =
+            Duration.zero; //reset progress for new track
+        timer.resetForNewTrack(Duration(milliseconds: trackLength));
+        timer.start();
+        playbackState.currentSong = newTrack;
+        playbackState.currentTrackIndex = index;
+        playbackState.paused = false;
 
-      if (playbackState.inTrackClipPlaybackMode ?? false) {
-        playbackState.currentTrackClip = playbackState.trackClipQueue![index];
+        if (playbackState.inTrackClipPlaybackMode ?? false) {
+          playbackState.currentTrackClip = playbackState.trackClipQueue![index];
+        }
+
+        notifyListeners();
       }
-      timer.resetForNewTrack(Duration(milliseconds: trackLength));
-      timer.start();
-      notifyListeners();
+      return r;
     }
-    return r;
+    notifyListeners();
+    return Response('Successfully setup playbackstate for next track', 200);
   }
 
-  Future<Response> playNextTrack() async {
+  Future<Response> playNextTrack({bool? changeIndex}) async {
     int trackQueueLength = playbackState.inTrackClipPlaybackMode!
         ? playbackState.trackClipQueue!.length
         : playbackState.trackQueue!.length;
+    
+    Response r;
     if (trackQueueLength == 1) {
-      return await playCurrentTrack(0);
+      
+      r = await playCurrentTrack(0);
+      
     }
     if (playbackState.currentTrackIndex == trackQueueLength - 1) {
-      return await playNewTrackInList(0);
+      r = await playNewTrackInList(0);
+    } else {
+      r = await playNewTrackInList(playbackState.currentTrackIndex! + 1);
     }
-    return await playNewTrackInList(playbackState.currentTrackIndex! + 1);
+
+    if (r.statusCode == 200 || r.statusCode == 204) {
+      playbackState.isRepeatMode = false;
+    }
+    return r;
   }
 
   Future<Response> playPreviousTrack() async {
     int trackQueueLength = playbackState.inTrackClipPlaybackMode!
         ? playbackState.trackClipQueue!.length
         : playbackState.trackQueue!.length;
+
+    Response r;
     if (trackQueueLength == 1) {
-      return await playCurrentTrack(0);
+      r = await playCurrentTrack(0);
     }
     if (playbackState.currentTrackIndex == 0) {
-      return await playNewTrackInList(trackQueueLength - 1);
+      r = await playNewTrackInList(trackQueueLength - 1);
     }
-    return await playNewTrackInList(playbackState.currentTrackIndex! - 1);
+    r= await playNewTrackInList(playbackState.currentTrackIndex! - 1);
+    
+    if (r.statusCode == 200 || r.statusCode == 204) {
+      playbackState.isRepeatMode = false;
+    }
+    return r;
+
   }
 
   void shuffleQueue() {
@@ -289,13 +338,14 @@ class PlaybackNotifier extends ChangeNotifier {
 
   void addTrackClipToQueue(TrackClip track) {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      playbackState.trackClipQueue!.add(track);
+      playbackState.trackClipQueue = [...playbackState.trackClipQueue!, track];
       notifyListeners();
     }
   }
 
   void addTrackClipNextInQueue(TrackClip track) {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
+      playbackState.trackClipQueue = [...playbackState.trackClipQueue!];
       playbackState.trackClipQueue!
           .insert(playbackState.currentTrackIndex! + 1, track);
       notifyListeners();
@@ -304,19 +354,31 @@ class PlaybackNotifier extends ChangeNotifier {
 
   void addTrackClipPlaylistToQueue(TrackClipPlaylist playlist) {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      playbackState.trackClipQueue!.addAll(playlist.clips);
+      playbackState.trackClipQueue = [
+        ...playbackState.trackClipQueue!,
+        ...playlist.clips
+      ];
       if (playbackState.isShuffleMode) {
-        playbackState.originalTrackQueue!.addAll(playlist.clips);
+        playbackState.trackClipQueue = [
+          ...playbackState.trackClipQueue!,
+          ...playlist.clips
+        ];
       }
       notifyListeners();
     }
   }
-  
+
   void addTrackClipPlaylistNextInQueue(TrackClipPlaylist playlist) {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      playbackState.trackClipQueue!.insertAll(playbackState.currentTrackIndex! + 1, playlist.clips);
+      playbackState.trackClipQueue = [...playbackState.trackClipQueue!];
+      playbackState.trackClipQueue!
+          .insertAll(playbackState.currentTrackIndex! + 1, playlist.clips);
       if (playbackState.isShuffleMode) {
-        playbackState.originalTrackQueue!.insertAll(playbackState.currentTrackIndex! + 1, playlist.clips);
+        playbackState.originalTrackQueue = [
+          ...playbackState.originalTrackQueue!
+        ];
+        playbackState.originalTrackQueue!
+            .insertAll(playbackState.currentTrackIndex! + 1, playlist.clips);
       }
       notifyListeners();
     }
@@ -338,12 +400,10 @@ class PlaybackNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-
-
   @override
   void dispose() {
     // TODO: implement dispose
-    this.timer.dispose();
+    timer.dispose();
     super.dispose();
   }
 
@@ -362,7 +422,7 @@ class PlaybackNotifier extends ChangeNotifier {
     List<TrackClip>? trackClipQueue,
     RadialGradient? domColorLinGradient,
     Duration? startPosition,
-    bool? isShuffleMode, 
+    bool? isShuffleMode,
     bool? isRepeatMode,
     List<Object>? originalTrackQueue,
   }) {

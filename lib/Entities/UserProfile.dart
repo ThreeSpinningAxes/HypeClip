@@ -22,7 +22,10 @@ class UserProfile {
   Map<String, TrackClipPlaylist> playlists = {
     TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY: TrackClipPlaylist(
         playlistName: "Saved Clips",
-        clips: <TrackClip>[]),
+        clips: <TrackClip>[],),
+    TrackClipPlaylist.RECENTLY_LISTENED_KEY: TrackClipPlaylist(
+        playlistName: "Recently Listened Clips",
+        clips: <TrackClip>[],),
   };
 
   UserProfile(this.username, this.ID, this.email);
@@ -35,7 +38,8 @@ class UserProfile {
   Set<MusicLibraryService> get getConnectedMusicServices =>
       connectedMusicServices;
   List<TrackClip> get getClips => clips;
-  Map<String, TrackClipPlaylist> get getPlaylists => playlists;
+  TrackClipPlaylist get getRecentlyListenedPlaylist =>
+      playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY]!;
   bool get getLoadedTrackClips => loadedTrackClips;
 
 // Setters
@@ -47,6 +51,8 @@ class UserProfile {
       connectedMusicServices = value;
   set setClips(List<TrackClip> value) => clips = value;
   set setPlaylists(Map<String, TrackClipPlaylist> value) => playlists = value;
+  set setRecentlyListenedPlaylist(TrackClipPlaylist value) =>
+    playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY] = value;
 
   set setLoadedTrackClips(bool value) => loadedTrackClips = value;
 }

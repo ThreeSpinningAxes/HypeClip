@@ -43,8 +43,9 @@ class ProgressTimer extends ChangeNotifier  {
           notifyListeners();         
       } else {
           playbackState!.currentProgress = trackLength;
-          playbackState!.paused = true; //set early so UI updates faster
-          playbackNotifier!.pauseTrack();
+        
+          //playbackState!.paused = true; //set early so UI updates faster
+          //playbackNotifier!.pauseTrack();
           trackFinished = true;
           timer.cancel();
         
@@ -56,6 +57,7 @@ class ProgressTimer extends ChangeNotifier  {
   void stop() {
     _timer!.cancel();
   }
+
 
 
   void resetForNewTrack(Duration newTrackLength) {

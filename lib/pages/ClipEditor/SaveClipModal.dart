@@ -4,6 +4,7 @@ import 'package:hypeclip/Entities/TrackClip.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
+import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Widgets/CreateNewPlaylistModal.dart';
 import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/Services/UserProfileService.dart';
@@ -15,13 +16,14 @@ class SaveClipModal extends ConsumerStatefulWidget {
   final Song song;
   final List<double> clipPoints;
   final MusicLibraryService musicLibraryService;
+  final bool fromSongPlayback;
 
   const SaveClipModal(
-      {Key? key,
+      {super.key,
       required this.song,
       required this.clipPoints,
-      required this.musicLibraryService})
-      : super(key: key);
+      required this.musicLibraryService,
+      this.fromSongPlayback = true});
 
   @override
   _SaveClipModalState createState() => _SaveClipModalState();
@@ -239,18 +241,24 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                                     playlistName: playlistName,
                                     save: false);
                               }
-                              ref
-                                  .read(trackClipProvider.notifier)
-                                  .updateClips();
+
                             } else {
                               await UserProfileService.saveNewTrackClip(
                                   trackClip: clip,
                                   playlistName: TrackClipPlaylist
                                       .SAVED_CLIPS_PLAYLIST_KEY,
                                   save: true);
+                             
                             }
+                             ref
+                                  .read(trackClipProvider.notifier)
+                                  .updateClips();
 
                             if (context.mounted) {
+                              if (!widget.fromSongPlayback &&
+                                  ref.context.mounted) {
+                                ref.read(playbackProvider).pauseTrack();
+                              }
                               Navigator.of(context).pop();
                               _showSuccessDialog();
                             }
@@ -311,7 +319,9 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                               context: context,
                               builder: (context) => CreateNewPlaylistModal(
                                     selectedPlaylistsInput: selectedPlaylists,
-                                  ));
+                                  )).then((value) {
+                            setState(() {});
+                          });
                         },
                         text: "New playlist"),
                     SizedBox(height: 20),
@@ -319,10 +329,16 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                     //add button to create playlist
                     Expanded(
                       child: ListView.builder(
-                        itemCount: ref.watch(trackClipProvider).values.length,
+                        itemCount:
+                            ref.watch(trackClipProvider).values.length - 1,
                         itemBuilder: (context, index) {
-                          List<TrackClipPlaylist> playlists =
-                              ref.watch(trackClipProvider).values.toList();
+                          List<TrackClipPlaylist> playlists = ref
+                              .watch(trackClipProvider)
+                              .values
+                              .where((playlist) =>
+                                  playlist.playlistName !=
+                                  TrackClipPlaylist.RECENTLY_LISTENED_KEY)
+                              .toList();
                           return CheckboxListTile(
                             checkColor: Colors.transparent,
                             activeColor: Theme.of(context).primaryColor,
@@ -366,7 +382,6 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                     ),
                     SubmitButton(
                         onPressed: () {
-                          
                           Navigator.of(context).pop();
                         },
                         text: "Finish Selection"),
@@ -405,7 +420,7 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                   var height = MediaQuery.of(context).size.height * 0.2;
                   var width = MediaQuery.of(context).size.width * 0.4;
 
-                  return Container(
+                  return SizedBox(
                     height: height,
                     width: width,
                     child: Column(

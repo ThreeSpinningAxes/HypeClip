@@ -9,13 +9,15 @@ class TrackClipPlaylist {
 
   static const String SAVED_CLIPS_PLAYLIST_KEY = 'Saved Clips';
 
+  static const String RECENTLY_LISTENED_KEY = 'Recently Listened Clips';
+
   String playlistID;
 
   String playlistName;
 
   DateTime? dateCreated;
 
-  List<TrackClip> clips;
+  List<TrackClip> clips = List.empty(growable: true);
 
 
   TrackClipPlaylist({
@@ -24,7 +26,7 @@ class TrackClipPlaylist {
     this.dateCreated,
     required this.clips,
 
-  }) : this.playlistID = playlistID ?? _uuid.v1() {
+  }) : playlistID = playlistID ?? _uuid.v1() {
     dateCreated = dateCreated ?? DateTime.now();
   }
 

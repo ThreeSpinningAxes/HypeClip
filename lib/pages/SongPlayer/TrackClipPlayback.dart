@@ -9,14 +9,12 @@ import 'package:http/http.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/ErrorPages/GenericErrorPage.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
-import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
-import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
-import 'package:palette_generator/palette_generator.dart';
 
 class SongPlayback extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;

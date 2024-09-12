@@ -18,8 +18,7 @@ import 'package:hypeclip/Pages/Explore/UserPlaylists.dart';
 import 'package:hypeclip/Pages/Explore/explore.dart';
 import 'package:hypeclip/Pages/Explore/TrackList.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
-import 'package:hypeclip/Widgets/CreateNewPlaylistModal.dart';
-import 'package:hypeclip/Pages/Library/ListOfPlaylists.dart';
+import 'package:hypeclip/Pages/Library/ListOfTrackClipPlaylists.dart';
 import 'package:hypeclip/Pages/Library/ListOfTrackClips.dart';
 import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
 import 'package:hypeclip/Pages/home.dart';
@@ -90,11 +89,16 @@ final GoRouter _router = GoRouter(
               state.uri.queryParameters['fromMiniPlayer'] == 'true'
                   ? true
                   : false;
+          final bool fromSongPlaybackWidget =
+              state.uri.queryParameters['fromSongPlaybackWidget'] == 'false'
+                  ? false
+                  : true;
           return NoTransitionPage(
               key: state.pageKey,
               child: ClipEditor(
                 key: state.pageKey,
                 showMiniPlayerOnExit: showMiniOnExit,
+                fromSongPlaybackWidget: fromSongPlaybackWidget,
               ));
         }),
     StatefulShellRoute.indexedStack(
@@ -120,6 +124,7 @@ final GoRouter _router = GoRouter(
                         key: state.pageKey,
                         child: ListOfTrackClips(
                           key: state.pageKey,
+                          playlistName: TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY,
                         ));
                   }),
               GoRoute(
@@ -128,7 +133,7 @@ final GoRouter _router = GoRouter(
                   pageBuilder: (context, state) {
                     return NoTransitionPage(
                         key: state.pageKey,
-                        child: ListOfPlaylists(
+                        child: ListOfTrackClipPlaylists(
                           key: state.pageKey,
                         ));
                   },
@@ -154,6 +159,7 @@ final GoRouter _router = GoRouter(
         StatefulShellBranch(routes: <RouteBase>[
           GoRoute(
               path: '/explore',
+              name: 'explore',
               pageBuilder: (context, state) {
                 return NoTransitionPage(
                     key: state.pageKey,

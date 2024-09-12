@@ -3,8 +3,7 @@ import "package:flutter/material.dart";
 import "package:google_sign_in/google_sign_in.dart";
 import "package:hypeclip/OnBoarding/UserProfileFireStoreService.dart";
 import "package:hypeclip/Services/UserProfileService.dart";
-import "package:hypeclip/Utilities/ShowErrorDialog.dart";
-import "package:hypeclip/main.dart";
+import "package:hypeclip/Utilities/ShowSnackbar.dart";
 
 class Auth {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;

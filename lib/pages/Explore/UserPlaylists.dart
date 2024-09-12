@@ -144,7 +144,7 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
                     SizedBox(height: 20),
                     // Now, ListView.builder to display the fetched data
                     Expanded(
-                      child: Container(
+                      child: SizedBox(
                         height: 400,
                         child: ListView.builder(
                           itemCount: filteredPlaylists.length,
@@ -165,7 +165,7 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
                                       width: 50.0, // Adjust the width as needed
                                       height: 50.0, // Adjust the height as needed
                                     )
-                                  : Container(
+                                  : SizedBox(
                                     width: 50,
                                     height: 50,
                                     child: Icon(Icons.music_note, color: Colors.white),

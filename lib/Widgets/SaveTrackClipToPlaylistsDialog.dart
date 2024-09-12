@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hypeclip/Entities/TrackClip.dart';
 import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
-import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Widgets/CreateNewPlaylistModal.dart';
 import 'package:hypeclip/Widgets/SubmitButton.dart';
 
@@ -43,7 +43,7 @@ class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlayl
         .watch(trackClipProvider)
         .values
         .where((playlist) =>
-            playlist.playlistName != currentPlaylist.playlistName)
+            playlist.playlistName != currentPlaylist.playlistName && playlist.playlistName != TrackClipPlaylist.RECENTLY_LISTENED_KEY)
         .toList();
     
 
@@ -88,6 +88,7 @@ class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlayl
                   child: ListView.builder(
                     itemCount: playlists.length,
                     itemBuilder: (context, index) {
+                     
                       return CheckboxListTile(
                           checkColor: Colors.transparent,
                           activeColor: Theme.of(context).primaryColor,

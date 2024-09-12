@@ -9,14 +9,14 @@ class SubmitButton extends StatelessWidget {
   final double borderRadius;
 
   const SubmitButton({
-    Key? key,
+    super.key,
     required this.onPressed,
     required this.text,
     this.backgroundColor,
     this.textColor,
     this.borderRadius = 20.0,
     this.textStyle
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -42,7 +42,7 @@ class _HomeState extends ConsumerState<Home> {
             appBar: AppBar(
               
              
-              
+             
               title: Text(pageNames[widget.child.currentIndex], style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,

@@ -16,12 +16,12 @@ class PlaybackState {
   Duration? currentProgress;
   bool? paused;
   int? currentTrackIndex;
-  List<Song>? songs = [];
+  List<Song>? songs = List.empty(growable: true);
 
-  List<TrackClip>? trackClipQueue = [];
-  List<Object>? originalTrackQueue = []; //used if shuffle is undone
+  List<TrackClip>? trackClipQueue = List.empty(growable: true);
+  List<Object>? originalTrackQueue = List.empty(growable: true); //used if shuffle is undone
 
-  List<Song>? trackQueue = [];
+  List<Song>? trackQueue = List.empty(growable: true);
 
   MusicLibraryService? musicLibraryService;
   RadialGradient? domColorLinGradient;
@@ -79,7 +79,7 @@ class PlaybackState {
       currentTrackClip: currentTrackClip ?? this.currentTrackClip,
       inSongPlaybackMode: inSongPlaybackMode ?? this.inSongPlaybackMode,
       trackClipQueue: trackClipQueue ?? this.trackClipQueue,
-      trackQueue: trackQueue ?? this.trackQueue,
+      trackQueue: trackQueue ?? trackQueue,
       domColorLinGradient: domColorLinGradient ?? this.domColorLinGradient,
       inTrackClipPlaybackMode:
           inTrackClipPlaybackMode ?? this.inTrackClipPlaybackMode,
@@ -106,9 +106,10 @@ class PlaybackState {
       trackQueue: newPlaybackState.trackQueue,
       domColorLinGradient: newPlaybackState.domColorLinGradient,
       startPosition: newPlaybackState.startPosition,
-       isShuffleMode: isShuffleMode,
-      isRepeatMode: isRepeatMode,
-      originalTrackQueue: originalTrackQueue,
+       isShuffleMode: newPlaybackState.isShuffleMode,
+      isRepeatMode: newPlaybackState.isRepeatMode,
+      originalTrackQueue: newPlaybackState.originalTrackQueue,
+
     );
   }
 }

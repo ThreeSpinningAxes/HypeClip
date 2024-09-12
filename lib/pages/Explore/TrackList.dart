@@ -4,12 +4,10 @@ import 'package:hypeclip/Entities/Playlist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Entities/Song.dart';
-import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
-import 'package:hypeclip/Providers/TrackClipProvider.dart';
 
 class TrackList extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
@@ -249,6 +247,7 @@ class _TrackListState extends ConsumerState<TrackList>
                                 ref.read(playbackProvider).init(PlaybackState(
                                     currentSong: song,
                                     currentProgress: Duration.zero,
+                                    
                                     paused: true,
                                     currentTrackIndex:
                                         originalTrackIndexFromPlaylist?[
@@ -258,13 +257,13 @@ class _TrackListState extends ConsumerState<TrackList>
                                     musicLibraryService: widget.service,
                                     inSongPlaybackMode: true,
                                     inTrackClipPlaybackMode: false,
-                                    originalTrackQueue: []));
+                                    originalTrackQueue: List.empty(growable: true)));
                                 ref
                                     .watch(
                                         miniPlayerVisibilityProvider.notifier)
                                     .state = false;
 
-                                context.pushNamed('clipEditor');
+                                context.pushNamed('clipEditor', queryParameters: {"fromSongPlaybackWidget": 'false'});
                               },
                             ),
                             leading: song.albumImage != null
@@ -279,7 +278,7 @@ class _TrackListState extends ConsumerState<TrackList>
                                 : Icon(Icons.music_note, color: Colors.white),
 
                             onTap: () async {
-                              List<Song>? songs = await trackList;
+                              List<Song>? songs = trackList;
                               ref.read(playbackProvider).init(PlaybackState(
                                     currentSong: song,
                                     currentProgress: Duration.zero,
@@ -291,7 +290,7 @@ class _TrackListState extends ConsumerState<TrackList>
                                     musicLibraryService: widget.service,
                                     inSongPlaybackMode: true,
                                     inTrackClipPlaybackMode: false,
-                                    originalTrackQueue: [],
+                                    originalTrackQueue: List.empty(growable: true),
                                     isShuffleMode: false,
                                     isRepeatMode: false,
                                   ));

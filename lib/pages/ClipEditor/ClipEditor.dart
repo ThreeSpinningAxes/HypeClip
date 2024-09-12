@@ -14,14 +14,18 @@ import 'package:hypeclip/Pages/ClipEditor/SaveClipModal.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
-import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
 
 class ClipEditor extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
   final bool? showMiniPlayerOnExit;
+  final bool fromSongPlaybackWidget;
 
-  const ClipEditor({super.key, this.showMiniPlayerOnExit});
+  const ClipEditor(
+      {super.key,
+      this.showMiniPlayerOnExit,
+      this.fromSongPlaybackWidget = true});
 
   @override
   _ClipEditorState createState() => _ClipEditorState();
@@ -198,24 +202,28 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                   alignment: Alignment.topLeft,
                   heightFactor: 1,
                   child: IconButton(
-                    icon: const Icon(
-                      Icons.keyboard_arrow_down,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                    onPressed: () async {
-                      if (inEvent) {
-                        return;
-                      } 
-                      context.pop();
-                      if (widget.showMiniPlayerOnExit == true) {
-                        ref.read(miniPlayerVisibilityProvider.notifier).state =
-                            true;
-                      } else {
-                        await ref.read(playbackProvider).pauseTrack();
-                      }
-                    },
-                  ),
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      onPressed: () async {
+                        if (inEvent) {
+                          return;
+                        }
+                        if (!widget.fromSongPlaybackWidget) {
+                          await ref.read(playbackProvider).pauseTrack();
+                        }
+                        if (context.mounted) {
+                          context.pop();
+                        }
+
+                        if (widget.showMiniPlayerOnExit == true) {
+                          ref
+                              .read(miniPlayerVisibilityProvider.notifier)
+                              .state = true;
+                        }
+                      }),
                 ),
               ),
               Expanded(
@@ -581,7 +589,8 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
           return SaveClipModal(
               song: ref.read(playbackProvider).playbackState.currentSong!,
               clipPoints: clipValues,
-              musicLibraryService: widget.service);
+              musicLibraryService: widget.service,
+              fromSongPlayback: widget.fromSongPlaybackWidget,);
         });
   }
 
