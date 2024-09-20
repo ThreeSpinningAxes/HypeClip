@@ -422,8 +422,8 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
         musicLibraryService: widget.service,
         isShuffleMode: false,
         isRepeatMode: false,
-        trackClipQueue: trackClipPlaylists[playlistName]!.clips,
-        originalTrackQueue: trackClipPlaylists[playlistName]!.clips));
+        trackClipQueue: [...trackClipPlaylists[playlistName]!.clips],
+        originalTrackQueue: [...trackClipPlaylists[playlistName]!.clips]));
   }
 
   void filterClips(String searchString) {

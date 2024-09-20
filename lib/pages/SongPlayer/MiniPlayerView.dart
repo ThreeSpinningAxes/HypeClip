@@ -1,19 +1,14 @@
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
-import 'package:hypeclip/ErrorPages/GenericErrorPage.dart';
-import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
 import 'package:hypeclip/Utilities/ShowSnackbar.dart';
-import 'package:marquee/marquee.dart';
 
 class MiniPlayerView extends ConsumerStatefulWidget {
   final MusicLibraryService? service = MusicLibraryService.spotify;

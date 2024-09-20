@@ -12,7 +12,6 @@ import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Widgets/TrackUI.dart';
-import 'package:hypeclip/Services/UserProfileService.dart';
 
 class ListOfTrackClipPlaylists extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;

@@ -15,6 +15,7 @@ class ConfirmationDialog extends StatefulWidget {
   final String? secondConfirmText;
   final VoidCallback? onSecondConfirm;
   final Color? secondConfirmButtonColor;
+  final bool? centerText;
 
   const ConfirmationDialog({
     super.key,
@@ -25,6 +26,7 @@ class ConfirmationDialog extends StatefulWidget {
     this.primaryConfirmText = 'Confirm',
     this.cancelText = 'Cancel',
     this.icon,
+    this.centerText = false,
     this.confirmButtonColor,
     this.cancelButtonColor,
     this.showCheckbox = false,

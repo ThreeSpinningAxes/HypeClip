@@ -203,7 +203,7 @@ class _TrackListState extends ConsumerState<TrackList>
                     // Your SearchBar widget here
                     // Assuming SearchBar doesn't depend on the fetched data
                     SearchBar(
-                      controller: search,
+                      controller: search, 
                       hintText: 'Search',
                       hintStyle: WidgetStateProperty.all(
                           TextStyle(color: Colors.black)),
@@ -263,7 +263,7 @@ class _TrackListState extends ConsumerState<TrackList>
                                         miniPlayerVisibilityProvider.notifier)
                                     .state = false;
 
-                                context.pushNamed('clipEditor', queryParameters: {"fromSongPlaybackWidget": 'false'});
+                                context.pushNamed('clipEditor', queryParameters: {'fromSongPlaybackWidget': 'false'});
                               },
                             ),
                             leading: song.albumImage != null
@@ -285,12 +285,12 @@ class _TrackListState extends ConsumerState<TrackList>
                                     paused: true,
                                     currentTrackIndex:
                                         originalTrackIndexFromPlaylist?[song.trackURI] ?? 0,
-                                    trackQueue: songs,
+                                    trackQueue: [...songs],
                                     songs: songs,
                                     musicLibraryService: widget.service,
                                     inSongPlaybackMode: true,
                                     inTrackClipPlaybackMode: false,
-                                    originalTrackQueue: List.empty(growable: true),
+                                    originalTrackQueue: [...songs],
                                     isShuffleMode: false,
                                     isRepeatMode: false,
                                   ));

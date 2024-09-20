@@ -8,7 +8,6 @@ import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
-import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:palette_generator/palette_generator.dart';
 
 final playbackProvider = ChangeNotifierProvider(
@@ -77,7 +76,78 @@ class PlaybackNotifier extends ChangeNotifier {
       ],
     );
     playbackState.domColorLinGradient = radialGradient;
+    notifyListeners();
     return radialGradient;
+  }
+
+  void update() {
+    notifyListeners();
+  }
+
+  void reorderQueue(bool trackClipQueue, int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+    if (trackClipQueue) {
+      final item = playbackState.trackClipQueue!.removeAt(oldIndex);
+      playbackState.trackClipQueue!.insert(newIndex, item);
+    } else {
+      final item = playbackState.trackQueue!.removeAt(oldIndex);
+      playbackState.trackQueue!.insert(newIndex, item);
+    }
+    if (oldIndex == playbackState.currentTrackIndex) {
+      playbackState.currentTrackIndex = newIndex;
+    } else if (oldIndex < playbackState.currentTrackIndex! &&
+        newIndex >= playbackState.currentTrackIndex!) {
+      playbackState.currentTrackIndex = playbackState.currentTrackIndex! - 1;
+    } else if (oldIndex > playbackState.currentTrackIndex! &&
+        newIndex <= playbackState.currentTrackIndex!) {
+      playbackState.currentTrackIndex = playbackState.currentTrackIndex! + 1;
+    }
+    notifyListeners();
+  }
+
+  Future<void> removeItemFromQueue(int index) async {
+    List queue = playbackState.inTrackClipPlaybackMode!
+        ? playbackState.trackClipQueue!
+        : playbackState.trackQueue!;
+
+    if (queue.length > 1) {
+      if (playbackState.currentTrackIndex! == index) {
+        if (playbackState.currentTrackIndex == queue.length - 1) {
+          queue.removeAt(index);
+          index = 0;
+          playbackState.currentTrackIndex = 0;
+        }
+        else {
+          queue.removeAt(index);
+        }
+
+        
+        
+        playNewTrackInList(index, autoplay: true);
+        
+      }
+      else {
+        queue.removeAt(index);
+        if (index < playbackState.currentTrackIndex!) {
+          playbackState.currentTrackIndex = playbackState.currentTrackIndex! - 1;
+        }
+      }
+      
+      
+    } else {
+      playbackState.currentSong = null;
+      playbackState.currentTrackClip = null;
+      playbackState.currentTrackIndex = 0;
+      playbackState.currentProgress = Duration.zero;
+      playbackState.paused = true;
+      timer.stop();
+      pauseTrack();
+      queue.clear();
+    }
+
+    notifyListeners();
   }
 
   void removeTrackClipFromQueue(TrackClip track) async {
@@ -85,11 +155,16 @@ class PlaybackNotifier extends ChangeNotifier {
       if (playbackState.currentTrackClip == track) {
         pauseTrack();
         if (playbackState.trackClipQueue!.length > 1) {
-          await playNewTrackInList(playbackState.currentTrackIndex! + 1, autoplay: false);
+          await playNewTrackInList(playbackState.currentTrackIndex! + 1,
+              autoplay: false);
           playbackState.currentTrackIndex =
               playbackState.currentTrackIndex! - 1;
         } else {
-          
+          playbackState.currentSong = null;
+          playbackState.currentTrackIndex = 0;
+          playbackState.currentProgress = Duration.zero;
+          playbackState.paused = true;
+          timer.stop();
         }
       }
       playbackState.trackClipQueue!.removeWhere((item) => item == track);
@@ -221,7 +296,7 @@ class PlaybackNotifier extends ChangeNotifier {
     return pauseSuccessful;
   }
 
-  Future<Response> playNewTrackInList(int index, {bool autoplay = true}) async {
+  Future<Response> playNewTrackInList(int index, {bool autoplay = true, bool updateGradient = false}) async {
     Song? newTrack;
     int trackStartPosition = 0;
     int trackLength = 0;
@@ -248,13 +323,22 @@ class PlaybackNotifier extends ChangeNotifier {
       Response r = await musicServiceHandler.playTrack(newTrack.trackURI,
           position: trackStartPosition);
       if (r.statusCode == 200 || r.statusCode == 204) {
+        
         playbackState.currentProgress =
             Duration.zero; //reset progress for new track
         timer.resetForNewTrack(Duration(milliseconds: trackLength));
         timer.start();
-        playbackState.currentSong = newTrack;
+        playbackState.currentSong = playbackState.inTrackClipPlaybackMode!
+            ? playbackState.trackClipQueue![index].song
+            : playbackState.trackQueue![index];
+        playbackState.currentTrackClip = playbackState.inTrackClipPlaybackMode!
+            ? playbackState.trackClipQueue![index]
+            : null;
         playbackState.currentTrackIndex = index;
         playbackState.paused = false;
+        if (updateGradient) {
+         setImagePalette();
+        }
 
         if (playbackState.inTrackClipPlaybackMode ?? false) {
           playbackState.currentTrackClip = playbackState.trackClipQueue![index];
@@ -272,12 +356,10 @@ class PlaybackNotifier extends ChangeNotifier {
     int trackQueueLength = playbackState.inTrackClipPlaybackMode!
         ? playbackState.trackClipQueue!.length
         : playbackState.trackQueue!.length;
-    
+
     Response r;
     if (trackQueueLength == 1) {
-      
       r = await playCurrentTrack(0);
-      
     }
     if (playbackState.currentTrackIndex == trackQueueLength - 1) {
       r = await playNewTrackInList(0);
@@ -303,13 +385,12 @@ class PlaybackNotifier extends ChangeNotifier {
     if (playbackState.currentTrackIndex == 0) {
       r = await playNewTrackInList(trackQueueLength - 1);
     }
-    r= await playNewTrackInList(playbackState.currentTrackIndex! - 1);
-    
+    r = await playNewTrackInList(playbackState.currentTrackIndex! - 1);
+
     if (r.statusCode == 200 || r.statusCode == 204) {
       playbackState.isRepeatMode = false;
     }
     return r;
-
   }
 
   void shuffleQueue() {

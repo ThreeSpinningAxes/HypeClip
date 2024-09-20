@@ -17,4 +17,20 @@ class MusicServicesNotifier extends StateNotifier<Set<MusicLibraryService>> {
    
     return state.isNotEmpty;
   }
+
+  void addService(MusicLibraryService service) {
+    state.add(service);
+  }
+
+  Future<void> deleteMusicService(MusicLibraryService service) async {
+    state.remove(service);
+    await UserProfileService.deleteMusicService(service);
+    state = Set.from(state);
+  }
+
+  Future<void> addMusicService(MusicLibraryService service, Map<String, dynamic> data) async {
+    state.add(service);
+    await UserProfileService.addMusicService(service, data);
+    state = Set.from(state);
+  }
 }

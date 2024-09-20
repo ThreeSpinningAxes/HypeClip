@@ -1,0 +1,74 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:8206777011072132457",
+      "lastPropertyId": "9:4544284274229552321",
+      "name": "Song",
+      "properties": [
+        {
+          "id": "1:3646475469489993490",
+          "name": "id",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:5228567039344799239",
+          "name": "trackURI",
+          "type": 9
+        },
+        {
+          "id": "3:7387107985471698676",
+          "name": "artistName",
+          "type": 9
+        },
+        {
+          "id": "4:6665638574963001440",
+          "name": "songName",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "1:8539712309826801651"
+        },
+        {
+          "id": "5:3683664839647536894",
+          "name": "songImage",
+          "type": 9
+        },
+        {
+          "id": "6:8920691947168484270",
+          "name": "artistImage",
+          "type": 9
+        },
+        {
+          "id": "7:2696696614971057640",
+          "name": "albumImage",
+          "type": 9
+        },
+        {
+          "id": "8:1667901264461299139",
+          "name": "albumName",
+          "type": 9
+        },
+        {
+          "id": "9:4544284274229552321",
+          "name": "imageURL",
+          "type": 9
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "1:8206777011072132457",
+  "lastIndexId": "1:8539712309826801651",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

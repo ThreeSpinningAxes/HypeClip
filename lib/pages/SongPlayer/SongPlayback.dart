@@ -128,6 +128,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
         child: Center(
           child: CircularProgressIndicator(
             color: Colors.white,
+            
           ),
         ),
       );
@@ -202,7 +203,10 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                       if (insideEvenHandler) {
                         return;
                       }
-                      context.pop();
+                      if (context.mounted) {
+                        context.pop();
+                      }
+                      
                       if (!error) {
                         ref.read(miniPlayerVisibilityProvider.notifier).state =
                             true;
@@ -414,6 +418,22 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                             await _seek(seek: 0);
                           },
                         ),
+                      SizedBox(height: 10),
+                      TextButton(
+                        onPressed: () {
+                          if (insideEvenHandler) {
+                            return;
+                          }
+                          context.pushNamed('queue');
+                        },
+                        child: Text(
+                          "Queue",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
