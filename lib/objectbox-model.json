@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:8206777011072132457",
-      "lastPropertyId": "9:4544284274229552321",
+      "lastPropertyId": "12:1374063591372238592",
       "name": "Song",
       "properties": [
         {
@@ -55,14 +55,85 @@
           "id": "9:4544284274229552321",
           "name": "imageURL",
           "type": 9
+        },
+        {
+          "id": "10:643646780825996892",
+          "name": "trackID",
+          "type": 9
+        },
+        {
+          "id": "11:4428027612275503602",
+          "name": "setDurationDB",
+          "type": 6
+        },
+        {
+          "id": "12:1374063591372238592",
+          "name": "setMusicLibraryServiceDB",
+          "type": 9
         }
       ],
-      "relations": []
+      "relations": [
+        {
+          "id": "2:7166231114413923972",
+          "name": "playlist",
+          "targetId": "2:38032209886724473"
+        }
+      ]
+    },
+    {
+      "id": "2:38032209886724473",
+      "lastPropertyId": "7:9114359661719988938",
+      "name": "Playlist",
+      "properties": [
+        {
+          "id": "1:2507107500663129673",
+          "name": "dbID",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:7436726987951804204",
+          "name": "id",
+          "type": 9
+        },
+        {
+          "id": "3:4697120687347050823",
+          "name": "uri",
+          "type": 9
+        },
+        {
+          "id": "4:8419196685553452409",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "5:8570848902807533601",
+          "name": "ownerName",
+          "type": 9
+        },
+        {
+          "id": "6:8303534634111930878",
+          "name": "imageUrl",
+          "type": 9
+        },
+        {
+          "id": "7:9114359661719988938",
+          "name": "totalTracks",
+          "type": 6
+        }
+      ],
+      "relations": [
+        {
+          "id": "1:6404008765985708642",
+          "name": "songs",
+          "targetId": "1:8206777011072132457"
+        }
+      ]
     }
   ],
-  "lastEntityId": "1:8206777011072132457",
+  "lastEntityId": "2:38032209886724473",
   "lastIndexId": "1:8539712309826801651",
-  "lastRelationId": "0:0",
+  "lastRelationId": "2:7166231114413923972",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,

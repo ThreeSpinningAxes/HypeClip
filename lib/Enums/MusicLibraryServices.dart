@@ -37,6 +37,7 @@ enum MusicLibraryService {
   soundCloud,
   googlePlayMusic,
   napster,
+  unknown,
 }
 class MusicLibraryServiceTile extends StatelessWidget {
   final MusicLibraryService service;

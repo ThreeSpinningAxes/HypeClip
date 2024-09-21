@@ -29,6 +29,7 @@ import 'package:hypeclip/Pages/Library/library.dart';
 import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/firebase_options.dart';
+import 'package:hypeclip/objectbox.dart';
 
 
 

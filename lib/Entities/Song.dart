@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hypeclip/Entities/Playlist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:objectbox/objectbox.dart';
 
@@ -8,7 +9,13 @@ class Song {
   @Id(assignable: true)
   int? id = 0;
 
+  String? trackID;
+
+  @Transient()
   Duration? duration;
+
+  int get getDurationDB => duration?.inMilliseconds ?? 0;
+  set setDurationDB(int value) => duration = Duration(milliseconds: value);
   
   String trackURI;
   String? artistName;
@@ -26,7 +33,16 @@ class Song {
   String? imageURL;
 
 
+  @Transient()
   MusicLibraryService? musicLibraryService;
+
+  String get musicLibraryServiceDB => musicLibraryService?.name ?? MusicLibraryService.unknown.name;
+  set setMusicLibraryServiceDB(String value) => musicLibraryService = MusicLibraryService.values.firstWhere((val) {
+    return val.name == value;
+  }, orElse: () => MusicLibraryService.unknown);
+
+   final playlist = ToMany<Playlist>();
+
 
   
 
@@ -34,6 +50,7 @@ class Song {
       {
         this.id,
         this.duration,
+        this.trackID,
       required this.trackURI,
       this.artistName,
       this.songName,
@@ -64,7 +81,7 @@ class Song {
           ? MusicLibraryService.values.firstWhere((val) {
               return val.name == json['musicLibraryService'];
             })
-          : null,
+          : MusicLibraryService.unknown,
     );
   }
 

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:uuid/uuid.dart';
+
 
 class TrackClip {
   static final Uuid _uuid = Uuid();
 
 
+  
   String ID;
   Song song;
   List<double> clipPoints;
