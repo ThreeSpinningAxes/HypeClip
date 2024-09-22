@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart';
 
 class GenericErrorPage extends StatelessWidget {
   const GenericErrorPage({
@@ -21,7 +22,7 @@ class GenericErrorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: padding ?? const EdgeInsets.all(0),
+        padding: padding ?? const EdgeInsets.all(20),
         child: Stack(
           children: [
             if (context.canPop())
@@ -94,4 +95,6 @@ class GenericErrorPage extends StatelessWidget {
       ),
     );
   }
+
+
 }

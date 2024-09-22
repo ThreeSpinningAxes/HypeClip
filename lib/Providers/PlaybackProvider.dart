@@ -21,14 +21,17 @@ class PlaybackNotifier extends ChangeNotifier {
 
   PlaybackState playbackState = PlaybackState();
   ProgressTimer timer =
-      ProgressTimer(trackLength: Duration.zero, currentProgress: Duration.zero);
+      ProgressTimer(trackLength: Duration.zero,);
 
   Duration get currentProgress => timer.currentProgress;
+  bool _insideEvent = false;
 
+  bool get insideEvent => _insideEvent;
 
-
-
-
+  set insideEvent(bool value) {
+    _insideEvent = value;
+    notifyListeners();
+  }
 
   Future<RadialGradient?> setImagePalette() async {
     String? imageURL;
@@ -186,6 +189,7 @@ class PlaybackNotifier extends ChangeNotifier {
 
   void init(PlaybackState newPlaybackState) {
     Object? prevTrack = playbackState.currentSong ?? playbackState.currentTrackClip;
+   
     playbackState = playbackState.copyState(newPlaybackState);
 
     if (playbackState.musicLibraryService != musicServiceHandler.service) {
@@ -195,24 +199,40 @@ class PlaybackNotifier extends ChangeNotifier {
     Duration trackLength = Duration.zero;
     if (playbackState.inTrackClipPlaybackMode ?? false) {
       trackLength = playbackState.currentTrackClip!.clipLength!;
+      playbackState.currentTrackName = playbackState.currentTrackClip!.clipName;
+      playbackState.currentTrackArtist = playbackState.currentTrackClip!.song!.artistName;
+      playbackState.currentTrackImg = playbackState.currentTrackClip!.song!.albumImage;
     } else {
       trackLength = playbackState.currentSong!.duration!;
+      playbackState.currentTrackName = playbackState.currentSong!.songName;
+      playbackState.currentTrackArtist = playbackState.currentSong!.artistName;
+      playbackState.currentTrackImg = playbackState.currentSong!.albumImage;
     }
     if (timer.isActive()) {
       timer.stop();
     }
     timer = ProgressTimer(
         trackLength: trackLength,
-        currentProgress: playbackState.currentProgress!,
+        
         playbackState: playbackState,
         playbackNotifier: this);
     initalized = true;
-    
 
+    playbackState.trackLength = trackLength.inMilliseconds;
+
+    if (playbackState.domColorLinGradient == null || prevTrack != playbackState.currentSong ||
+        prevTrack != playbackState.currentTrackClip) {
+          setImagePalette();
+    }
+    
     timer.addListener(() {
       notifyListeners();
     });
     notifyListeners();
+  }
+
+  Future<Response> playTrackAfterInit() async {
+    return await playCurrentTrack(0);
   }
 
   void reset() {
@@ -326,32 +346,39 @@ class PlaybackNotifier extends ChangeNotifier {
       }
       newTrack = playbackState.trackQueue![index];
       trackLength = newTrack.duration!.inMilliseconds;
+
     }
     if (autoplay ?? playbackState.autoplay) {
       Response r = await musicServiceHandler.playTrack(newTrack!.trackURI,
           position: trackStartPosition);
       if (r.statusCode == 200 || r.statusCode == 204) {
         
-        playbackState.currentProgress =
-            Duration.zero; //reset progress for new track
+        playbackState.currentProgress = Duration.zero; //reset progress for new track
+        playbackState.trackLength = trackLength;
         timer.resetForNewTrack(Duration(milliseconds: trackLength));
         timer.start();
-        playbackState.currentSong = playbackState.inTrackClipPlaybackMode!
-            ? playbackState.trackClipQueue![index].song
-            : playbackState.trackQueue![index];
-        playbackState.currentTrackClip = playbackState.inTrackClipPlaybackMode!
-            ? playbackState.trackClipQueue![index]
-            : null;
+        if (playbackState.inTrackClipPlaybackMode ?? false) {
+
+          playbackState.currentTrackClip = playbackState.trackClipQueue![index];
+          playbackState.currentSong = playbackState.trackClipQueue![index].song;
+          playbackState.currentTrackName = playbackState.trackClipQueue![index].clipName;
+          playbackState.currentTrackArtist = playbackState.trackClipQueue![index].song!.artistName;
+          playbackState.currentTrackImg = playbackState.trackClipQueue![index].song!.albumImage;      
+        }
+        else {
+          playbackState.currentSong = playbackState.trackQueue![index];
+          playbackState.currentTrackName = playbackState.trackQueue![index].songName;
+          playbackState.currentTrackArtist = playbackState.trackQueue![index].artistName;
+          playbackState.currentTrackImg = playbackState.trackQueue![index].albumImage;
+          playbackState.currentTrackClip = null;
+        }
+
         playbackState.currentTrackIndex = index;
         playbackState.paused = false;
+
         if (updateGradient) {
          setImagePalette();
         }
-
-        if (playbackState.inTrackClipPlaybackMode ?? false) {
-          playbackState.currentTrackClip = playbackState.trackClipQueue![index];
-        }
-
         notifyListeners();
       }
       return r;

@@ -178,7 +178,9 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                   onTap: () {
                     ref.read(miniPlayerVisibilityProvider.notifier).state =
                         false;
-                    context.pushNamed('songPlayer');
+                    context.pushNamed('songPlayer', queryParameters: {
+                      'resetForNewTrack': 'false'
+                    });
                     //   context,
                     //   PageRouteBuilder(
                     //     pageBuilder: (context, animation, secondaryAnimation) =>

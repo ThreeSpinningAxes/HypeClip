@@ -20,8 +20,9 @@ import 'package:hypeclip/Utilities/StringExtensions.dart';
 class SongPlayback extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
   final bool? inTrackClipPlaybackMode;
+  final bool? resetForNewTrack;
 
-  const SongPlayback({super.key, this.inTrackClipPlaybackMode});
+  const SongPlayback({super.key, this.inTrackClipPlaybackMode, this.resetForNewTrack});
 
   @override
   _SongPlaybackState createState() => _SongPlaybackState();
@@ -67,7 +68,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
   }
 
   _asyncInit() async {
-    insideEvenHandler = true;
+   
     Response r = await musicServiceHandler.isStreaingServiceAppOpen();
     if (r.statusCode != 200 && r.statusCode != 204) {
       errorPage = GenericErrorPage(
@@ -75,7 +76,6 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
         errorDescription: jsonDecode(r.body)['error']['message'],
         buttonText: "Retry",
         buttonAction: _refresh,
-        padding: EdgeInsets.all(20),
       );
       setState(() {
         _isLoading = false;
@@ -86,22 +86,15 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
     }
     PlaybackState playbackState = ref.read(playbackProvider).playbackState;
 
-    if (playbackState.domColorLinGradient == null) {
-      ref.read(playbackProvider).setImagePalette();
-    }
-
-    if ((playbackState.currentProgress == null ||
-        playbackState.currentProgress!.inMilliseconds ==
-            Duration.zero.inMilliseconds)) {
-      Response? r = await ref.watch(playbackProvider).playCurrentTrack(0);
+    if (widget.resetForNewTrack ?? false) {
+      r = await ref.watch(playbackProvider).playTrackAfterInit();
       if (r.statusCode != 200 && r.statusCode != 204) {
         errorPage = GenericErrorPage(
             errorHeader:
                 "Failed to play track ${playbackState.currentSong!.songName}",
             errorDescription: jsonDecode(r.body)['error']['message'],
             buttonText: "Retry",
-            buttonAction: _refresh,
-            padding: EdgeInsets.all(20));
+            buttonAction: _refresh,);
 
         setState(() {
           error = true;
@@ -109,16 +102,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
         });
         return;
       }
-      setState(() {
+    }
+     setState(() {
         error = false;
         initError = false;
       });
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -137,27 +125,19 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       return errorPage;
     }
     final playBack = ref.watch(playbackProvider);
-    final PlaybackState playbackState =
-        ref.watch(playbackProvider).playbackState;
+    final PlaybackState playbackState = ref.watch(playbackProvider).playbackState;
     final Song currentSong;
-    final String trackName;
-    final int trackDuration;
+    final String trackName = playbackState.currentTrackName!;
+    final int trackDuration = playbackState.trackLength!;
+    final String trackArtist = playbackState.currentTrackArtist!;
+    final String trackImg = playbackState.currentTrackImg!;
 
-    bool fromListOfTracks;
+
     if (playbackState.inTrackClipPlaybackMode ?? false) {
       currentSong = playbackState.currentTrackClip!.song!;
-      fromListOfTracks = (playbackState.trackClipQueue != null &&
-              playbackState.trackClipQueue!.length > 1) ||
-          playbackState.trackClipPlaylist != null;
-      trackName = playbackState.currentTrackClip!.clipName;
-      trackDuration =
-          playbackState.currentTrackClip!.clipLength!.inMilliseconds;
+
     } else {
       currentSong = playbackState.currentSong!;
-      fromListOfTracks =
-          playbackState.songs != null && playbackState.songs!.length > 1;
-      trackName = currentSong.songName!;
-      trackDuration = currentSong.duration!.inMilliseconds;
     }
 
     if (!playbackState.isRepeatMode &&
@@ -223,7 +203,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.network(
-                        currentSong.songImage ?? currentSong.albumImage!,
+                        trackImg,
                         height: 300,
                       ),
                       SizedBox(
@@ -247,7 +227,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                currentSong.artistName!,
+                                trackArtist,
                                 style: TextStyle(
                                     fontSize: 16, color: Colors.white),
                                 overflow: TextOverflow.ellipsis,
@@ -276,7 +256,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (fromListOfTracks)
+                              
                                 IconButton(
                                     icon: Icon(Icons.skip_previous,
                                         color: Colors.white),
@@ -311,7 +291,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                                     await _pausePlayback(
                                         currentSong, trackDuration);
                                   }),
-                              if (fromListOfTracks)
+                              
                                 IconButton(
                                     icon: Icon(Icons.skip_next,
                                         color: Colors.white),

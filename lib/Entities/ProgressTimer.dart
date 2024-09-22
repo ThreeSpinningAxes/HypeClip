@@ -10,39 +10,34 @@ class ProgressTimer extends ChangeNotifier  {
   final Duration interval = Duration(milliseconds: 100);
   Timer? _timer;
   Duration trackLength;
-  Duration currentProgress;
   bool trackFinished = false;
 
   late PlaybackState? playbackState = PlaybackState();
   late PlaybackNotifier? playbackNotifier;
 
 
-  ProgressTimer({required this.trackLength, required this.currentProgress, this.playbackState, this.playbackNotifier});
+  ProgressTimer({required this.trackLength, this.playbackState, this.playbackNotifier});
 
   void setPlaybackState(PlaybackState playbackState) {
     this.playbackState = playbackState;
   }
 
-  void setCurrentProgress(Duration currentProgress) {
-    this.currentProgress = currentProgress;
-    notifyListeners();
-  }
+
 
   void start({int? seek}) {
     if (seek != null) {
-      currentProgress = Duration(milliseconds: seek);
-      playbackState!.currentProgress = currentProgress;
+      playbackNotifier!.playbackState.currentProgress = Duration(milliseconds: seek);
+
     }
-    if (currentProgress.inMilliseconds < trackLength.inMilliseconds) {
+    if (playbackNotifier!.playbackState.currentProgress!.inMilliseconds < trackLength.inMilliseconds) {
       trackFinished = false;
     }
     _timer = Timer.periodic(interval, (timer) async {
-      if (currentProgress.inMilliseconds < trackLength.inMilliseconds) {         
-          currentProgress = Duration(milliseconds: currentProgress.inMilliseconds + 100);
-          playbackState!.currentProgress = currentProgress;
+      if (playbackNotifier!.playbackState.currentProgress!.inMilliseconds < trackLength.inMilliseconds) {         
+          playbackNotifier!.playbackState.currentProgress =  Duration(milliseconds: playbackNotifier!.currentProgress.inMilliseconds + 100);
           notifyListeners();         
       } else {
-          playbackState!.currentProgress = trackLength;
+         playbackNotifier!.playbackState.currentProgress = trackLength;
           trackFinished = true;
           timer.cancel();
         
@@ -60,7 +55,7 @@ class ProgressTimer extends ChangeNotifier  {
   void resetForNewTrack(Duration newTrackLength) {
     _timer!.cancel();
     trackLength = newTrackLength;
-    currentProgress = Duration.zero;
+    playbackNotifier!.playbackState.currentProgress = Duration.zero;
     trackFinished = false;
   }
 
@@ -70,6 +65,7 @@ class ProgressTimer extends ChangeNotifier  {
     }
     return _timer!.isActive;
   }
+
 
 
 }

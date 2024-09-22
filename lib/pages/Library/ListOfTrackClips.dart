@@ -186,7 +186,9 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
                                   ref
                                       .read(trackClipProvider.notifier)
                                       .appendRecentlyListenedToTrack(clip);
-                                  context.pushNamed('songPlayer');
+                                  context.pushNamed('songPlayer', queryParameters: {
+                                    'resetForNewTrack': 'true',
+                                  });
                                 },
                                 trailing: IconButton(
                                   onPressed: () {

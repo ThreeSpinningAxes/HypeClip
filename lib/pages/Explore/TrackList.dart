@@ -297,7 +297,7 @@ class _TrackListState extends ConsumerState<TrackList>
                               ref
                                   .watch(miniPlayerVisibilityProvider.notifier)
                                   .state = false;
-                              context.pushNamed('songPlayer');
+                              context.pushNamed('songPlayer', queryParameters: {'resetForNewTrack': 'true'});
                             },
                             title: Text(song.songName ?? 'Unknown',
                                 style: TextStyle(

@@ -46,7 +46,9 @@ final String? imageURL;
                   isRepeatMode: false,
                   trackClipQueue: playlist!.clips,
                   originalTrackQueue: playlist!.clips));
-              context.pushNamed('songPlayer');
+              context.pushNamed('songPlayer', queryParameters: {
+                'resetForNewTrack': 'true',
+              });
             }
           },
           child: Column(

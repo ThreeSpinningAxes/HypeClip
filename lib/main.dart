@@ -82,10 +82,15 @@ final GoRouter _router = GoRouter(
         path: '/songPlayer',
         name: 'songPlayer',
         pageBuilder: (context, state) {
+           final bool resetForNewTrack =
+              state.uri.queryParameters['resetForNewTrack'] == 'false'
+                  ? false
+                  : true;
           return NoTransitionPage(
               key: state.pageKey,
               child: SongPlayback(
                 key: state.pageKey,
+                resetForNewTrack: resetForNewTrack,
               ));
         }),
     GoRoute(

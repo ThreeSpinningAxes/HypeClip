@@ -31,6 +31,14 @@ class PlaybackState {
 
   bool inClipEditorMode = false;
   bool autoplay = true;
+  int? trackLength;
+
+  String? currentTrackName;
+  String? currentTrackArtist;
+  String? currentTrackImg;
+
+  bool? error; //implement error afterwards
+
 
   PlaybackState({
     this.currentSong,
@@ -52,6 +60,10 @@ class PlaybackState {
     this.originalTrackQueue,
     this.inClipEditorMode = false,
     this.autoplay = true,
+    this.trackLength,
+    this.currentTrackArtist,
+    this.currentTrackImg,
+    this.currentTrackName,
 
   });
 
@@ -75,6 +87,10 @@ class PlaybackState {
     List<Object>? originalTrackQueue,
     bool? inClipEditorMode,
     bool? autoplay,
+    int? trackLength,
+    String? currentTrackName,
+    String? currentTrackArtist,
+    String? currentTrackImg,
   }) {
     return PlaybackState(
       currentProgress: currentProgress ?? this.currentProgress,
@@ -97,6 +113,10 @@ class PlaybackState {
       originalTrackQueue: originalTrackQueue ?? this.originalTrackQueue,
       inClipEditorMode: inClipEditorMode ?? this.inClipEditorMode,
       autoplay: autoplay ?? this.autoplay,
+      trackLength: trackLength ?? this.trackLength,
+      currentTrackName: currentTrackName ?? this.currentTrackName,
+      currentTrackArtist: currentTrackArtist ?? this.currentTrackArtist,
+      currentTrackImg: currentTrackImg ?? this.currentTrackImg,
     );
   }
 
@@ -121,6 +141,10 @@ class PlaybackState {
       originalTrackQueue: newPlaybackState.originalTrackQueue,
       inClipEditorMode: newPlaybackState.inClipEditorMode,
       autoplay: newPlaybackState.autoplay,
+      trackLength: newPlaybackState.trackLength,
+      currentTrackName: newPlaybackState.currentTrackName,
+      currentTrackArtist: newPlaybackState.currentTrackArtist,
+      currentTrackImg: newPlaybackState.currentTrackImg,
 
     );
   }
