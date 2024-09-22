@@ -176,7 +176,9 @@ class _TrackQueueState extends ConsumerState<TrackQueue> {
                                         .then((value) {});
                                   }
                                   if (context.mounted) {
-                                    context.pushNamed('clipEditor');
+                                    context.pushNamed('clipEditor', queryParameters: {
+                                       
+                                    });
                                   }
                                 }),
                           ),

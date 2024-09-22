@@ -87,7 +87,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
     String trackName;
 
     if (playBack.playbackState.inTrackClipPlaybackMode ?? false) {
-      currentSong = playBack.playbackState.currentTrackClip!.song;
+      currentSong = playBack.playbackState.currentTrackClip!.song!;
       trackLength = playBack.playbackState.currentTrackClip!.clipLength!;
       trackName = playBack.playbackState.currentTrackClip!.clipName;
     } else {

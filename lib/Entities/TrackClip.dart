@@ -4,29 +4,58 @@ import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:objectbox/objectbox.dart';
 import 'package:uuid/uuid.dart';
 
-
+@Entity()
 class TrackClip {
+
+  @Transient()
   static final Uuid _uuid = Uuid();
 
-
-  
   String ID;
-  Song song;
+
+  @Id(assignable: true)
+  int? dbID;
+
+  @Transient()
+  Song? song;
+
+  final originalSongDB = ToOne<Song>();
+
+  @Property(type: PropertyType.floatVector)
   List<double> clipPoints;
+
+  @Transient()
   Duration? clipLength;
+
+  int get clipLengthDB => clipLength?.inMilliseconds ?? 0;
+  set clipLengthDB(int value) => clipLength = Duration(milliseconds: value);
+
+  final linkedSongDB = ToOne<Song>();
+
+
   String clipName;
   String? clipDescription;
+
+  @Property(type: PropertyType.date)
   DateTime dateCreated;
-  MusicLibraryService musicLibraryService;
+
+  @Transient()
+  MusicLibraryService? musicLibraryService;
+
+  String get musicLibraryServiceDB => musicLibraryService!.name;
+  set musicLibraryServiceDB(String value) => musicLibraryService = MusicLibraryService.values.firstWhere((val) {
+    return val.name == value;
+  }, orElse: () => MusicLibraryService.unknown);
+
+  @Transient()
   RadialGradient? domColorRadGradient;
 
   TrackClip({
-    required this.song,
+    this.song,
     required this.clipPoints,
     required this.clipName,
     this.clipDescription,
     required this.dateCreated,
-    required this.musicLibraryService,
+    this.musicLibraryService,
     this.domColorRadGradient,
     String? ID,
   }) : ID = ID ?? _uuid.v1(),
@@ -48,7 +77,7 @@ class TrackClip {
   Map<String, dynamic> toJson() {
     return {
       'ID': ID,
-      'song': song.toJson(),
+      'song': song!.toJson(),
       'clipPoints': clipPoints,
       'clipName': clipName,
       'clipDescription': clipDescription,

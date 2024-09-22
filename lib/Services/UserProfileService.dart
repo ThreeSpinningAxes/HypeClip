@@ -205,7 +205,7 @@ class UserProfileService {
 
   static Future<void> saveNewTrackClip(
       {required String playlistName, required TrackClip trackClip, bool? save}) async {
-    userProfile.playlists[playlistName]!.clips.add(trackClip);
+    userProfile.playlists[playlistName]!.clips!.add(trackClip);
 
     if (save ?? true) {
       await saveUserTrackClipPlaylistToPreferencs();
@@ -258,7 +258,7 @@ class UserProfileService {
 
   static Future<bool> deleteAllTrackClipsInPlaylist(String playlistName) async {
     if (userProfile.playlists.containsKey(playlistName)) {
-      userProfile.playlists[playlistName]!.clips.clear();
+      userProfile.playlists[playlistName]!.clips!.clear();
       await saveUserTrackClipPlaylistToPreferencs();
       return true;
     }
@@ -276,7 +276,7 @@ class UserProfileService {
   static Future<void> addTrackClipToMultiplePlaylists(
       TrackClip clip, List<TrackClipPlaylist> playlists) async {
     for (TrackClipPlaylist playlist in playlists) {
-      userProfile.playlists[playlist.playlistName]!.clips.add(clip);
+      userProfile.playlists[playlist.playlistName]!.clips!.add(clip);
     }
     await saveUserTrackClipPlaylistToPreferencs();
   }
@@ -284,8 +284,8 @@ class UserProfileService {
   static Future<void> deletePlaylist(
       {required String playlist, bool? keepClips}) async {
     if (keepClips ?? false) {
-      userProfile.playlists[TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY]!.clips
-          .addAll(userProfile.playlists[playlist]!.clips);
+      userProfile.playlists[TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY]!.clips!
+          .addAll(userProfile.playlists[playlist]!.clips!);
     }
     userProfile.playlists.remove(playlist);
     await saveUserTrackClipPlaylistToPreferencs();
@@ -293,17 +293,17 @@ class UserProfileService {
 
   static Future<void> addToRecentlyListenedPlaylist(
       {required TrackClip clip, bool? save}) async {
-    if (userProfile.playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY]!.clips
+    if (userProfile.playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY]!.clips!
         .any((c) => c.ID == clip.ID)) {
       return;
     }
 
-    userProfile.playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY]!.clips
+    userProfile.playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY]!.clips!
         .insert(0, clip);
     if (userProfile
-            .playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY]!.clips.length >
+            .playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY]!.clips!.length >
         20) {
-      userProfile.playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY]!.clips
+      userProfile.playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY]!.clips!
           .removeLast();
     }
     if (save ?? true) {

@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:8206777011072132457",
-      "lastPropertyId": "12:1374063591372238592",
+      "lastPropertyId": "14:2938041381718720521",
       "name": "Song",
       "properties": [
         {
@@ -28,7 +28,7 @@
           "id": "4:6665638574963001440",
           "name": "songName",
           "type": 9,
-          "flags": 2048,
+          "flags": 8,
           "indexId": "1:8539712309826801651"
         },
         {
@@ -62,21 +62,26 @@
           "type": 9
         },
         {
-          "id": "11:4428027612275503602",
-          "name": "setDurationDB",
-          "type": 6
+          "id": "13:7243118679844518903",
+          "name": "musicLibraryServiceDB",
+          "type": 9
         },
         {
-          "id": "12:1374063591372238592",
-          "name": "setMusicLibraryServiceDB",
-          "type": 9
+          "id": "14:2938041381718720521",
+          "name": "durationDB",
+          "type": 6
         }
       ],
       "relations": [
         {
-          "id": "2:7166231114413923972",
-          "name": "playlist",
+          "id": "5:6560852354575974672",
+          "name": "playlistDB",
           "targetId": "2:38032209886724473"
+        },
+        {
+          "id": "6:5625999409191442660",
+          "name": "trackClipsDB",
+          "targetId": "3:5317744468143076040"
         }
       ]
     },
@@ -104,7 +109,9 @@
         {
           "id": "4:8419196685553452409",
           "name": "name",
-          "type": 9
+          "type": 9,
+          "flags": 8,
+          "indexId": "2:7219058948244518911"
         },
         {
           "id": "5:8570848902807533601",
@@ -124,22 +131,133 @@
       ],
       "relations": [
         {
-          "id": "1:6404008765985708642",
-          "name": "songs",
+          "id": "4:7680320796412216355",
+          "name": "songsDB",
           "targetId": "1:8206777011072132457"
+        }
+      ]
+    },
+    {
+      "id": "3:5317744468143076040",
+      "lastPropertyId": "12:8764570932977687374",
+      "name": "TrackClip",
+      "properties": [
+        {
+          "id": "1:6511364109274843455",
+          "name": "ID",
+          "type": 9
+        },
+        {
+          "id": "2:4379171595982887829",
+          "name": "dbID",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "4:4903020926541020981",
+          "name": "clipPoints",
+          "type": 28
+        },
+        {
+          "id": "5:1616742170277854338",
+          "name": "clipName",
+          "type": 9
+        },
+        {
+          "id": "6:2075548201034169425",
+          "name": "clipDescription",
+          "type": 9
+        },
+        {
+          "id": "7:4452295220155678308",
+          "name": "dateCreated",
+          "type": 10
+        },
+        {
+          "id": "8:805590282630427560",
+          "name": "clipLengthDB",
+          "type": 6
+        },
+        {
+          "id": "9:5423191633874623565",
+          "name": "musicLibraryServiceDB",
+          "type": 9
+        },
+        {
+          "id": "11:2683385237213603353",
+          "name": "originalSongDBId",
+          "type": 11,
+          "flags": 520,
+          "indexId": "4:2273690582270434786",
+          "relationTarget": "Song"
+        },
+        {
+          "id": "12:8764570932977687374",
+          "name": "linkedSongDBId",
+          "type": 11,
+          "flags": 520,
+          "indexId": "5:1185253801173147599",
+          "relationTarget": "Song"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:5891164408967352254",
+      "lastPropertyId": "4:4386621581706981260",
+      "name": "TrackClipPlaylist",
+      "properties": [
+        {
+          "id": "1:7878616718681556215",
+          "name": "dbID",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:6556394252372289609",
+          "name": "playlistID",
+          "type": 9
+        },
+        {
+          "id": "3:2448660179705142332",
+          "name": "playlistName",
+          "type": 9
+        },
+        {
+          "id": "4:4386621581706981260",
+          "name": "dateCreated",
+          "type": 10
+        }
+      ],
+      "relations": [
+        {
+          "id": "7:5011536864274221388",
+          "name": "clipsDB",
+          "targetId": "3:5317744468143076040"
         }
       ]
     }
   ],
-  "lastEntityId": "2:38032209886724473",
-  "lastIndexId": "1:8539712309826801651",
-  "lastRelationId": "2:7166231114413923972",
+  "lastEntityId": "4:5891164408967352254",
+  "lastIndexId": "5:1185253801173147599",
+  "lastRelationId": "7:5011536864274221388",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
-  "retiredIndexUids": [],
-  "retiredPropertyUids": [],
-  "retiredRelationUids": [],
+  "retiredIndexUids": [
+    8833976317866044219
+  ],
+  "retiredPropertyUids": [
+    6391799891432596002,
+    6281726068887092049,
+    1374063591372238592,
+    4428027612275503602
+  ],
+  "retiredRelationUids": [
+    6404008765985708642,
+    7166231114413923972,
+    2660829391060280724
+  ],
   "version": 1
 }

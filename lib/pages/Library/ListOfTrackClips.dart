@@ -50,7 +50,7 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
   Widget build(BuildContext context) {
     final Map<String, TrackClipPlaylist> trackClipPlaylists =
         ref.watch(trackClipProvider);
-    final int totalClipsLength = trackClipPlaylists[playlistName]!.clips.length;
+    final int totalClipsLength = trackClipPlaylists[playlistName]!.clips!.length;
     filterClips(search.text);
     return SafeArea(
       child: Column(
@@ -79,7 +79,7 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
                       onPressed: () {
                         if (trackClipPlaylists[
                                 TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY]!
-                            .clips
+                            .clips!
                             .isEmpty) {
                           context.goNamed('explore');
                           return;
@@ -92,7 +92,7 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
                       },
                       text: trackClipPlaylists[
                                   TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY]!
-                              .clips
+                              .clips!
                               .isEmpty
                           ? 'Explore your tracks to create clips'
                           : 'Browse All Saved Clips',
@@ -145,7 +145,7 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
                             itemCount: filteredClips.length,
                             itemBuilder: (context, index) {
                               TrackClip clip = filteredClips[index];
-                              Song song = clip.song;
+                              Song song = clip.song!;
                               return ListTile(
                                 title: Text(
                                   filteredClips[index].clipName,
@@ -247,8 +247,8 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
                         child: Trackui.buildTrackCard(context,
                             trackName: clip.clipName,
                             artistName:
-                                clip.song.artistName ?? 'Unknown Artist',
-                            albumImageURL: clip.song.albumImage ?? ''),
+                                clip.song!.artistName ?? 'Unknown Artist',
+                            albumImageURL: clip.song!.albumImage ?? ''),
                       ),
 
                       if (clip.clipDescription != null &&
@@ -408,7 +408,7 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
     Map<String, TrackClipPlaylist> trackClipPlaylists =
         ref.read(trackClipProvider);
     int originalIndex = trackClipPlaylists[playlistName]!
-        .clips
+        .clips!
         .indexWhere((clip) => clip.ID == filteredClips[index].ID);
     ref.read(playbackProvider).init(PlaybackState(
         currentProgress: Duration.zero,
@@ -422,8 +422,8 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
         musicLibraryService: widget.service,
         isShuffleMode: false,
         isRepeatMode: false,
-        trackClipQueue: [...trackClipPlaylists[playlistName]!.clips],
-        originalTrackQueue: [...trackClipPlaylists[playlistName]!.clips]));
+        trackClipQueue: [...trackClipPlaylists[playlistName]!.clips!],
+        originalTrackQueue: [...trackClipPlaylists[playlistName]!.clips!]));
   }
 
   void filterClips(String searchString) {
@@ -440,11 +440,11 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
             .toString()
             .toLowerCase()
             .contains(searchString.toLowerCase());
-        final songNameContainsSearch = clip.song.songName
+        final songNameContainsSearch = clip.song!.songName
             .toString()
             .toLowerCase()
             .contains(searchString.toLowerCase());
-        final artistNameContainsSearch = clip.song.artistName
+        final artistNameContainsSearch = clip.song!.artistName
             .toString()
             .toLowerCase()
             .contains(searchString.toLowerCase());

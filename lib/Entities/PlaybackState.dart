@@ -29,6 +29,9 @@ class PlaybackState {
   bool isShuffleMode = false;
   bool isRepeatMode = false;
 
+  bool inClipEditorMode = false;
+  bool autoplay = true;
+
   PlaybackState({
     this.currentSong,
     this.currentProgress,
@@ -47,6 +50,9 @@ class PlaybackState {
     this.isShuffleMode = false, 
     this.isRepeatMode = false, 
     this.originalTrackQueue,
+    this.inClipEditorMode = false,
+    this.autoplay = true,
+
   });
 
   PlaybackState copyWith({
@@ -66,7 +72,9 @@ class PlaybackState {
     Duration? startPosition,
     bool? isShuffleMode, 
     bool? isRepeatMode,
-    List<Object>? originalTrackQueue,  
+    List<Object>? originalTrackQueue,
+    bool? inClipEditorMode,
+    bool? autoplay,
   }) {
     return PlaybackState(
       currentProgress: currentProgress ?? this.currentProgress,
@@ -87,6 +95,8 @@ class PlaybackState {
       isShuffleMode: isShuffleMode ?? this.isShuffleMode,
       isRepeatMode: isRepeatMode ?? this.isRepeatMode,
       originalTrackQueue: originalTrackQueue ?? this.originalTrackQueue,
+      inClipEditorMode: inClipEditorMode ?? this.inClipEditorMode,
+      autoplay: autoplay ?? this.autoplay,
     );
   }
 
@@ -109,6 +119,8 @@ class PlaybackState {
        isShuffleMode: newPlaybackState.isShuffleMode,
       isRepeatMode: newPlaybackState.isRepeatMode,
       originalTrackQueue: newPlaybackState.originalTrackQueue,
+      inClipEditorMode: newPlaybackState.inClipEditorMode,
+      autoplay: newPlaybackState.autoplay,
 
     );
   }

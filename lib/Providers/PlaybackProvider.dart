@@ -25,10 +25,15 @@ class PlaybackNotifier extends ChangeNotifier {
 
   Duration get currentProgress => timer.currentProgress;
 
+
+
+
+
+
   Future<RadialGradient?> setImagePalette() async {
     String? imageURL;
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      imageURL = playbackState.currentTrackClip?.song.albumImage;
+      imageURL = playbackState.currentTrackClip?.song!.albumImage;
     } else {
       imageURL = playbackState.currentSong?.albumImage;
     }
@@ -180,7 +185,9 @@ class PlaybackNotifier extends ChangeNotifier {
   }
 
   void init(PlaybackState newPlaybackState) {
+    Object? prevTrack = playbackState.currentSong ?? playbackState.currentTrackClip;
     playbackState = playbackState.copyState(newPlaybackState);
+
     if (playbackState.musicLibraryService != musicServiceHandler.service) {
       musicServiceHandler
           .setMusicService(newPlaybackState.musicLibraryService!);
@@ -200,6 +207,7 @@ class PlaybackNotifier extends ChangeNotifier {
         playbackState: playbackState,
         playbackNotifier: this);
     initalized = true;
+    
 
     timer.addListener(() {
       notifyListeners();
@@ -220,7 +228,7 @@ class PlaybackNotifier extends ChangeNotifier {
       if (playbackState.currentTrackClip == null) {
         return Response('No track clip selected', 500);
       }
-      song = playbackState.currentTrackClip!.song;
+      song = playbackState.currentTrackClip!.song!;
       playbackOffset += playbackState.currentTrackClip!.clipPoints[0].toInt();
     } else {
       if (playbackState.currentSong == null) {
@@ -251,7 +259,7 @@ class PlaybackNotifier extends ChangeNotifier {
     Song song;
     int playbackOffset = seek ?? 0;
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      song = playbackState.currentTrackClip!.song;
+      song = playbackState.currentTrackClip!.song!;
       playbackOffset += playbackState.currentTrackClip!.clipPoints[0].toInt();
     } else {
       song = playbackState.currentSong!;
@@ -296,7 +304,7 @@ class PlaybackNotifier extends ChangeNotifier {
     return pauseSuccessful;
   }
 
-  Future<Response> playNewTrackInList(int index, {bool autoplay = true, bool updateGradient = false}) async {
+  Future<Response> playNewTrackInList(int index, {bool? autoplay, bool updateGradient = false}) async {
     Song? newTrack;
     int trackStartPosition = 0;
     int trackLength = 0;
@@ -319,8 +327,8 @@ class PlaybackNotifier extends ChangeNotifier {
       newTrack = playbackState.trackQueue![index];
       trackLength = newTrack.duration!.inMilliseconds;
     }
-    if (autoplay) {
-      Response r = await musicServiceHandler.playTrack(newTrack.trackURI,
+    if (autoplay ?? playbackState.autoplay) {
+      Response r = await musicServiceHandler.playTrack(newTrack!.trackURI,
           position: trackStartPosition);
       if (r.statusCode == 200 || r.statusCode == 204) {
         
@@ -437,12 +445,12 @@ class PlaybackNotifier extends ChangeNotifier {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
       playbackState.trackClipQueue = [
         ...playbackState.trackClipQueue!,
-        ...playlist.clips
+        ...playlist.clips!
       ];
       if (playbackState.isShuffleMode) {
         playbackState.trackClipQueue = [
           ...playbackState.trackClipQueue!,
-          ...playlist.clips
+          ...playlist.clips!
         ];
       }
       notifyListeners();
@@ -453,13 +461,13 @@ class PlaybackNotifier extends ChangeNotifier {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
       playbackState.trackClipQueue = [...playbackState.trackClipQueue!];
       playbackState.trackClipQueue!
-          .insertAll(playbackState.currentTrackIndex! + 1, playlist.clips);
+          .insertAll(playbackState.currentTrackIndex! + 1, playlist.clips!);
       if (playbackState.isShuffleMode) {
         playbackState.originalTrackQueue = [
           ...playbackState.originalTrackQueue!
         ];
         playbackState.originalTrackQueue!
-            .insertAll(playbackState.currentTrackIndex! + 1, playlist.clips);
+            .insertAll(playbackState.currentTrackIndex! + 1, playlist.clips!);
       }
       notifyListeners();
     }
@@ -506,6 +514,8 @@ class PlaybackNotifier extends ChangeNotifier {
     bool? isShuffleMode,
     bool? isRepeatMode,
     List<Object>? originalTrackQueue,
+    bool? inClipEditorMode,
+    bool? autoplay,
   }) {
     playbackState = playbackState.copyWith(
       currentProgress: currentProgress,
@@ -525,6 +535,8 @@ class PlaybackNotifier extends ChangeNotifier {
       isShuffleMode: isShuffleMode,
       isRepeatMode: isRepeatMode,
       originalTrackQueue: originalTrackQueue,
+      inClipEditorMode: inClipEditorMode,
+      autoplay: autoplay,
     );
     notifyListeners();
   }

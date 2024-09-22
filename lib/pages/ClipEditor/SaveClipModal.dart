@@ -344,15 +344,15 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                             activeColor: Theme.of(context).primaryColor,
                             shape: CircleBorder(),
                             checkboxShape: CircleBorder(),
-                            secondary: playlists[index].clips.isNotEmpty &&
-                                    playlists[index].clips[0].song.albumImage !=
+                            secondary: playlists[index].clips!.isNotEmpty &&
+                                    playlists[index].clips![0].song!.albumImage !=
                                         null
                                 ? FadeInImage.assetNetwork(
                                     placeholder:
                                         'assets/loading_placeholder.gif', // Path to your placeholder image
                                     image: playlists[index]
-                                        .clips[0]
-                                        .song
+                                        .clips![0]
+                                        .song!
                                         .albumImage!,
                                     fit: BoxFit.cover,
                                     width: 40.0, // Adjust the width as needed

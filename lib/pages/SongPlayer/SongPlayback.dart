@@ -145,7 +145,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
 
     bool fromListOfTracks;
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      currentSong = playbackState.currentTrackClip!.song;
+      currentSong = playbackState.currentTrackClip!.song!;
       fromListOfTracks = (playbackState.trackClipQueue != null &&
               playbackState.trackClipQueue!.length > 1) ||
           playbackState.trackClipPlaylist != null;
@@ -162,6 +162,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
 
     if (!playbackState.isRepeatMode &&
         !playbackState.paused! &&
+        playbackState.autoplay &&
         !insideEvenHandler) {
       if (playbackState.currentProgress!.inMilliseconds >= trackDuration) {
         _playNextSong();

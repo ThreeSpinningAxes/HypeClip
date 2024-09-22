@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hypeclip/Entities/Playlist.dart';
+import 'package:hypeclip/Entities/TrackClip.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:objectbox/objectbox.dart';
 
@@ -14,13 +15,13 @@ class Song {
   @Transient()
   Duration? duration;
 
-  int get getDurationDB => duration?.inMilliseconds ?? 0;
-  set setDurationDB(int value) => duration = Duration(milliseconds: value);
+  int get durationDB => duration?.inMilliseconds ?? 0;
+  set durationDB(int value) => duration = Duration(milliseconds: value);
   
   String trackURI;
   String? artistName;
 
-  @Index()
+  @Index(type: IndexType.value)
   String? songName;
   String? songImage;
   String? artistImage;
@@ -37,13 +38,14 @@ class Song {
   MusicLibraryService? musicLibraryService;
 
   String get musicLibraryServiceDB => musicLibraryService?.name ?? MusicLibraryService.unknown.name;
-  set setMusicLibraryServiceDB(String value) => musicLibraryService = MusicLibraryService.values.firstWhere((val) {
-    return val.name == value;
-  }, orElse: () => MusicLibraryService.unknown);
+  set musicLibraryServiceDB(String value) {
+   musicLibraryService = MusicLibraryService.values.firstWhere((val) {
+      return val.name == value;
+    }, orElse: () => MusicLibraryService.unknown);
+  }
 
-   final playlist = ToMany<Playlist>();
-
-
+  final playlistDB = ToMany<Playlist>();
+  final trackClipsDB = ToMany<TrackClip>();
   
 
   Song(

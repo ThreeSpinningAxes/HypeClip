@@ -167,7 +167,10 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
     if (!insidePlaybackSlider) {
       if (trackProgress[0] >= clipValues[1]) {
         if (!playbackState.paused!) {
-          playbackState.paused = true;
+          setState(() {
+            playbackState.paused = true;
+          });
+          
           playBack.pauseTrack();
         }
         setState(() {

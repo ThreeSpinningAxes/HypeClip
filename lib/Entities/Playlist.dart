@@ -10,12 +10,14 @@ class Playlist {
   
   String id; //actual streaming service id
   String? uri;
+
+  @Index(type: IndexType.value)
   String name;
   String? ownerName;
   String? imageUrl;
   int? totalTracks;
   
-  final songs = ToMany<Song>();
+  final songsDB = ToMany<Song>();
 
   Playlist({
     this.dbID,

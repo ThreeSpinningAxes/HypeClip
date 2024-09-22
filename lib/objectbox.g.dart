@@ -16,6 +16,8 @@ import 'package:objectbox_flutter_libs/objectbox_flutter_libs.dart';
 
 import 'Entities/Playlist.dart';
 import 'Entities/Song.dart';
+import 'Entities/TrackClip.dart';
+import 'Entities/TrackClipPlaylist.dart';
 
 export 'package:objectbox/objectbox.dart'; // so that callers only have to import this file
 
@@ -23,7 +25,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(1, 8206777011072132457),
       name: 'Song',
-      lastPropertyId: const obx_int.IdUid(12, 1374063591372238592),
+      lastPropertyId: const obx_int.IdUid(14, 2938041381718720521),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -45,7 +47,7 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(4, 6665638574963001440),
             name: 'songName',
             type: 9,
-            flags: 2048,
+            flags: 8,
             indexId: const obx_int.IdUid(1, 8539712309826801651)),
         obx_int.ModelProperty(
             id: const obx_int.IdUid(5, 3683664839647536894),
@@ -78,21 +80,25 @@ final _entities = <obx_int.ModelEntity>[
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(11, 4428027612275503602),
-            name: 'setDurationDB',
-            type: 6,
+            id: const obx_int.IdUid(13, 7243118679844518903),
+            name: 'musicLibraryServiceDB',
+            type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(12, 1374063591372238592),
-            name: 'setMusicLibraryServiceDB',
-            type: 9,
+            id: const obx_int.IdUid(14, 2938041381718720521),
+            name: 'durationDB',
+            type: 6,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[
         obx_int.ModelRelation(
-            id: const obx_int.IdUid(2, 7166231114413923972),
-            name: 'playlist',
-            targetId: const obx_int.IdUid(2, 38032209886724473))
+            id: const obx_int.IdUid(5, 6560852354575974672),
+            name: 'playlistDB',
+            targetId: const obx_int.IdUid(2, 38032209886724473)),
+        obx_int.ModelRelation(
+            id: const obx_int.IdUid(6, 5625999409191442660),
+            name: 'trackClipsDB',
+            targetId: const obx_int.IdUid(3, 5317744468143076040))
       ],
       backlinks: <obx_int.ModelBacklink>[]),
   obx_int.ModelEntity(
@@ -120,7 +126,8 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(4, 8419196685553452409),
             name: 'name',
             type: 9,
-            flags: 0),
+            flags: 8,
+            indexId: const obx_int.IdUid(2, 7219058948244518911)),
         obx_int.ModelProperty(
             id: const obx_int.IdUid(5, 8570848902807533601),
             name: 'ownerName',
@@ -139,9 +146,106 @@ final _entities = <obx_int.ModelEntity>[
       ],
       relations: <obx_int.ModelRelation>[
         obx_int.ModelRelation(
-            id: const obx_int.IdUid(1, 6404008765985708642),
-            name: 'songs',
+            id: const obx_int.IdUid(4, 7680320796412216355),
+            name: 'songsDB',
             targetId: const obx_int.IdUid(1, 8206777011072132457))
+      ],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(3, 5317744468143076040),
+      name: 'TrackClip',
+      lastPropertyId: const obx_int.IdUid(12, 8764570932977687374),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 6511364109274843455),
+            name: 'ID',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 4379171595982887829),
+            name: 'dbID',
+            type: 6,
+            flags: 129),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 4903020926541020981),
+            name: 'clipPoints',
+            type: 28,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(5, 1616742170277854338),
+            name: 'clipName',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(6, 2075548201034169425),
+            name: 'clipDescription',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(7, 4452295220155678308),
+            name: 'dateCreated',
+            type: 10,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(8, 805590282630427560),
+            name: 'clipLengthDB',
+            type: 6,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(9, 5423191633874623565),
+            name: 'musicLibraryServiceDB',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(11, 2683385237213603353),
+            name: 'originalSongDBId',
+            type: 11,
+            flags: 520,
+            indexId: const obx_int.IdUid(4, 2273690582270434786),
+            relationTarget: 'Song'),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(12, 8764570932977687374),
+            name: 'linkedSongDBId',
+            type: 11,
+            flags: 520,
+            indexId: const obx_int.IdUid(5, 1185253801173147599),
+            relationTarget: 'Song')
+      ],
+      relations: <obx_int.ModelRelation>[],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(4, 5891164408967352254),
+      name: 'TrackClipPlaylist',
+      lastPropertyId: const obx_int.IdUid(4, 4386621581706981260),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 7878616718681556215),
+            name: 'dbID',
+            type: 6,
+            flags: 129),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 6556394252372289609),
+            name: 'playlistID',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 2448660179705142332),
+            name: 'playlistName',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 4386621581706981260),
+            name: 'dateCreated',
+            type: 10,
+            flags: 0)
+      ],
+      relations: <obx_int.ModelRelation>[
+        obx_int.ModelRelation(
+            id: const obx_int.IdUid(7, 5011536864274221388),
+            name: 'clipsDB',
+            targetId: const obx_int.IdUid(3, 5317744468143076040))
       ],
       backlinks: <obx_int.ModelBacklink>[])
 ];
@@ -181,14 +285,23 @@ Future<obx.Store> openStore(
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
       entities: _entities,
-      lastEntityId: const obx_int.IdUid(2, 38032209886724473),
-      lastIndexId: const obx_int.IdUid(1, 8539712309826801651),
-      lastRelationId: const obx_int.IdUid(2, 7166231114413923972),
+      lastEntityId: const obx_int.IdUid(4, 5891164408967352254),
+      lastIndexId: const obx_int.IdUid(5, 1185253801173147599),
+      lastRelationId: const obx_int.IdUid(7, 5011536864274221388),
       lastSequenceId: const obx_int.IdUid(0, 0),
       retiredEntityUids: const [],
-      retiredIndexUids: const [],
-      retiredPropertyUids: const [],
-      retiredRelationUids: const [],
+      retiredIndexUids: const [8833976317866044219],
+      retiredPropertyUids: const [
+        6391799891432596002,
+        6281726068887092049,
+        1374063591372238592,
+        4428027612275503602
+      ],
+      retiredRelationUids: const [
+        6404008765985708642,
+        7166231114413923972,
+        2660829391060280724
+      ],
       modelVersion: 5,
       modelVersionParserMinimum: 5,
       version: 1);
@@ -197,8 +310,10 @@ obx_int.ModelDefinition getObjectBoxModel() {
     Song: obx_int.EntityDefinition<Song>(
         model: _entities[0],
         toOneRelations: (Song object) => [],
-        toManyRelations: (Song object) =>
-            {obx_int.RelInfo<Song>.toMany(2, object.id!): object.playlist},
+        toManyRelations: (Song object) => {
+              obx_int.RelInfo<Song>.toMany(5, object.id!): object.playlistDB,
+              obx_int.RelInfo<Song>.toMany(6, object.id!): object.trackClipsDB
+            },
         getId: (Song object) => object.id,
         setId: (Song object, int id) {
           object.id = id;
@@ -228,9 +343,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
               : fbb.writeString(object.imageURL!);
           final trackIDOffset =
               object.trackID == null ? null : fbb.writeString(object.trackID!);
-          final setMusicLibraryServiceDBOffset =
-              fbb.writeString(object.setMusicLibraryServiceDB);
-          fbb.startTable(13);
+          final musicLibraryServiceDBOffset =
+              fbb.writeString(object.musicLibraryServiceDB);
+          fbb.startTable(15);
           fbb.addInt64(0, object.id ?? 0);
           fbb.addOffset(1, trackURIOffset);
           fbb.addOffset(2, artistNameOffset);
@@ -241,8 +356,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addOffset(7, albumNameOffset);
           fbb.addOffset(8, imageURLOffset);
           fbb.addOffset(9, trackIDOffset);
-          fbb.addInt64(10, object.setDurationDB);
-          fbb.addOffset(11, setMusicLibraryServiceDBOffset);
+          fbb.addOffset(12, musicLibraryServiceDBOffset);
+          fbb.addInt64(13, object.durationDB);
           fbb.finish(fbb.endTable());
           return object.id ?? 0;
         },
@@ -281,20 +396,22 @@ obx_int.ModelDefinition getObjectBoxModel() {
               albumImage: albumImageParam,
               albumName: albumNameParam,
               imageURL: imageURLParam)
-            ..setDurationDB =
-                const fb.Int64Reader().vTableGet(buffer, rootOffset, 24, 0)
-            ..setMusicLibraryServiceDB =
+            ..musicLibraryServiceDB =
                 const fb.StringReader(asciiOptimization: true)
-                    .vTableGet(buffer, rootOffset, 26, '');
-          obx_int.InternalToManyAccess.setRelInfo<Song>(object.playlist, store,
-              obx_int.RelInfo<Song>.toMany(2, object.id!));
+                    .vTableGet(buffer, rootOffset, 28, '')
+            ..durationDB =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 30, 0);
+          obx_int.InternalToManyAccess.setRelInfo<Song>(object.playlistDB,
+              store, obx_int.RelInfo<Song>.toMany(5, object.id!));
+          obx_int.InternalToManyAccess.setRelInfo<Song>(object.trackClipsDB,
+              store, obx_int.RelInfo<Song>.toMany(6, object.id!));
           return object;
         }),
     Playlist: obx_int.EntityDefinition<Playlist>(
         model: _entities[1],
         toOneRelations: (Playlist object) => [],
         toManyRelations: (Playlist object) =>
-            {obx_int.RelInfo<Playlist>.toMany(1, object.dbID!): object.songs},
+            {obx_int.RelInfo<Playlist>.toMany(4, object.dbID!): object.songsDB},
         getId: (Playlist object) => object.dbID,
         setId: (Playlist object, int id) {
           object.dbID = id;
@@ -346,8 +463,123 @@ obx_int.ModelDefinition getObjectBoxModel() {
               ownerName: ownerNameParam,
               imageUrl: imageUrlParam,
               totalTracks: totalTracksParam);
-          obx_int.InternalToManyAccess.setRelInfo<Playlist>(object.songs, store,
-              obx_int.RelInfo<Playlist>.toMany(1, object.dbID!));
+          obx_int.InternalToManyAccess.setRelInfo<Playlist>(object.songsDB,
+              store, obx_int.RelInfo<Playlist>.toMany(4, object.dbID!));
+          return object;
+        }),
+    TrackClip: obx_int.EntityDefinition<TrackClip>(
+        model: _entities[2],
+        toOneRelations: (TrackClip object) =>
+            [object.originalSongDB, object.linkedSongDB],
+        toManyRelations: (TrackClip object) => {},
+        getId: (TrackClip object) => object.dbID,
+        setId: (TrackClip object, int id) {
+          object.dbID = id;
+        },
+        objectToFB: (TrackClip object, fb.Builder fbb) {
+          final IDOffset = fbb.writeString(object.ID);
+          final clipPointsOffset = fbb.writeListFloat32(object.clipPoints);
+          final clipNameOffset = fbb.writeString(object.clipName);
+          final clipDescriptionOffset = object.clipDescription == null
+              ? null
+              : fbb.writeString(object.clipDescription!);
+          final musicLibraryServiceDBOffset =
+              fbb.writeString(object.musicLibraryServiceDB);
+          fbb.startTable(13);
+          fbb.addOffset(0, IDOffset);
+          fbb.addInt64(1, object.dbID ?? 0);
+          fbb.addOffset(3, clipPointsOffset);
+          fbb.addOffset(4, clipNameOffset);
+          fbb.addOffset(5, clipDescriptionOffset);
+          fbb.addInt64(6, object.dateCreated.millisecondsSinceEpoch);
+          fbb.addInt64(7, object.clipLengthDB);
+          fbb.addOffset(8, musicLibraryServiceDBOffset);
+          fbb.addInt64(10, object.originalSongDB.targetId);
+          fbb.addInt64(11, object.linkedSongDB.targetId);
+          fbb.finish(fbb.endTable());
+          return object.dbID ?? 0;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final clipPointsParam =
+              const fb.ListReader<double>(fb.Float32Reader(), lazy: false)
+                  .vTableGet(buffer, rootOffset, 10, []);
+          final clipNameParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 12, '');
+          final clipDescriptionParam =
+              const fb.StringReader(asciiOptimization: true)
+                  .vTableGetNullable(buffer, rootOffset, 14);
+          final dateCreatedParam = DateTime.fromMillisecondsSinceEpoch(
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 16, 0));
+          final IDParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 4, '');
+          final object = TrackClip(
+              clipPoints: clipPointsParam,
+              clipName: clipNameParam,
+              clipDescription: clipDescriptionParam,
+              dateCreated: dateCreatedParam,
+              ID: IDParam)
+            ..dbID =
+                const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 6)
+            ..clipLengthDB =
+                const fb.Int64Reader().vTableGet(buffer, rootOffset, 18, 0)
+            ..musicLibraryServiceDB =
+                const fb.StringReader(asciiOptimization: true)
+                    .vTableGet(buffer, rootOffset, 20, '');
+          object.originalSongDB.targetId =
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 24, 0);
+          object.originalSongDB.attach(store);
+          object.linkedSongDB.targetId =
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 26, 0);
+          object.linkedSongDB.attach(store);
+          return object;
+        }),
+    TrackClipPlaylist: obx_int.EntityDefinition<TrackClipPlaylist>(
+        model: _entities[3],
+        toOneRelations: (TrackClipPlaylist object) => [],
+        toManyRelations: (TrackClipPlaylist object) => {
+              obx_int.RelInfo<TrackClipPlaylist>.toMany(7, object.dbID!):
+                  object.clipsDB
+            },
+        getId: (TrackClipPlaylist object) => object.dbID,
+        setId: (TrackClipPlaylist object, int id) {
+          object.dbID = id;
+        },
+        objectToFB: (TrackClipPlaylist object, fb.Builder fbb) {
+          final playlistIDOffset = fbb.writeString(object.playlistID);
+          final playlistNameOffset = fbb.writeString(object.playlistName);
+          fbb.startTable(5);
+          fbb.addInt64(0, object.dbID ?? 0);
+          fbb.addOffset(1, playlistIDOffset);
+          fbb.addOffset(2, playlistNameOffset);
+          fbb.addInt64(3, object.dateCreated?.millisecondsSinceEpoch);
+          fbb.finish(fbb.endTable());
+          return object.dbID ?? 0;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final dateCreatedValue =
+              const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 10);
+          final playlistIDParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 6, '');
+          final playlistNameParam =
+              const fb.StringReader(asciiOptimization: true)
+                  .vTableGet(buffer, rootOffset, 8, '');
+          final dateCreatedParam = dateCreatedValue == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(dateCreatedValue);
+          final object = TrackClipPlaylist(
+              playlistID: playlistIDParam,
+              playlistName: playlistNameParam,
+              dateCreated: dateCreatedParam)
+            ..dbID =
+                const fb.Int64Reader().vTableGetNullable(buffer, rootOffset, 4);
+          obx_int.InternalToManyAccess.setRelInfo<TrackClipPlaylist>(
+              object.clipsDB,
+              store,
+              obx_int.RelInfo<TrackClipPlaylist>.toMany(7, object.dbID!));
           return object;
         })
   };
@@ -396,17 +628,21 @@ class Song_ {
   static final trackID =
       obx.QueryStringProperty<Song>(_entities[0].properties[9]);
 
-  /// See [Song.setDurationDB].
-  static final setDurationDB =
-      obx.QueryIntegerProperty<Song>(_entities[0].properties[10]);
+  /// See [Song.musicLibraryServiceDB].
+  static final musicLibraryServiceDB =
+      obx.QueryStringProperty<Song>(_entities[0].properties[10]);
 
-  /// See [Song.setMusicLibraryServiceDB].
-  static final setMusicLibraryServiceDB =
-      obx.QueryStringProperty<Song>(_entities[0].properties[11]);
+  /// See [Song.durationDB].
+  static final durationDB =
+      obx.QueryIntegerProperty<Song>(_entities[0].properties[11]);
 
-  /// see [Song.playlist]
-  static final playlist =
+  /// see [Song.playlistDB]
+  static final playlistDB =
       obx.QueryRelationToMany<Song, Playlist>(_entities[0].relations[0]);
+
+  /// see [Song.trackClipsDB]
+  static final trackClipsDB =
+      obx.QueryRelationToMany<Song, TrackClip>(_entities[0].relations[1]);
 }
 
 /// [Playlist] entity fields to define ObjectBox queries.
@@ -439,7 +675,73 @@ class Playlist_ {
   static final totalTracks =
       obx.QueryIntegerProperty<Playlist>(_entities[1].properties[6]);
 
-  /// see [Playlist.songs]
-  static final songs =
+  /// see [Playlist.songsDB]
+  static final songsDB =
       obx.QueryRelationToMany<Playlist, Song>(_entities[1].relations[0]);
+}
+
+/// [TrackClip] entity fields to define ObjectBox queries.
+class TrackClip_ {
+  /// See [TrackClip.ID].
+  static final ID =
+      obx.QueryStringProperty<TrackClip>(_entities[2].properties[0]);
+
+  /// See [TrackClip.dbID].
+  static final dbID =
+      obx.QueryIntegerProperty<TrackClip>(_entities[2].properties[1]);
+
+  /// See [TrackClip.clipPoints].
+  static final clipPoints =
+      obx.QueryDoubleVectorProperty<TrackClip>(_entities[2].properties[2]);
+
+  /// See [TrackClip.clipName].
+  static final clipName =
+      obx.QueryStringProperty<TrackClip>(_entities[2].properties[3]);
+
+  /// See [TrackClip.clipDescription].
+  static final clipDescription =
+      obx.QueryStringProperty<TrackClip>(_entities[2].properties[4]);
+
+  /// See [TrackClip.dateCreated].
+  static final dateCreated =
+      obx.QueryDateProperty<TrackClip>(_entities[2].properties[5]);
+
+  /// See [TrackClip.clipLengthDB].
+  static final clipLengthDB =
+      obx.QueryIntegerProperty<TrackClip>(_entities[2].properties[6]);
+
+  /// See [TrackClip.musicLibraryServiceDB].
+  static final musicLibraryServiceDB =
+      obx.QueryStringProperty<TrackClip>(_entities[2].properties[7]);
+
+  /// See [TrackClip.originalSongDB].
+  static final originalSongDB =
+      obx.QueryRelationToOne<TrackClip, Song>(_entities[2].properties[8]);
+
+  /// See [TrackClip.linkedSongDB].
+  static final linkedSongDB =
+      obx.QueryRelationToOne<TrackClip, Song>(_entities[2].properties[9]);
+}
+
+/// [TrackClipPlaylist] entity fields to define ObjectBox queries.
+class TrackClipPlaylist_ {
+  /// See [TrackClipPlaylist.dbID].
+  static final dbID =
+      obx.QueryIntegerProperty<TrackClipPlaylist>(_entities[3].properties[0]);
+
+  /// See [TrackClipPlaylist.playlistID].
+  static final playlistID =
+      obx.QueryStringProperty<TrackClipPlaylist>(_entities[3].properties[1]);
+
+  /// See [TrackClipPlaylist.playlistName].
+  static final playlistName =
+      obx.QueryStringProperty<TrackClipPlaylist>(_entities[3].properties[2]);
+
+  /// See [TrackClipPlaylist.dateCreated].
+  static final dateCreated =
+      obx.QueryDateProperty<TrackClipPlaylist>(_entities[3].properties[3]);
+
+  /// see [TrackClipPlaylist.clipsDB]
+  static final clipsDB = obx.QueryRelationToMany<TrackClipPlaylist, TrackClip>(
+      _entities[3].relations[0]);
 }

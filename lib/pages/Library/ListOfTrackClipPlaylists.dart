@@ -183,8 +183,8 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClipPlaylists> {
                           child: Trackui.buildTrackCard(context,
                               trackName: playlist.playlistName,
                               artistName: '',
-                              albumImageURL: playlist.clips.isNotEmpty
-                                  ? playlist.clips[0].song.albumImage ?? ''
+                              albumImageURL: playlist.clips!.isNotEmpty
+                                  ? playlist.clips![0].song!.albumImage ?? ''
                                   : null)),
 
                       ListTile(
@@ -207,7 +207,7 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClipPlaylists> {
                             ref
                                 .read(trackClipProvider.notifier)
                                 .appendRecentlyListenedToTrack(
-                                    playlist.clips[0]);
+                                    playlist.clips![0]);
                           }
                          
                         },
@@ -335,11 +335,11 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClipPlaylists> {
         style: TextStyle(color: Colors.white, fontSize: 14),
       ),
       leading:
-          playlist.clips.isNotEmpty && playlist.clips[0].song.albumImage != null
+          playlist.clips!.isNotEmpty && playlist.clips![0].song!.albumImage != null
               ? FadeInImage.assetNetwork(
                   placeholder:
                       'assets/loading_placeholder.gif', // Path to your placeholder image
-                  image: playlist.clips[0].song.albumImage!,
+                  image: playlist.clips![0].song!.albumImage!,
                   fit: BoxFit.cover,
                   width: 50.0, // Adjust the width as needed
                   height: 50.0, // Adjust the height as needed
@@ -417,18 +417,18 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClipPlaylists> {
   void _initPlaylistPlayback(TrackClipPlaylist playlist)  {
     ref.read(playbackProvider).init(PlaybackState(
         currentProgress: Duration.zero,
-        currentSong: playlist.clips[0].song,
+        currentSong: playlist.clips![0].song,
         startPosition:
-            Duration(milliseconds: playlist.clips[0].clipPoints[0].toInt()),
+            Duration(milliseconds: playlist.clips![0].clipPoints[0].toInt()),
         paused: true,
         currentTrackIndex: 0,
         trackClipPlaylist: playlist,
-        currentTrackClip: playlist.clips[0],
+        currentTrackClip: playlist.clips![0],
         inTrackClipPlaybackMode: true,
-        musicLibraryService: playlist.clips[0].musicLibraryService,
+        musicLibraryService: playlist.clips![0].musicLibraryService,
         isShuffleMode: false,
         isRepeatMode: false,
-        trackClipQueue: [...playlist.clips],
-        originalTrackQueue: [...playlist.clips]));
+        trackClipQueue: [...playlist.clips!],
+        originalTrackQueue: [...playlist.clips!]));
   }
 }

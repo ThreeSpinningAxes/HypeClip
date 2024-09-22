@@ -8,7 +8,7 @@ import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Providers/TrackClipProvider.dart';
 
 class MinimalTrackView extends ConsumerWidget {
-  final String? imageURL;
+final String? imageURL;
   final String trackName;
   final TrackClip? clip;
   final TrackClipPlaylist? playlist;
@@ -37,7 +37,7 @@ class MinimalTrackView extends ConsumerWidget {
                   startPosition:
                       Duration(milliseconds: clip!.clipPoints[0].toInt()),
                   paused: true,
-                  currentTrackIndex: playlist!.clips.indexOf(clip!),
+                  currentTrackIndex: playlist!.clips!.indexOf(clip!),
                   trackClipPlaylist: playlist,
                   currentTrackClip: clip,
                   inTrackClipPlaybackMode: true,
@@ -105,7 +105,7 @@ class MinimalTrackListView extends ConsumerWidget {
       mainAxisSpacing: 0,
       children: tracks.map((track) {
         return MinimalTrackView(
-          imageURL: track.song.albumImage,
+          imageURL: track.song!.albumImage,
           trackName: track.clipName,
           clip: track,
           playlist: ref.watch(trackClipProvider)[playlistName],
