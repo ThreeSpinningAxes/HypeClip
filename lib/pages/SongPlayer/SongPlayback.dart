@@ -22,7 +22,8 @@ class SongPlayback extends ConsumerStatefulWidget {
   final bool? inTrackClipPlaybackMode;
   final bool? resetForNewTrack;
 
-  const SongPlayback({super.key, this.inTrackClipPlaybackMode, this.resetForNewTrack});
+  const SongPlayback(
+      {super.key, this.inTrackClipPlaybackMode, this.resetForNewTrack});
 
   @override
   _SongPlaybackState createState() => _SongPlaybackState();
@@ -31,7 +32,6 @@ class SongPlayback extends ConsumerStatefulWidget {
 class _SongPlaybackState extends ConsumerState<SongPlayback> {
   bool _isLoading = true;
   late final MusicServiceHandler musicServiceHandler;
-  bool insideEvenHandler = false;
   bool error = false;
   bool initError = false;
   GenericErrorPage errorPage = GenericErrorPage();
@@ -40,35 +40,36 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
   void initState() {
     super.initState();
     musicServiceHandler = MusicServiceHandler(service: widget.service);
+    PlaybackNotifier playbackNotifier = ref.read(playbackProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         _isLoading = true;
-        insideEvenHandler = true;
+        playbackNotifier.insideEvent = true;
       });
       _asyncInit().then((value) {
         setState(() {});
       });
       setState(() {
         _isLoading = false;
-        insideEvenHandler = false;
+        playbackNotifier.insideEvent = false;
       });
     });
   }
 
   void _refresh() async {
+    PlaybackNotifier playbackNotifier = ref.read(playbackProvider);
     setState(() {
       _isLoading = true;
-      insideEvenHandler = true;
+      playbackNotifier.insideEvent = true;
     });
     await _asyncInit();
     setState(() {
       _isLoading = false;
-      insideEvenHandler = false;
+      playbackNotifier.insideEvent = false;
     });
   }
 
   _asyncInit() async {
-   
     Response r = await musicServiceHandler.isStreaingServiceAppOpen();
     if (r.statusCode != 200 && r.statusCode != 204) {
       errorPage = GenericErrorPage(
@@ -90,11 +91,12 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       r = await ref.watch(playbackProvider).playTrackAfterInit();
       if (r.statusCode != 200 && r.statusCode != 204) {
         errorPage = GenericErrorPage(
-            errorHeader:
-                "Failed to play track ${playbackState.currentSong!.songName}",
-            errorDescription: jsonDecode(r.body)['error']['message'],
-            buttonText: "Retry",
-            buttonAction: _refresh,);
+          errorHeader:
+              "Failed to play track ${playbackState.currentSong!.songName}",
+          errorDescription: jsonDecode(r.body)['error']['message'],
+          buttonText: "Retry",
+          buttonAction: _refresh,
+        );
 
         setState(() {
           error = true;
@@ -103,21 +105,18 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
         return;
       }
     }
-     setState(() {
-        error = false;
-        initError = false;
-      });
+    setState(() {
+      error = false;
+      initError = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Container(
-        child: Center(
-          child: CircularProgressIndicator(
-            color: Colors.white,
-            
-          ),
+      return Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
         ),
       );
     }
@@ -125,38 +124,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       return errorPage;
     }
     final playBack = ref.watch(playbackProvider);
-    final PlaybackState playbackState = ref.watch(playbackProvider).playbackState;
-    final Song currentSong;
+    final PlaybackState playbackState = playBack.playbackState;
     final String trackName = playbackState.currentTrackName!;
     final int trackDuration = playbackState.trackLength!;
     final String trackArtist = playbackState.currentTrackArtist!;
     final String trackImg = playbackState.currentTrackImg!;
-
-
-    if (playbackState.inTrackClipPlaybackMode ?? false) {
-      currentSong = playbackState.currentTrackClip!.song!;
-
-    } else {
-      currentSong = playbackState.currentSong!;
-    }
-
-    if (!playbackState.isRepeatMode &&
-        !playbackState.paused! &&
-        playbackState.autoplay &&
-        !insideEvenHandler) {
-      if (playbackState.currentProgress!.inMilliseconds >= trackDuration) {
-        _playNextSong();
-      }
-    } else if (playbackState.isRepeatMode && !playbackState.paused!) {
-      if (playbackState.currentProgress!.inMilliseconds >= trackDuration) {
-        setState(() {
-          playbackState.currentProgress = Duration.zero;
-          playBack.timer.currentProgress = Duration.zero;
-          playbackState.paused = false;
-        });
-        _seek(seek: 0);
-      }
-    }
 
     return Scaffold(
       body: SafeArea(
@@ -181,13 +153,14 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                       size: 28,
                     ),
                     onPressed: () {
-                      if (insideEvenHandler) {
+                      PlaybackNotifier playBack = ref.read(playbackProvider);
+                      if (playBack.insideEvent) {
                         return;
                       }
                       if (context.mounted) {
                         context.pop();
                       }
-                      
+
                       if (!error) {
                         ref.read(miniPlayerVisibilityProvider.notifier).state =
                             true;
@@ -247,39 +220,38 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                                 ? Color.fromARGB(255, 8, 104, 187)
                                 : Colors.white,
                             onPressed: () {
-                              setState(() {
-                                playbackState.isRepeatMode =
-                                    !playbackState.isRepeatMode;
-                              });
+                              PlaybackNotifier playBack =
+                                  ref.read(playbackProvider);
+                              if (playBack.insideEvent) {
+                                return;
+                              }
+                              playBack.updatePlaybackState(
+                                  isRepeatMode: !playbackState.isRepeatMode);
                             },
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              
-                                IconButton(
-                                    icon: Icon(Icons.skip_previous,
-                                        color: Colors.white),
-                                         
-                                    onPressed: () async {
-                                      if (!insideEvenHandler) {
-                                        setState(() {
-                                          insideEvenHandler = true;
-                                        });
-                                        if (playbackState.currentProgress!
-                                                .inMilliseconds <=Duration(seconds: 3).inMilliseconds) {
-                                                  await _playPreviousSong();
-                                          
-                                        } else if (playbackState.currentProgress!
-                                                .inMilliseconds >= Duration(seconds: 3).inMilliseconds) 
-                                             {
-                                          await _seek(seek: 0);
-                                        }
-                                        setState(() {
-                                          insideEvenHandler = false;
-                                        });
+                              IconButton(
+                                  icon: Icon(Icons.skip_previous,
+                                      color: Colors.white),
+                                  onPressed: () async {
+                                    PlaybackNotifier playBack =
+                                        ref.read(playbackProvider);
+                                    if (!playBack.insideEvent) {
+                                      playBack.insideEvent = true;
+                                      if (playbackState.currentProgress!
+                                              .inMilliseconds <=
+                                          Duration(seconds: 3).inMilliseconds) {
+                                        await _playPreviousSong();
+                                      } else if (playbackState.currentProgress!
+                                              .inMilliseconds >=
+                                          Duration(seconds: 3).inMilliseconds) {
+                                        await _seek(seek: 0);
                                       }
-                                    }),
+                                      playBack.insideEvent = false;
+                                    }
+                                  }),
                               IconButton(
                                   icon: Icon(
                                       playbackState.paused!
@@ -289,25 +261,23 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                                       size: 36),
                                   onPressed: () async {
                                     await _pausePlayback(
-                                        currentSong, trackDuration);
+                                        playbackState.currentSong!,
+                                        trackDuration);
                                   }),
-                              
-                                IconButton(
-                                    icon: Icon(Icons.skip_next,
-                                        color: Colors.white),
-                                    onPressed: () async {
-                                      if (!insideEvenHandler) {
-                                        setState(() {
-                                          insideEvenHandler = true;
-                                        });
+                              IconButton(
+                                  icon: Icon(Icons.skip_next,
+                                      color: Colors.white),
+                                  onPressed: () async {
+                                    PlaybackNotifier playBack =
+                                        ref.read(playbackProvider);
+                                    if (!playBack.insideEvent) {
+                                      playBack.insideEvent = true;
 
-                                        await _playNextSong();
+                                      await _playNextSong();
 
-                                        setState(() {
-                                          insideEvenHandler = false;
-                                        });
-                                      }
-                                    }),
+                                      playBack.insideEvent = false;
+                                    }
+                                  }),
                             ],
                           ),
                           IconButton(
@@ -316,20 +286,17 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                                   ? Color.fromARGB(255, 8, 104, 187)
                                   : Colors.white,
                               onPressed: () {
-                                if (!insideEvenHandler) {
-                                  setState(() {
-                                    insideEvenHandler = true;
-                                  });
+                                PlaybackNotifier playBack =
+                                    ref.read(playbackProvider);
+                                if (!playBack.insideEvent) {
+                                  playBack.insideEvent = true;
 
                                   if (!playbackState.isShuffleMode) {
                                     playBack.shuffleQueue();
                                   } else {
                                     playBack.undueShuffle();
                                   }
-
-                                  setState(() {
-                                    insideEvenHandler = false;
-                                  });
+                                  playBack.insideEvent = false;
                                 }
                               }),
                         ],
@@ -338,6 +305,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                           !playbackState.inTrackClipPlaybackMode!)
                         IconButton(
                             onPressed: () {
+                              PlaybackNotifier playBack =
+                                  ref.read(playbackProvider);
+                              if (playBack.insideEvent) {
+                                return;
+                              }
                               context.pushNamed('clipEditor');
                             },
                             icon: Icon(
@@ -360,20 +332,20 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                           //buffered: Duration(milliseconds: 2000),
                           total: Duration(milliseconds: trackDuration),
                           onSeek: (duration) async {
-                            if (insideEvenHandler) {
+                            PlaybackNotifier playBack =
+                                ref.read(playbackProvider);
+                            if (playBack.insideEvent) {
                               return;
                             }
 
-                            setState(() {
-                              insideEvenHandler = true;
-                            });
-
+                            playBack.insideEvent = true;
                             if (playbackState.paused!) {
-                              setState(() {
-                                playBack.playbackState.currentProgress =
-                                    duration;
-                                playBack.timer.currentProgress = duration;
-                              });
+                              // setState(() {
+                              //   playBack.playbackState.currentProgress =
+                              //       duration;
+                              // });
+                              playBack.updatePlaybackState(
+                                  currentProgress: duration);
                             } else if (playbackState
                                     .currentProgress!.inMilliseconds >=
                                 trackDuration) {
@@ -382,9 +354,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                               await _seek(seek: duration.inMilliseconds);
                             }
 
-                            setState(() {
-                              insideEvenHandler = false;
-                            });
+                            playBack.insideEvent = false;
                           },
                         ),
                       ),
@@ -396,13 +366,20 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                           ),
                           color: Colors.white,
                           onPressed: () async {
+                            PlaybackNotifier playBack =
+                                    ref.read(playbackProvider);
+                            if (playBack.insideEvent) {
+                              return;
+                            }
+                            playBack.insideEvent = true;
                             await _seek(seek: 0);
+                            playBack.insideEvent = false;
                           },
                         ),
                       SizedBox(height: 10),
                       TextButton(
                         onPressed: () {
-                          if (insideEvenHandler) {
+                          if (playBack.insideEvent) {
                             return;
                           }
                           context.pushNamed('queue');
@@ -410,9 +387,9 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                         child: Text(
                           "Queue",
                           style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              ),
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -449,7 +426,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
   }
 
   Future<void> _playPreviousSong() async {
-    insideEvenHandler = true;
+    
     Response r = await ref.read(playbackProvider).playPreviousTrack();
     if (r.statusCode != 200 && r.statusCode != 204) {
       setState(() {
@@ -508,11 +485,12 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
   }
 
   Future<void> _pausePlayback(Song currentSong, int trackDuration) async {
-    if (!insideEvenHandler) {
-      setState(() {
-        insideEvenHandler = true;
-      });
-      PlaybackNotifier playBack = ref.read(playbackProvider);
+    PlaybackNotifier playBack = ref.read(playbackProvider);
+    if(playBack.insideEvent) {
+      return;
+    }
+    playBack.insideEvent = true;
+      
       PlaybackState playbackState = ref.read(playbackProvider).playbackState;
       if (playbackState.paused!) {
         if (playbackState.currentProgress!.inMilliseconds >= trackDuration) {
@@ -532,11 +510,9 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
         }
       }
 
-      setState(() {
-        insideEvenHandler = false;
-      });
+     playBack.insideEvent = false;
     }
-  }
+  
 
   @override
   void setState(VoidCallback fn) {

@@ -23,7 +23,6 @@ class MiniPlayerView extends ConsumerStatefulWidget {
 
 class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
     with TickerProviderStateMixin {
-  bool insideEventHandler = false;
   double marqueeVelocity = 25;
   double _leftPosition = 0.0;
   bool _isSwiped = false;
@@ -79,40 +78,10 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
       return SizedBox.shrink();
     }
     final playBack = ref.watch(playbackProvider);
-    final PlaybackState playbackState =
-        ref.watch(playbackProvider).playbackState;
-
-    Song currentSong;
-    final Duration trackLength;
-    String trackName;
-
-    if (playBack.playbackState.inTrackClipPlaybackMode ?? false) {
-      currentSong = playBack.playbackState.currentTrackClip!.song!;
-      trackLength = playBack.playbackState.currentTrackClip!.clipLength!;
-      trackName = playBack.playbackState.currentTrackClip!.clipName;
-    } else {
-      currentSong = playBack.playbackState.currentSong!;
-      trackLength = playBack.playbackState.currentSong!.duration!;
-      trackName = playBack.playbackState.currentSong!.songName!;
-    }
-
-    if (playbackState.isRepeatMode) {
-      if (playbackState.currentProgress!.inMilliseconds >=
-          trackLength.inMilliseconds) {
-        setState(() {
-          _seek(seek: 0);
-        });
-      }
-    }
-
-    if (!playbackState.paused! &&
-        !playbackState.isRepeatMode &&
-        playbackState.currentProgress!.inMilliseconds >=
-            trackLength.inMilliseconds) {
-      setState(() {
-        _playNextTrack();
-      });
-    }
+    final PlaybackState playbackState = playBack.playbackState;
+    String trackName = playbackState.currentTrackName!;
+    final Duration trackLength =
+        Duration(milliseconds: playbackState.trackLength!);
 
     return Container(
       height: 70.0,
@@ -178,9 +147,8 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                   onTap: () {
                     ref.read(miniPlayerVisibilityProvider.notifier).state =
                         false;
-                    context.pushNamed('songPlayer', queryParameters: {
-                      'resetForNewTrack': 'false'
-                    });
+                    context.pushNamed('songPlayer',
+                        queryParameters: {'resetForNewTrack': 'false'});
                     //   context,
                     //   PageRouteBuilder(
                     //     pageBuilder: (context, animation, secondaryAnimation) =>
@@ -219,8 +187,8 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                 Padding(
                                   padding: const EdgeInsets.only(left: 10.0),
                                   child: Image.network(
-                                    currentSong.songImage ??
-                                        currentSong.albumImage!,
+                                    playbackState.currentTrackImg ??
+                                        'assets/placeHolderImages/music.png',
                                     width: 40.0,
                                     height: 40.0,
                                     fit: BoxFit.cover,
@@ -233,29 +201,6 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                         CrossAxisAlignment.start,
                                     //mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      // SizedBox(
-                                      //   height: 20, // Set a fixed height
-                                      //   child: Marquee(
-                                      //     crossAxisAlignment: CrossAxisAlignment.start,
-                                      //     textDirection: TextDirection.ltr,
-                                      //     text: "${currentSong.songName!} | ${currentSong.artistName!}",
-                                      //     numberOfRounds: 3,
-                                      //     onDone: () {
-                                      //       marqueeVelocity *= -1;
-                                      //     },
-                                      //     velocity: marqueeVelocity,
-                                      //     pauseAfterRound: Duration(seconds: 1),
-                                      //     startAfter: Duration(seconds: 1),
-
-                                      //     style: TextStyle(
-                                      //       fontSize: 14,
-
-                                      //       color: Colors.white,
-                                      //       fontWeight: FontWeight.bold,
-                                      //     ),
-                                      //   ),
-                                      // ),
-
                                       Text(
                                         trackName,
                                         style: TextStyle(
@@ -269,7 +214,8 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                         height: 4,
                                       ),
                                       Text(
-                                        currentSong.artistName!,
+                                        playbackState.currentTrackArtist ??
+                                            'unkown artist',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 12,
@@ -292,10 +238,11 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                     color: Colors.white,
                                   ),
                                   onPressed: () async {
-                                    if (!insideEventHandler) {
-                                      setState(() {
-                                        insideEventHandler = true;
-                                      });
+                                    PlaybackNotifier playBack =
+                                        ref.read(playbackProvider);
+                                    playBack.insideEvent = true;
+                                    if (!playBack.insideEvent) {
+                                      playBack.insideEvent = true;
 
                                       if (playbackState.paused!) {
                                         if (playbackState.currentProgress!
@@ -312,15 +259,16 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                                   .inMilliseconds);
                                         }
                                       } else {
-                                        bool? r = await ref.read(playbackProvider).pauseTrack();
+                                        bool? r = await ref
+                                            .read(playbackProvider)
+                                            .pauseTrack();
                                         if (r == false) {
                                           ShowSnackBar.showSnackbarError(
                                               context, 'Error pausing song', 5);
                                         }
                                       }
-                                      setState(() {
-                                        insideEventHandler = false;
-                                      });
+
+                                      playBack.insideEvent = false;
                                     }
 
                                     // var x = await SpotifyService().getAvailableDevices();
@@ -331,7 +279,9 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                     false)
                                   IconButton(
                                       onPressed: () {
-                                        if (insideEventHandler) {
+                                        PlaybackNotifier playBack =
+                                            ref.read(playbackProvider);
+                                        if (playBack.insideEvent) {
                                           return;
                                         }
 
@@ -355,16 +305,18 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                     true)
                                   IconButton(
                                       onPressed: () async {
-                                        if (insideEventHandler) {
+                                        PlaybackNotifier playBack =
+                                            ref.read(playbackProvider);
+                                        if (playBack.insideEvent) {
                                           return;
                                         }
                                         setState(() {
-                                          insideEventHandler = true;
+                                          playBack.insideEvent = true;
                                         });
                                         await _seek(seek: 0);
                                         setState(() {
-                                        insideEventHandler = false;
-                                      });
+                                          playBack.insideEvent = false;
+                                        });
                                       },
                                       icon: Icon(
                                         Icons.refresh,
@@ -373,23 +325,17 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                               ],
                             ),
                             ProgressBar(
-                              progress: ref
-                                  .read(playbackProvider)
-                                  .playbackState
-                                  .currentProgress!,
+                              progress: playBack.currentProgress,
                               total: trackLength,
                               onSeek: (duration) async {
-                                if (!insideEventHandler) {
-                                  setState(() {
-                                    insideEventHandler = true;
-                                  });
+                                PlaybackNotifier playBack =
+                                    ref.read(playbackProvider);
+                                if (!playBack.insideEvent) {
+                                  playBack.insideEvent = true;
 
                                   if (playbackState.paused!) {
-                                    setState(() {
-                                      playBack.playbackState.currentProgress =
-                                          duration;
-                                      playBack.timer.currentProgress = duration;
-                                    });
+                                    playBack.updatePlaybackState(
+                                        currentProgress: duration);
                                   } else if (playbackState
                                           .currentProgress!.inMilliseconds >=
                                       trackLength.inMilliseconds) {
@@ -397,9 +343,8 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                   } else {
                                     await _seek(seek: duration.inMilliseconds);
                                   }
-                                  setState(() {
-                                    insideEventHandler = false;
-                                  });
+
+                                  playBack.insideEvent = false;
                                 }
                               },
                               baseBarColor: Colors.black,
@@ -443,7 +388,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
 
   Future<void> _playNextTrack() async {
     Response? r = await ref.watch(playbackProvider).playNextTrack();
-    
+
     Response response = r;
     if (response.statusCode != 204 && response.statusCode != 200) {
       if (mounted) {
@@ -467,6 +412,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
   }
 
   void _showError(Response r) async {
-     ShowSnackBar.showSnackbarError(context, r.body, 3, miniPlayerVisibility: ref.read(miniPlayerVisibilityProvider));
+    ShowSnackBar.showSnackbarError(context, r.body, 3,
+        miniPlayerVisibility: ref.read(miniPlayerVisibilityProvider));
   }
 }

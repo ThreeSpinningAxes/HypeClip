@@ -20,10 +20,11 @@ class PlaybackNotifier extends ChangeNotifier {
       MusicServiceHandler(service: MusicLibraryService.spotify);
 
   PlaybackState playbackState = PlaybackState();
-  ProgressTimer timer =
-      ProgressTimer(trackLength: Duration.zero,);
+  ProgressTimer timer = ProgressTimer(
+    trackLength: Duration.zero,
+  );
 
-  Duration get currentProgress => timer.currentProgress;
+  Duration get currentProgress => playbackState.currentProgress!;
   bool _insideEvent = false;
 
   bool get insideEvent => _insideEvent;
@@ -126,24 +127,18 @@ class PlaybackNotifier extends ChangeNotifier {
           queue.removeAt(index);
           index = 0;
           playbackState.currentTrackIndex = 0;
-        }
-        else {
+        } else {
           queue.removeAt(index);
         }
 
-        
-        
         playNewTrackInList(index, autoplay: true);
-        
-      }
-      else {
+      } else {
         queue.removeAt(index);
         if (index < playbackState.currentTrackIndex!) {
-          playbackState.currentTrackIndex = playbackState.currentTrackIndex! - 1;
+          playbackState.currentTrackIndex =
+              playbackState.currentTrackIndex! - 1;
         }
       }
-      
-      
     } else {
       playbackState.currentSong = null;
       playbackState.currentTrackClip = null;
@@ -181,15 +176,10 @@ class PlaybackNotifier extends ChangeNotifier {
     }
   }
 
-  void setCurrentProgress({required Duration progress}) {
-    timer.setCurrentProgress(progress);
-    playbackState.currentProgress = progress;
-    notifyListeners();
-  }
-
   void init(PlaybackState newPlaybackState) {
-    Object? prevTrack = playbackState.currentSong ?? playbackState.currentTrackClip;
-   
+    Object? prevTrack =
+        playbackState.currentSong ?? playbackState.currentTrackClip;
+
     playbackState = playbackState.copyState(newPlaybackState);
 
     if (playbackState.musicLibraryService != musicServiceHandler.service) {
@@ -200,8 +190,10 @@ class PlaybackNotifier extends ChangeNotifier {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
       trackLength = playbackState.currentTrackClip!.clipLength!;
       playbackState.currentTrackName = playbackState.currentTrackClip!.clipName;
-      playbackState.currentTrackArtist = playbackState.currentTrackClip!.song!.artistName;
-      playbackState.currentTrackImg = playbackState.currentTrackClip!.song!.albumImage;
+      playbackState.currentTrackArtist =
+          playbackState.currentTrackClip!.song!.artistName;
+      playbackState.currentTrackImg =
+          playbackState.currentTrackClip!.song!.albumImage;
     } else {
       trackLength = playbackState.currentSong!.duration!;
       playbackState.currentTrackName = playbackState.currentSong!.songName;
@@ -213,18 +205,18 @@ class PlaybackNotifier extends ChangeNotifier {
     }
     timer = ProgressTimer(
         trackLength: trackLength,
-        
         playbackState: playbackState,
         playbackNotifier: this);
     initalized = true;
 
     playbackState.trackLength = trackLength.inMilliseconds;
 
-    if (playbackState.domColorLinGradient == null || prevTrack != playbackState.currentSong ||
+    if (playbackState.domColorLinGradient == null ||
+        prevTrack != playbackState.currentSong ||
         prevTrack != playbackState.currentTrackClip) {
-          setImagePalette();
+      setImagePalette();
     }
-    
+
     timer.addListener(() {
       notifyListeners();
     });
@@ -265,8 +257,9 @@ class PlaybackNotifier extends ChangeNotifier {
       if (!timer.isActive()) {
         timer.start(seek: seek);
       } else {
-        timer.currentProgress = Duration(
-            milliseconds: seek ?? timer.currentProgress.inMilliseconds);
+        playbackState.currentProgress = Duration(
+            milliseconds:
+                seek ?? playbackState.currentProgress!.inMilliseconds);
       }
     } else {
       playbackState.paused = true;
@@ -275,9 +268,15 @@ class PlaybackNotifier extends ChangeNotifier {
     return r;
   }
 
-  Future<Response> seekCurrentTrack(int? seek) async {
+  Future<Response> seekCurrentTrack(int seek) async {
     Song song;
-    int playbackOffset = seek ?? 0;
+    int playbackOffset = seek;
+    Duration oldPosition = playbackState.currentProgress!;
+
+    //change the seek value on the bar, revert it if the seek failed
+    playbackState.currentProgress = Duration(milliseconds: seek);
+    notifyListeners();
+
     if (playbackState.inTrackClipPlaybackMode ?? false) {
       song = playbackState.currentTrackClip!.song!;
       playbackOffset += playbackState.currentTrackClip!.clipPoints[0].toInt();
@@ -285,27 +284,20 @@ class PlaybackNotifier extends ChangeNotifier {
       song = playbackState.currentSong!;
     }
     Response r;
-    if (seek != null) {
-      r = await musicServiceHandler.playTrack(song.trackURI,
-          position: playbackOffset);
-    } else {
-      int position = playbackState.currentProgress!.inMilliseconds;
-      if (playbackState.inTrackClipPlaybackMode ?? false) {
-        position += playbackOffset;
-      }
-      r = await musicServiceHandler.playTrack(song.trackURI,
-          position: position);
-    }
+    r = await musicServiceHandler.playTrack(song.trackURI,
+        position: playbackOffset);
 
     if (r.statusCode == 200 || r.statusCode == 204) {
       playbackState.paused = false;
-      timer.currentProgress = Duration(milliseconds: seek!);
+
+      playbackState.currentProgress = Duration(milliseconds: seek);
       if (!timer.isActive()) {
         timer.start(seek: seek);
       }
     } else {
       playbackState.paused = true;
       timer.stop();
+      playbackState.currentProgress = oldPosition;
     }
     notifyListeners();
     return r;
@@ -314,7 +306,7 @@ class PlaybackNotifier extends ChangeNotifier {
   Future<bool?> pauseTrack() async {
     bool? pauseSuccessful = await musicServiceHandler.pausePlayback();
     Duration currentTime =
-        Duration(milliseconds: timer.currentProgress.inMilliseconds);
+        Duration(milliseconds: playbackState.currentProgress!.inMilliseconds);
     if (pauseSuccessful == true) {
       timer.stop();
       playbackState.paused = true;
@@ -324,7 +316,12 @@ class PlaybackNotifier extends ChangeNotifier {
     return pauseSuccessful;
   }
 
-  Future<Response> playNewTrackInList(int index, {bool? autoplay, bool updateGradient = false}) async {
+  bool inEvent() {
+    return _insideEvent;
+  }
+
+  Future<Response> playNewTrackInList(int index,
+      {bool? autoplay, bool updateGradient = false}) async {
     Song? newTrack;
     int trackStartPosition = 0;
     int trackLength = 0;
@@ -346,30 +343,33 @@ class PlaybackNotifier extends ChangeNotifier {
       }
       newTrack = playbackState.trackQueue![index];
       trackLength = newTrack.duration!.inMilliseconds;
-
     }
     if (autoplay ?? playbackState.autoplay) {
       Response r = await musicServiceHandler.playTrack(newTrack!.trackURI,
           position: trackStartPosition);
       if (r.statusCode == 200 || r.statusCode == 204) {
-        
-        playbackState.currentProgress = Duration.zero; //reset progress for new track
+        playbackState.currentProgress =
+            Duration.zero; //reset progress for new track
         playbackState.trackLength = trackLength;
         timer.resetForNewTrack(Duration(milliseconds: trackLength));
         timer.start();
         if (playbackState.inTrackClipPlaybackMode ?? false) {
-
           playbackState.currentTrackClip = playbackState.trackClipQueue![index];
           playbackState.currentSong = playbackState.trackClipQueue![index].song;
-          playbackState.currentTrackName = playbackState.trackClipQueue![index].clipName;
-          playbackState.currentTrackArtist = playbackState.trackClipQueue![index].song!.artistName;
-          playbackState.currentTrackImg = playbackState.trackClipQueue![index].song!.albumImage;      
-        }
-        else {
+          playbackState.currentTrackName =
+              playbackState.trackClipQueue![index].clipName;
+          playbackState.currentTrackArtist =
+              playbackState.trackClipQueue![index].song!.artistName;
+          playbackState.currentTrackImg =
+              playbackState.trackClipQueue![index].song!.albumImage;
+        } else {
           playbackState.currentSong = playbackState.trackQueue![index];
-          playbackState.currentTrackName = playbackState.trackQueue![index].songName;
-          playbackState.currentTrackArtist = playbackState.trackQueue![index].artistName;
-          playbackState.currentTrackImg = playbackState.trackQueue![index].albumImage;
+          playbackState.currentTrackName =
+              playbackState.trackQueue![index].songName;
+          playbackState.currentTrackArtist =
+              playbackState.trackQueue![index].artistName;
+          playbackState.currentTrackImg =
+              playbackState.trackQueue![index].albumImage;
           playbackState.currentTrackClip = null;
         }
 
@@ -377,7 +377,7 @@ class PlaybackNotifier extends ChangeNotifier {
         playbackState.paused = false;
 
         if (updateGradient) {
-         setImagePalette();
+          setImagePalette();
         }
         notifyListeners();
       }
@@ -434,9 +434,13 @@ class PlaybackNotifier extends ChangeNotifier {
       playbackState.originalTrackQueue =
           List.from(playbackState.trackClipQueue!);
       playbackState.trackClipQueue?.shuffle();
+      playbackState.currentTrackIndex = playbackState.trackClipQueue!
+          .indexWhere((element) => element == playbackState.currentTrackClip);
     } else {
       playbackState.originalTrackQueue = List.from(playbackState.trackQueue!);
       playbackState.trackQueue?.shuffle();
+      playbackState.currentTrackIndex = playbackState.trackQueue!
+          .indexWhere((element) => element == playbackState.currentSong);
     }
     notifyListeners();
   }
@@ -446,8 +450,12 @@ class PlaybackNotifier extends ChangeNotifier {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
       playbackState.trackClipQueue =
           List.from(playbackState.originalTrackQueue!);
+      playbackState.currentTrackIndex = playbackState.trackClipQueue!
+          .indexWhere((element) => element == playbackState.currentTrackClip);
     } else {
       playbackState.trackQueue = List.from(playbackState.originalTrackQueue!);
+      playbackState.currentTrackIndex = playbackState.trackQueue!
+          .indexWhere((element) => element == playbackState.currentSong);
     }
     notifyListeners();
   }
@@ -506,7 +514,6 @@ class PlaybackNotifier extends ChangeNotifier {
   }
 
   void setProgress(int progress) {
-    timer.currentProgress = Duration(milliseconds: progress);
     playbackState.currentProgress = Duration(milliseconds: progress);
     notifyListeners();
   }

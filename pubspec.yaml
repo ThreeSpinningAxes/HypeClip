@@ -99,6 +99,9 @@ flutter:
     - assets/youtubeMusicIcon.svg
     - assets/app_icon_music_round_192.svg
     - assets/loading_placeholder.gif
+    - assets/placeHolderImages/music.png
+    - assets/
+    
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

@@ -47,6 +47,10 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
   @override
   void initState() {
     super.initState();
+    if (ref.exists(playbackProvider)) {
+      ref.read(playbackProvider).playbackState.inClipEditorMode = true;
+    } 
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _asyncInit();
     });

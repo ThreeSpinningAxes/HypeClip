@@ -298,7 +298,6 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                         if (playbackState.paused!) {
                           setState(() {
                             playBack.playbackState.currentProgress = duration;
-                            playBack.timer.currentProgress = duration;
                           });
                         } else {
                           await _seek(seek: duration.inMilliseconds);

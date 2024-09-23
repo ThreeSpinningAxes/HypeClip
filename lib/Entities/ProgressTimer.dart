@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
 
-
-
-class ProgressTimer extends ChangeNotifier  {
+class ProgressTimer extends ChangeNotifier {
   final Duration interval = Duration(milliseconds: 100);
   Timer? _timer;
   Duration trackLength;
@@ -15,32 +13,35 @@ class ProgressTimer extends ChangeNotifier  {
   late PlaybackState? playbackState = PlaybackState();
   late PlaybackNotifier? playbackNotifier;
 
-
-  ProgressTimer({required this.trackLength, this.playbackState, this.playbackNotifier});
+  ProgressTimer(
+      {required this.trackLength, this.playbackState, this.playbackNotifier});
 
   void setPlaybackState(PlaybackState playbackState) {
     this.playbackState = playbackState;
   }
 
-
-
   void start({int? seek}) {
     if (seek != null) {
-      playbackNotifier!.playbackState.currentProgress = Duration(milliseconds: seek);
-
+      playbackNotifier!.playbackState.currentProgress =
+          Duration(milliseconds: seek);
     }
-    if (playbackNotifier!.playbackState.currentProgress!.inMilliseconds < trackLength.inMilliseconds) {
+    if (playbackNotifier!.playbackState.currentProgress!.inMilliseconds <
+        trackLength.inMilliseconds) {
       trackFinished = false;
     }
     _timer = Timer.periodic(interval, (timer) async {
-      if (playbackNotifier!.playbackState.currentProgress!.inMilliseconds < trackLength.inMilliseconds) {         
-          playbackNotifier!.playbackState.currentProgress =  Duration(milliseconds: playbackNotifier!.currentProgress.inMilliseconds + 100);
-          notifyListeners();         
+      if (playbackNotifier!.playbackState.currentProgress!.inMilliseconds <
+          trackLength.inMilliseconds) {
+        playbackNotifier!.playbackState.currentProgress = Duration(
+            milliseconds:
+                playbackNotifier!.currentProgress.inMilliseconds + 100);
+        notifyListeners();
       } else {
-         playbackNotifier!.playbackState.currentProgress = trackLength;
-          trackFinished = true;
-          timer.cancel();
-        
+        playbackNotifier!.playbackState.currentProgress = trackLength;
+        trackFinished = true;
+        timer.cancel();
+        await handleTrackEnd();
+
         notifyListeners(); // Stop the timer if the song ends
       }
     });
@@ -49,8 +50,6 @@ class ProgressTimer extends ChangeNotifier  {
   void stop() {
     _timer!.cancel();
   }
-
-
 
   void resetForNewTrack(Duration newTrackLength) {
     _timer!.cancel();
@@ -66,6 +65,34 @@ class ProgressTimer extends ChangeNotifier  {
     return _timer!.isActive;
   }
 
+  Future<void> handleTrackEnd() async {
+    PlaybackState playbackState = playbackNotifier!.playbackState;
+    if (playbackNotifier?.insideEvent ?? false) {
+      return;
+    }
+    playbackNotifier!.insideEvent = true;
+    notifyListeners();
 
+    //regular song playback
+    if (!playbackState.inClipEditorMode) {
+      if (!playbackState.paused!) {
+        if (playbackState.isRepeatMode) {
+          await playbackNotifier!.seekCurrentTrack(0);
+        } else {
+          await playbackNotifier!.playNextTrack();
+          playbackNotifier!.setImagePalette();
+        }
+      }
+      return;
+    } else if (playbackState.inClipEditorMode) {
+      if (playbackState.isRepeatMode) {
+        await playbackNotifier!.seekCurrentTrack(0);
+      }
 
+      return;
+    }
+
+    playbackNotifier!.insideEvent = false;
+    notifyListeners();
+  }
 }
