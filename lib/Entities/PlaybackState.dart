@@ -38,6 +38,9 @@ class PlaybackState {
   String? currentTrackImg;
 
   bool? error; //implement error afterwards
+  bool? isSeeking = false;
+
+  List<double>? clipValues = [0.0, 0.0];
 
 
   PlaybackState({
@@ -64,6 +67,8 @@ class PlaybackState {
     this.currentTrackArtist,
     this.currentTrackImg,
     this.currentTrackName,
+    this.clipValues,
+    this.isSeeking = false,
 
   });
 
@@ -91,6 +96,8 @@ class PlaybackState {
     String? currentTrackName,
     String? currentTrackArtist,
     String? currentTrackImg,
+    List<double>? clipValues,
+    bool? isSeeking,
   }) {
     return PlaybackState(
       currentProgress: currentProgress ?? this.currentProgress,
@@ -117,6 +124,8 @@ class PlaybackState {
       currentTrackName: currentTrackName ?? this.currentTrackName,
       currentTrackArtist: currentTrackArtist ?? this.currentTrackArtist,
       currentTrackImg: currentTrackImg ?? this.currentTrackImg,
+      clipValues: clipValues ?? this.clipValues,
+      isSeeking: isSeeking ?? this.isSeeking,
     );
   }
 
@@ -145,6 +154,8 @@ class PlaybackState {
       currentTrackName: newPlaybackState.currentTrackName,
       currentTrackArtist: newPlaybackState.currentTrackArtist,
       currentTrackImg: newPlaybackState.currentTrackImg,
+      clipValues: newPlaybackState.clipValues,
+      isSeeking: newPlaybackState.isSeeking,
 
     );
   }

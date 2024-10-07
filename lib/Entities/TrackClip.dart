@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hypeclip/Entities/Song.dart';
+import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:objectbox/objectbox.dart';
 import 'package:uuid/uuid.dart';
@@ -18,7 +19,6 @@ class TrackClip {
   @Transient()
   Song? song;
 
-  final originalSongDB = ToOne<Song>();
 
   @Property(type: PropertyType.floatVector)
   List<double> clipPoints;
@@ -30,6 +30,8 @@ class TrackClip {
   set clipLengthDB(int value) => clipLength = Duration(milliseconds: value);
 
   final linkedSongDB = ToOne<Song>();
+  
+  final linkedPlaylistsDB = ToMany<TrackClipPlaylist>();
 
 
   String clipName;

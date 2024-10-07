@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
-import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
@@ -240,7 +239,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                   onPressed: () async {
                                     PlaybackNotifier playBack =
                                         ref.read(playbackProvider);
-                                    playBack.insideEvent = true;
+                                    
                                     if (!playBack.insideEvent) {
                                       playBack.insideEvent = true;
 

@@ -18,6 +18,8 @@ import 'Entities/Playlist.dart';
 import 'Entities/Song.dart';
 import 'Entities/TrackClip.dart';
 import 'Entities/TrackClipPlaylist.dart';
+import 'Entities/UserConnectedMusicServiceDB.dart';
+import 'Entities/UserProfileDB.dart';
 
 export 'package:objectbox/objectbox.dart'; // so that callers only have to import this file
 
@@ -32,7 +34,7 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(1, 3646475469489993490),
             name: 'id',
             type: 6,
-            flags: 129),
+            flags: 1),
         obx_int.ModelProperty(
             id: const obx_int.IdUid(2, 5228567039344799239),
             name: 'trackURI',
@@ -104,14 +106,14 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(2, 38032209886724473),
       name: 'Playlist',
-      lastPropertyId: const obx_int.IdUid(7, 9114359661719988938),
+      lastPropertyId: const obx_int.IdUid(8, 2952492968814855538),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
             id: const obx_int.IdUid(1, 2507107500663129673),
             name: 'dbID',
             type: 6,
-            flags: 129),
+            flags: 1),
         obx_int.ModelProperty(
             id: const obx_int.IdUid(2, 7436726987951804204),
             name: 'id',
@@ -142,7 +144,14 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(7, 9114359661719988938),
             name: 'totalTracks',
             type: 6,
-            flags: 0)
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(8, 2952492968814855538),
+            name: 'userMusicStreamingServiceAccountId',
+            type: 11,
+            flags: 520,
+            indexId: const obx_int.IdUid(6, 77858185340425533),
+            relationTarget: 'UserConnectedMusicService')
       ],
       relations: <obx_int.ModelRelation>[
         obx_int.ModelRelation(
@@ -198,13 +207,6 @@ final _entities = <obx_int.ModelEntity>[
             type: 9,
             flags: 0),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(11, 2683385237213603353),
-            name: 'originalSongDBId',
-            type: 11,
-            flags: 520,
-            indexId: const obx_int.IdUid(4, 2273690582270434786),
-            relationTarget: 'Song'),
-        obx_int.ModelProperty(
             id: const obx_int.IdUid(12, 8764570932977687374),
             name: 'linkedSongDBId',
             type: 11,
@@ -212,7 +214,12 @@ final _entities = <obx_int.ModelEntity>[
             indexId: const obx_int.IdUid(5, 1185253801173147599),
             relationTarget: 'Song')
       ],
-      relations: <obx_int.ModelRelation>[],
+      relations: <obx_int.ModelRelation>[
+        obx_int.ModelRelation(
+            id: const obx_int.IdUid(11, 6329358754405982976),
+            name: 'linkedPlaylistsDB',
+            targetId: const obx_int.IdUid(4, 5891164408967352254))
+      ],
       backlinks: <obx_int.ModelBacklink>[]),
   obx_int.ModelEntity(
       id: const obx_int.IdUid(4, 5891164408967352254),
@@ -224,7 +231,7 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(1, 7878616718681556215),
             name: 'dbID',
             type: 6,
-            flags: 129),
+            flags: 1),
         obx_int.ModelProperty(
             id: const obx_int.IdUid(2, 6556394252372289609),
             name: 'playlistID',
@@ -247,7 +254,76 @@ final _entities = <obx_int.ModelEntity>[
             name: 'clipsDB',
             targetId: const obx_int.IdUid(3, 5317744468143076040))
       ],
-      backlinks: <obx_int.ModelBacklink>[])
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(5, 5847052262546585380),
+      name: 'UserConnectedMusicService',
+      lastPropertyId: const obx_int.IdUid(5, 1434238896907544753),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 4444769691680332144),
+            name: 'id',
+            type: 6,
+            flags: 1),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 27490556055955667),
+            name: 'accessToken',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 869272187348887856),
+            name: 'refreshToken',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 7837593114993218792),
+            name: 'connectedUserDBId',
+            type: 11,
+            flags: 520,
+            indexId: const obx_int.IdUid(7, 6872033909649812997),
+            relationTarget: 'UserProfileDB'),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(5, 1434238896907544753),
+            name: 'musicLibraryServiceDB',
+            type: 9,
+            flags: 0)
+      ],
+      relations: <obx_int.ModelRelation>[
+        obx_int.ModelRelation(
+            id: const obx_int.IdUid(8, 6391866633536201104),
+            name: 'userPlaylistsDB',
+            targetId: const obx_int.IdUid(2, 38032209886724473))
+      ],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(6, 2247108447826571828),
+      name: 'UserProfileDB',
+      lastPropertyId: const obx_int.IdUid(1, 5805537477370951392),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 5805537477370951392),
+            name: 'id',
+            type: 6,
+            flags: 1)
+      ],
+      relations: <obx_int.ModelRelation>[
+        obx_int.ModelRelation(
+            id: const obx_int.IdUid(9, 7293152528198126790),
+            name: 'allTrackClipsDB',
+            targetId: const obx_int.IdUid(3, 5317744468143076040)),
+        obx_int.ModelRelation(
+            id: const obx_int.IdUid(10, 1384838242840462835),
+            name: 'allTrackClipPlaylistsDB',
+            targetId: const obx_int.IdUid(4, 5891164408967352254))
+      ],
+      backlinks: <obx_int.ModelBacklink>[
+        obx_int.ModelBacklink(
+            name: 'connectedMusicStreamingServices',
+            srcEntity: 'UserConnectedMusicService',
+            srcField: 'connectedUserDB')
+      ])
 ];
 
 /// Shortcut for [obx.Store.new] that passes [getObjectBoxModel] and for Flutter
@@ -285,17 +361,18 @@ Future<obx.Store> openStore(
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
       entities: _entities,
-      lastEntityId: const obx_int.IdUid(4, 5891164408967352254),
-      lastIndexId: const obx_int.IdUid(5, 1185253801173147599),
-      lastRelationId: const obx_int.IdUid(7, 5011536864274221388),
+      lastEntityId: const obx_int.IdUid(6, 2247108447826571828),
+      lastIndexId: const obx_int.IdUid(7, 6872033909649812997),
+      lastRelationId: const obx_int.IdUid(11, 6329358754405982976),
       lastSequenceId: const obx_int.IdUid(0, 0),
       retiredEntityUids: const [],
-      retiredIndexUids: const [8833976317866044219],
+      retiredIndexUids: const [8833976317866044219, 2273690582270434786],
       retiredPropertyUids: const [
         6391799891432596002,
         6281726068887092049,
         1374063591372238592,
-        4428027612275503602
+        4428027612275503602,
+        2683385237213603353
       ],
       retiredRelationUids: const [
         6404008765985708642,
@@ -409,7 +486,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
         }),
     Playlist: obx_int.EntityDefinition<Playlist>(
         model: _entities[1],
-        toOneRelations: (Playlist object) => [],
+        toOneRelations: (Playlist object) =>
+            [object.userMusicStreamingServiceAccount],
         toManyRelations: (Playlist object) =>
             {obx_int.RelInfo<Playlist>.toMany(4, object.dbID!): object.songsDB},
         getId: (Playlist object) => object.dbID,
@@ -427,7 +505,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final imageUrlOffset = object.imageUrl == null
               ? null
               : fbb.writeString(object.imageUrl!);
-          fbb.startTable(8);
+          fbb.startTable(9);
           fbb.addInt64(0, object.dbID ?? 0);
           fbb.addOffset(1, idOffset);
           fbb.addOffset(2, uriOffset);
@@ -435,6 +513,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addOffset(4, ownerNameOffset);
           fbb.addOffset(5, imageUrlOffset);
           fbb.addInt64(6, object.totalTracks);
+          fbb.addInt64(7, object.userMusicStreamingServiceAccount.targetId);
           fbb.finish(fbb.endTable());
           return object.dbID ?? 0;
         },
@@ -463,15 +542,20 @@ obx_int.ModelDefinition getObjectBoxModel() {
               ownerName: ownerNameParam,
               imageUrl: imageUrlParam,
               totalTracks: totalTracksParam);
+          object.userMusicStreamingServiceAccount.targetId =
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 18, 0);
+          object.userMusicStreamingServiceAccount.attach(store);
           obx_int.InternalToManyAccess.setRelInfo<Playlist>(object.songsDB,
               store, obx_int.RelInfo<Playlist>.toMany(4, object.dbID!));
           return object;
         }),
     TrackClip: obx_int.EntityDefinition<TrackClip>(
         model: _entities[2],
-        toOneRelations: (TrackClip object) =>
-            [object.originalSongDB, object.linkedSongDB],
-        toManyRelations: (TrackClip object) => {},
+        toOneRelations: (TrackClip object) => [object.linkedSongDB],
+        toManyRelations: (TrackClip object) => {
+              obx_int.RelInfo<TrackClip>.toMany(11, object.dbID!):
+                  object.linkedPlaylistsDB
+            },
         getId: (TrackClip object) => object.dbID,
         setId: (TrackClip object, int id) {
           object.dbID = id;
@@ -494,7 +578,6 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addInt64(6, object.dateCreated.millisecondsSinceEpoch);
           fbb.addInt64(7, object.clipLengthDB);
           fbb.addOffset(8, musicLibraryServiceDBOffset);
-          fbb.addInt64(10, object.originalSongDB.targetId);
           fbb.addInt64(11, object.linkedSongDB.targetId);
           fbb.finish(fbb.endTable());
           return object.dbID ?? 0;
@@ -527,12 +610,13 @@ obx_int.ModelDefinition getObjectBoxModel() {
             ..musicLibraryServiceDB =
                 const fb.StringReader(asciiOptimization: true)
                     .vTableGet(buffer, rootOffset, 20, '');
-          object.originalSongDB.targetId =
-              const fb.Int64Reader().vTableGet(buffer, rootOffset, 24, 0);
-          object.originalSongDB.attach(store);
           object.linkedSongDB.targetId =
               const fb.Int64Reader().vTableGet(buffer, rootOffset, 26, 0);
           object.linkedSongDB.attach(store);
+          obx_int.InternalToManyAccess.setRelInfo<TrackClip>(
+              object.linkedPlaylistsDB,
+              store,
+              obx_int.RelInfo<TrackClip>.toMany(11, object.dbID!));
           return object;
         }),
     TrackClipPlaylist: obx_int.EntityDefinition<TrackClipPlaylist>(
@@ -580,6 +664,108 @@ obx_int.ModelDefinition getObjectBoxModel() {
               object.clipsDB,
               store,
               obx_int.RelInfo<TrackClipPlaylist>.toMany(7, object.dbID!));
+          return object;
+        }),
+    UserConnectedMusicService: obx_int.EntityDefinition<
+            UserConnectedMusicService>(
+        model: _entities[4],
+        toOneRelations: (UserConnectedMusicService object) =>
+            [object.connectedUserDB],
+        toManyRelations: (UserConnectedMusicService object) => {
+              obx_int.RelInfo<UserConnectedMusicService>.toMany(8, object.id):
+                  object.userPlaylistsDB
+            },
+        getId: (UserConnectedMusicService object) => object.id,
+        setId: (UserConnectedMusicService object, int id) {
+          object.id = id;
+        },
+        objectToFB: (UserConnectedMusicService object, fb.Builder fbb) {
+          final accessTokenOffset = object.accessToken == null
+              ? null
+              : fbb.writeString(object.accessToken!);
+          final refreshTokenOffset = object.refreshToken == null
+              ? null
+              : fbb.writeString(object.refreshToken!);
+          final musicLibraryServiceDBOffset =
+              fbb.writeString(object.musicLibraryServiceDB);
+          fbb.startTable(6);
+          fbb.addInt64(0, object.id);
+          fbb.addOffset(1, accessTokenOffset);
+          fbb.addOffset(2, refreshTokenOffset);
+          fbb.addInt64(3, object.connectedUserDB.targetId);
+          fbb.addOffset(4, musicLibraryServiceDBOffset);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+
+          final object = UserConnectedMusicService()
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
+            ..accessToken = const fb.StringReader(asciiOptimization: true)
+                .vTableGetNullable(buffer, rootOffset, 6)
+            ..refreshToken = const fb.StringReader(asciiOptimization: true)
+                .vTableGetNullable(buffer, rootOffset, 8)
+            ..musicLibraryServiceDB =
+                const fb.StringReader(asciiOptimization: true)
+                    .vTableGet(buffer, rootOffset, 12, '');
+          object.connectedUserDB.targetId =
+              const fb.Int64Reader().vTableGet(buffer, rootOffset, 10, 0);
+          object.connectedUserDB.attach(store);
+          obx_int.InternalToManyAccess.setRelInfo<UserConnectedMusicService>(
+              object.userPlaylistsDB,
+              store,
+              obx_int.RelInfo<UserConnectedMusicService>.toMany(8, object.id));
+          return object;
+        }),
+    UserProfileDB: obx_int.EntityDefinition<UserProfileDB>(
+        model: _entities[5],
+        toOneRelations: (UserProfileDB object) => [],
+        toManyRelations: (UserProfileDB object) => {
+              obx_int.RelInfo<UserProfileDB>.toMany(9, object.id):
+                  object.allTrackClipsDB,
+              obx_int.RelInfo<UserProfileDB>.toMany(10, object.id):
+                  object.allTrackClipPlaylistsDB,
+              obx_int.RelInfo<UserConnectedMusicService>.toOneBacklink(
+                      4,
+                      object.id,
+                      (UserConnectedMusicService srcObject) =>
+                          srcObject.connectedUserDB):
+                  object.connectedMusicStreamingServices
+            },
+        getId: (UserProfileDB object) => object.id,
+        setId: (UserProfileDB object, int id) {
+          object.id = id;
+        },
+        objectToFB: (UserProfileDB object, fb.Builder fbb) {
+          fbb.startTable(2);
+          fbb.addInt64(0, object.id);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+
+          final object = UserProfileDB()
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
+          obx_int.InternalToManyAccess.setRelInfo<UserProfileDB>(
+              object.allTrackClipsDB,
+              store,
+              obx_int.RelInfo<UserProfileDB>.toMany(9, object.id));
+          obx_int.InternalToManyAccess.setRelInfo<UserProfileDB>(
+              object.allTrackClipPlaylistsDB,
+              store,
+              obx_int.RelInfo<UserProfileDB>.toMany(10, object.id));
+          obx_int.InternalToManyAccess.setRelInfo<UserProfileDB>(
+              object.connectedMusicStreamingServices,
+              store,
+              obx_int.RelInfo<UserConnectedMusicService>.toOneBacklink(
+                  4,
+                  object.id,
+                  (UserConnectedMusicService srcObject) =>
+                      srcObject.connectedUserDB));
           return object;
         })
   };
@@ -675,6 +861,11 @@ class Playlist_ {
   static final totalTracks =
       obx.QueryIntegerProperty<Playlist>(_entities[1].properties[6]);
 
+  /// See [Playlist.userMusicStreamingServiceAccount].
+  static final userMusicStreamingServiceAccount =
+      obx.QueryRelationToOne<Playlist, UserConnectedMusicService>(
+          _entities[1].properties[7]);
+
   /// see [Playlist.songsDB]
   static final songsDB =
       obx.QueryRelationToMany<Playlist, Song>(_entities[1].relations[0]);
@@ -714,13 +905,14 @@ class TrackClip_ {
   static final musicLibraryServiceDB =
       obx.QueryStringProperty<TrackClip>(_entities[2].properties[7]);
 
-  /// See [TrackClip.originalSongDB].
-  static final originalSongDB =
-      obx.QueryRelationToOne<TrackClip, Song>(_entities[2].properties[8]);
-
   /// See [TrackClip.linkedSongDB].
   static final linkedSongDB =
-      obx.QueryRelationToOne<TrackClip, Song>(_entities[2].properties[9]);
+      obx.QueryRelationToOne<TrackClip, Song>(_entities[2].properties[8]);
+
+  /// see [TrackClip.linkedPlaylistsDB]
+  static final linkedPlaylistsDB =
+      obx.QueryRelationToMany<TrackClip, TrackClipPlaylist>(
+          _entities[2].relations[0]);
 }
 
 /// [TrackClipPlaylist] entity fields to define ObjectBox queries.
@@ -744,4 +936,57 @@ class TrackClipPlaylist_ {
   /// see [TrackClipPlaylist.clipsDB]
   static final clipsDB = obx.QueryRelationToMany<TrackClipPlaylist, TrackClip>(
       _entities[3].relations[0]);
+}
+
+/// [UserConnectedMusicService] entity fields to define ObjectBox queries.
+class UserConnectedMusicService_ {
+  /// See [UserConnectedMusicService.id].
+  static final id = obx.QueryIntegerProperty<UserConnectedMusicService>(
+      _entities[4].properties[0]);
+
+  /// See [UserConnectedMusicService.accessToken].
+  static final accessToken = obx.QueryStringProperty<UserConnectedMusicService>(
+      _entities[4].properties[1]);
+
+  /// See [UserConnectedMusicService.refreshToken].
+  static final refreshToken =
+      obx.QueryStringProperty<UserConnectedMusicService>(
+          _entities[4].properties[2]);
+
+  /// See [UserConnectedMusicService.connectedUserDB].
+  static final connectedUserDB =
+      obx.QueryRelationToOne<UserConnectedMusicService, UserProfileDB>(
+          _entities[4].properties[3]);
+
+  /// See [UserConnectedMusicService.musicLibraryServiceDB].
+  static final musicLibraryServiceDB =
+      obx.QueryStringProperty<UserConnectedMusicService>(
+          _entities[4].properties[4]);
+
+  /// see [UserConnectedMusicService.userPlaylistsDB]
+  static final userPlaylistsDB =
+      obx.QueryRelationToMany<UserConnectedMusicService, Playlist>(
+          _entities[4].relations[0]);
+}
+
+/// [UserProfileDB] entity fields to define ObjectBox queries.
+class UserProfileDB_ {
+  /// See [UserProfileDB.id].
+  static final id =
+      obx.QueryIntegerProperty<UserProfileDB>(_entities[5].properties[0]);
+
+  /// see [UserProfileDB.allTrackClipsDB]
+  static final allTrackClipsDB =
+      obx.QueryRelationToMany<UserProfileDB, TrackClip>(
+          _entities[5].relations[0]);
+
+  /// see [UserProfileDB.allTrackClipPlaylistsDB]
+  static final allTrackClipPlaylistsDB =
+      obx.QueryRelationToMany<UserProfileDB, TrackClipPlaylist>(
+          _entities[5].relations[1]);
+
+  /// see [UserProfileDB.connectedMusicStreamingServices]
+  static final connectedMusicStreamingServices =
+      obx.QueryBacklinkToMany<UserConnectedMusicService, UserProfileDB>(
+          UserConnectedMusicService_.connectedUserDB);
 }

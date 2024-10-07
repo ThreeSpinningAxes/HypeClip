@@ -16,7 +16,7 @@ class TrackClipPlaylist {
   @Transient()
   static const String RECENTLY_LISTENED_KEY = 'Recently Listened Clips';
 
-  @Id(assignable: true)
+  @Id()
   int? dbID;
   
   String playlistID;

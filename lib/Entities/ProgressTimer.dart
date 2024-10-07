@@ -35,6 +35,9 @@ class ProgressTimer extends ChangeNotifier {
         playbackNotifier!.playbackState.currentProgress = Duration(
             milliseconds:
                 playbackNotifier!.currentProgress.inMilliseconds + 100);
+        if (playbackNotifier!.playbackState.inClipEditorMode) {
+          await handleClipEditor();
+        }
         notifyListeners();
       } else {
         playbackNotifier!.playbackState.currentProgress = trackLength;
@@ -84,15 +87,24 @@ class ProgressTimer extends ChangeNotifier {
         }
       }
       return;
-    } else if (playbackState.inClipEditorMode) {
-      if (playbackState.isRepeatMode) {
-        await playbackNotifier!.seekCurrentTrack(0);
-      }
-
-      return;
-    }
-
+    } 
     playbackNotifier!.insideEvent = false;
     notifyListeners();
+  }
+
+  Future<void> handleClipEditor() async {
+    PlaybackState playbackState = playbackNotifier!.playbackState;
+    if (playbackNotifier!.playbackState.isSeeking! || playbackNotifier!.insideEvent) {
+      return;
+    }
+    if (!playbackState.isSeeking!) {
+      if (playbackState.currentProgress!.inMilliseconds >= playbackState.clipValues![1]) {
+        playbackNotifier!.insideEvent = true;
+        playbackNotifier!.updatePlaybackState(paused: true, );
+        await playbackNotifier!.pauseTrack();
+        playbackNotifier!.updatePlaybackState(currentProgress: Duration(milliseconds: playbackState.clipValues![1].toInt()));
+        playbackNotifier!.insideEvent = false;
+      } 
+    }
   }
 }

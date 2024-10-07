@@ -49,6 +49,7 @@ Future<void> initUser() async {
     await UserProfileService.loadUserTrackClipPlaylistsFromPreferences();
   }
 }
+late ObjectBox db;
 
 Future main() async {
   //main method is where the root of the application runs
@@ -56,7 +57,7 @@ Future main() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   WidgetsFlutterBinding.ensureInitialized();
-  final objectBox = await ObjectBox.create();
+  db = await ObjectBox.create();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

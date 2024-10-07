@@ -272,9 +272,11 @@ class PlaybackNotifier extends ChangeNotifier {
     Song song;
     int playbackOffset = seek;
     Duration oldPosition = playbackState.currentProgress!;
+    playbackState.isSeeking = true;
 
     //change the seek value on the bar, revert it if the seek failed
     playbackState.currentProgress = Duration(milliseconds: seek);
+    timer.stop();
     notifyListeners();
 
     if (playbackState.inTrackClipPlaybackMode ?? false) {
@@ -299,16 +301,18 @@ class PlaybackNotifier extends ChangeNotifier {
       timer.stop();
       playbackState.currentProgress = oldPosition;
     }
+    playbackState.isSeeking = false;
     notifyListeners();
     return r;
   }
 
   Future<bool?> pauseTrack() async {
+    timer.stop();
     bool? pauseSuccessful = await musicServiceHandler.pausePlayback();
     Duration currentTime =
         Duration(milliseconds: playbackState.currentProgress!.inMilliseconds);
     if (pauseSuccessful == true) {
-      timer.stop();
+      //timer.stop();
       playbackState.paused = true;
       playbackState.currentProgress = currentTime;
       notifyListeners();
@@ -550,6 +554,8 @@ class PlaybackNotifier extends ChangeNotifier {
     List<Object>? originalTrackQueue,
     bool? inClipEditorMode,
     bool? autoplay,
+    List<double>? clipValues,
+    bool? isSeeking,
   }) {
     playbackState = playbackState.copyWith(
       currentProgress: currentProgress,
@@ -571,6 +577,8 @@ class PlaybackNotifier extends ChangeNotifier {
       originalTrackQueue: originalTrackQueue,
       inClipEditorMode: inClipEditorMode,
       autoplay: autoplay,
+      clipValues: clipValues,
+      isSeeking: isSeeking,
     );
     notifyListeners();
   }

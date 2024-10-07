@@ -6,7 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/AppleMusicService.dart';
-import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
+import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
 import 'package:hypeclip/Services/UserProfileService.dart';
@@ -104,7 +104,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                               setState(() {
                                 _isLoading = true;
                               });
-                              Map<String, dynamic>? data = await SpotifyService().authorize();
+                              Map<String, dynamic>? data = await MusicServiceHandler(service: MusicLibraryService.spotify).authenticate(MusicLibraryService.spotify);
                               if (data !=null && UserProfileService.hasMusicService(MusicLibraryService.spotify)) {
                                 afterSuccessfulConnection(MusicLibraryService.spotify, data);
                               }

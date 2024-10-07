@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
+import 'package:hypeclip/main.dart';
 
 class TrackList extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
@@ -32,12 +33,41 @@ class _TrackListState extends ConsumerState<TrackList>
   List<Song> filteredSongs = [];
   TextEditingController search = TextEditingController();
   Map<String, int>? originalTrackIndexFromPlaylist;
+  late Playlist _playlist;
 
   @override
   void initState() {
     super.initState();
     musicServiceHandler = MusicServiceHandler(service: widget.service);
-    trackList = loadSongs();
+    
+
+
+    if (widget.fetchLikedSongs) {
+      _playlist = db.playlistBox.getAll().firstWhere((playlist) => playlist.id == 'likedTracks', orElse: () {
+        db.initPlaylists(service: widget.service);
+        return db.playlistBox.getAll().firstWhere((playlist) => playlist.id == 'likedTracks');
+      },);
+    }
+    else if (widget.fetchRecentlyPlayedTracks) {
+      _playlist = db.playlistBox.getAll().firstWhere((playlist) => playlist.id == 'recentlyPlayed', orElse: () {
+        db.initPlaylists(service: widget.service);
+        return db.playlistBox.getAll().firstWhere((playlist) => playlist.id == 'recentlyPlayed');
+      },);
+    }
+    else {
+      _playlist = widget.playlist!;
+    }
+
+    if (_playlist.songsDB.isEmpty) {
+      trackList = loadSongs().then((tracks) {
+        return getNewTracksAndStore(tracks);
+      });
+    }
+    else {
+      trackList = Future.value(_playlist.songsDB);
+      filteredSongs = _playlist.songsDB;
+    }
+    
 
     search.addListener(() {
       updateSearchQuery(search.text);
@@ -107,7 +137,7 @@ class _TrackListState extends ConsumerState<TrackList>
   }
 
   void updateSearchQuery(String searchString) {
-    setState(() {
+   
       if (searchString.isNotEmpty) {
         trackList!.then((songs) {
           //print(songs.length);
@@ -124,7 +154,39 @@ class _TrackListState extends ConsumerState<TrackList>
           }).toList();
         });
       }
-    });
+      else {
+        trackList!.then((songs) {
+          filteredSongs = songs;
+        });
+      }
+      setState(() {
+        
+      });
+  }
+
+
+  List<Song> getNewTracksAndStore(List<Song> tracks) {
+     List<Song> existingTracks = db.songBox.getAll();
+    
+    // Create a set of existing song IDs
+    Set<String> existingTrackIds = existingTracks.map((song) => song.trackID!).toSet();
+    
+    // Calculate new songs that don't exist in the song box
+    List<Song> newTracks = [];
+    for (Song song in tracks) {
+      if (!existingTrackIds.contains(song.trackURI)) {
+        song.playlistDB.add(_playlist);
+        newTracks.add(song);
+       
+      }
+    }
+    
+    // Store new songs in the song box
+    _playlist.songsDB.addAll(newTracks);
+    db.playlistBox.put(_playlist);
+    db.songBox.putMany(newTracks);
+    
+    return newTracks;
   }
 
   @override
@@ -158,6 +220,7 @@ class _TrackListState extends ConsumerState<TrackList>
 
               // store the index of the original track in the playlist
               List<Song> trackList = snapshot.data as List<Song>;
+              
               if (originalTrackIndexFromPlaylist == null) {
                 if (trackList.isNotEmpty) {
                   originalTrackIndexFromPlaylist = {

@@ -5,6 +5,8 @@ import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Widgets/CreateNewPlaylistModal.dart';
 import 'package:hypeclip/Widgets/SubmitButton.dart';
+import 'package:hypeclip/main.dart';
+import 'package:hypeclip/objectbox.g.dart';
 
 import '../Providers/TrackClipProvider.dart';
 
@@ -24,7 +26,7 @@ class SaveTrackClipToPlaylistsDialog extends ConsumerStatefulWidget {
 class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlaylistsDialog> {
 
   
-  Set<String> selectedPlaylists = {};
+  List<String> selectedTrackClipPlaylistIDs = [];
 
  late final TrackClip trackClip ;
  late final TrackClipPlaylist currentPlaylist;
@@ -39,10 +41,15 @@ class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlayl
   
   @override
   Widget build(BuildContext context) {
-    List<TrackClipPlaylist> playlists = ref
-        .watch(trackClipProvider)
-        .values
-        .where((playlist) =>
+    List<TrackClipPlaylist> playlists =
+    //  ref
+    //     .watch(trackClipProvider)
+    //     .values
+    //     .where((playlist) =>
+    //         playlist.playlistName != currentPlaylist.playlistName && playlist.playlistName != TrackClipPlaylist.RECENTLY_LISTENED_KEY)
+    //     .toList();
+
+    db.trackClipPlaylistBox.getAll().where((playlist) =>
             playlist.playlistName != currentPlaylist.playlistName && playlist.playlistName != TrackClipPlaylist.RECENTLY_LISTENED_KEY)
         .toList();
     
@@ -77,7 +84,8 @@ class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlayl
                           context: context,
                           builder: (context) => CreateNewPlaylistModal(
                                 trackClip: clip,
-                                selectedPlaylistsInput: selectedPlaylists,
+                                
+                                selectedTrackClipPlaylistIDs: selectedTrackClipPlaylistIDs,
                               ));
                     },
                     text: "New playlist"),
@@ -114,16 +122,16 @@ class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlayl
                                   child: Icon(Icons.music_note,
                                       color: Colors.white, size: 30)),
                           title: Text(playlists[index].playlistName),
-                          value: selectedPlaylists
-                              .contains(playlists[index].playlistName),
+                          value: selectedTrackClipPlaylistIDs
+                              .contains(playlists[index].playlistID),
                           onChanged: (bool? value) {
                             setState(() {
-                              selectedPlaylists
-                                      .contains(playlists[index].playlistName)
-                                  ? selectedPlaylists
-                                      .remove(playlists[index].playlistName)
-                                  : selectedPlaylists
-                                      .add(playlists[index].playlistName);
+                              selectedTrackClipPlaylistIDs
+                                      .contains(playlists[index].playlistID)
+                                  ? selectedTrackClipPlaylistIDs
+                                      .remove(playlists[index].playlistID)
+                                  : selectedTrackClipPlaylistIDs
+                                      .add(playlists[index].playlistID);
                             });
                           });
                     },
@@ -131,12 +139,12 @@ class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlayl
                 ),
                 SubmitButton(
                     onPressed: () {
-                      if (selectedPlaylists.isNotEmpty) {
-                        for (String playlistName in selectedPlaylists) {
+                      if (selectedTrackClipPlaylistIDs.isNotEmpty) {
+                        for (String playlistID in selectedTrackClipPlaylistIDs) {
                           ref
                               .read(trackClipProvider.notifier)
                               .addClipToPlaylist(
-                                  playlistName: playlistName,
+                                  playlistName: db.trackClipPlaylistBox.query(TrackClipPlaylist_.playlistID.equals(playlistID)).build().findFirst()!.playlistName,
                                   trackClip: trackClip,
                                   save: false);
                         }

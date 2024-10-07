@@ -1,12 +1,14 @@
 
 
 import 'package:hypeclip/Entities/Song.dart';
+import 'package:hypeclip/Entities/UserConnectedMusicServiceDB.dart';
 import 'package:objectbox/objectbox.dart';
 
 @Entity()
 class Playlist {
-  @Id(assignable: true)
-  int? dbID; 
+  
+  @Id()
+  int? dbID = 0; 
   
   String id; //actual streaming service id
   String? uri;
@@ -18,6 +20,8 @@ class Playlist {
   int? totalTracks;
   
   final songsDB = ToMany<Song>();
+
+  final userMusicStreamingServiceAccount = ToOne<UserConnectedMusicService>();
 
   Playlist({
     this.dbID,

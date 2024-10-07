@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/ErrorPages/GenericErrorPage.dart';
-import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
+import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Pages/ClipEditor/SaveClipModal.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
@@ -37,8 +37,9 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
   bool insideClipSlider = false;
   bool inEvent = false;
   Widget errorPage = GenericErrorPage();
+  late MusicServiceHandler musicServiceHandler;
 
-  List<double> clipValues = [0, 0];
+  //List<double> clipValues = [0, 0];
   List<double> trackProgress = [0];
 
   bool initError = false;
@@ -48,8 +49,9 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
   void initState() {
     super.initState();
     if (ref.exists(playbackProvider)) {
-      ref.read(playbackProvider).playbackState.inClipEditorMode = true;
-    } 
+      
+      musicServiceHandler = ref.read(playbackProvider).musicServiceHandler;
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _asyncInit();
@@ -64,7 +66,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
   }
 
   _asyncInit() async {
-    Response r = await SpotifyService().isSpotifyAppOpen();
+    Response r = await musicServiceHandler.isStreaingServiceAppOpen();
     if (r.statusCode != 200 && r.statusCode != 204) {
       if (mounted) {
         setState(() {
@@ -85,6 +87,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
         });
       }
     } else {
+      PlaybackNotifier playbackNotifier = ref.read(playbackProvider.notifier);
       PlaybackState playbackState = ref.read(playbackProvider).playbackState;
       if (playbackState.domColorLinGradient == null) {
         ref.read(playbackProvider).setImagePalette();
@@ -102,7 +105,6 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                 errorDescription: jsonDecode(r.body)['error']['message'],
                 buttonText: "Retry",
                 buttonAction: _refresh,
-                padding: EdgeInsets.all(20),
               );
               error = true;
               initError = true;
@@ -115,25 +117,16 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
       setState(() {
         error = false;
         initError = false;
-        clipValues = [
-          0,
-          ref
-              .read(playbackProvider)
-              .playbackState
-              .currentSong!
-              .duration!
-              .inMilliseconds
-              .toDouble()
-        ];
-        trackProgress = [
-          ref
-              .read(playbackProvider)
-              .playbackState
-              .currentProgress!
-              .inMilliseconds
-              .toDouble()
-        ];
       });
+
+      double startPos =
+          playbackState.currentProgress!.inMilliseconds.toDouble();
+      double trackLength =
+          playbackState.currentSong!.duration!.inMilliseconds.toDouble();
+
+      playbackNotifier.updatePlaybackState(clipValues: [0.0, trackLength], inClipEditorMode: true);
+      trackProgress = [startPos];
+      //clipValues = playbackState.clipValues!;
     }
     setState(() {
       _isLoading = false;
@@ -164,34 +157,40 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
     final PlaybackState playbackState =
         ref.watch(playbackProvider).playbackState;
 
-    // if (trackProgress[0] >= clipValues[1]) {
-    //   ref.watch(playbackProvider).pauseSong();
-    //   trackProgress[0] = clipValues[1];
-    // }
+    final String trackName = currentSong.songName ?? 'Unknown Song Name';
+    final String artistName = currentSong.artistName ?? 'Unknown Artist Name';
+    final String trackImage = currentSong.albumImage ?? currentSong.songImage!;
+    List<double> clipValues = playbackState.clipValues!;
+
     if (!insidePlaybackSlider) {
-      if (trackProgress[0] >= clipValues[1]) {
-        if (!playbackState.paused!) {
-          setState(() {
-            playbackState.paused = true;
-          });
-          
-          playBack.pauseTrack();
-        }
-        setState(() {
-          playbackState.currentProgress =
-              Duration(milliseconds: clipValues[1].toInt());
-          trackProgress[0] = clipValues[1];
-        });
+      if (trackProgress[0] >= playbackState.clipValues![1]) {
+        // if (!playbackState.paused!) {
+        //   setState(() {
+        //     playbackState.paused = true;
+        //   });
+
+        //   playBack.pauseTrack();
+        // }
+        // setState(() {
+        //   playbackState.currentProgress =
+        //       Duration(milliseconds: clipValues[1].toInt());
+        //   trackProgress[0] = clipValues[1];
+        // });
       } else {
-        setState(() {
-          if (playbackState.currentProgress!.inMilliseconds >= clipValues[1]) {
-            trackProgress[0] = clipValues[1];
-          } else {
-            trackProgress[0] =
-                playbackState.currentProgress!.inMilliseconds.toDouble();
-          }
-        });
+        // setState(() {
+        //   if (!insideClipSlider &&
+        //       playbackState.currentProgress!.inMilliseconds >= clipValues[1]) {
+        //     //trackProgress[0] = clipValues[1];
+        //   } else {
+        //     trackProgress[0] =
+        //         playbackState.currentProgress!.inMilliseconds.toDouble();
+        //   }
+        // });
       }
+      setState(() {
+        trackProgress[0] =
+            playbackState.currentProgress!.inMilliseconds.toDouble();
+      });
     }
 
     return Scaffold(
@@ -222,6 +221,9 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                           await ref.read(playbackProvider).pauseTrack();
                         }
                         if (context.mounted) {
+                          ref
+                              .read(playbackProvider)
+                              .updatePlaybackState(inClipEditorMode: false);
                           context.pop();
                         }
 
@@ -240,7 +242,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.network(
-                        currentSong.songImage ?? currentSong.albumImage!,
+                        trackImage,
                         height: 300,
                       ),
                       SizedBox(
@@ -254,7 +256,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                currentSong.songName ?? 'Unknown Song Name',
+                                trackName,
                                 style: TextStyle(
                                     fontSize: 24,
                                     color: Colors.white,
@@ -264,7 +266,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                currentSong.artistName!,
+                                artistName,
                                 style: TextStyle(
                                     fontSize: 16, color: Colors.white),
                                 overflow: TextOverflow.ellipsis,
@@ -300,11 +302,14 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
 
                                     await _seek(seek: clipValues[0].toInt());
                                     setState(() {
-                                      trackProgress[0] = clipValues[0];
+                                      trackProgress[0] = playbackState
+                                          .currentProgress!.inMilliseconds
+                                          .toDouble();
                                     });
                                   } else if (playbackState.paused!) {
                                     await _playSong(
-                                        position: trackProgress[0].toInt());
+                                        position: playbackState
+                                            .currentProgress!.inMilliseconds);
                                   } else {
                                     bool? r = await playBack.pauseTrack();
                                     if (r == false) {
@@ -332,7 +337,12 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                                   await _seek(seek: clipValues[0].toInt());
 
                                   setState(() {
-                                    trackProgress[0] = clipValues[0];
+                                    trackProgress[0] = ref
+                                        .read(playbackProvider)
+                                        .playbackState
+                                        .currentProgress!
+                                        .inMilliseconds
+                                        .toDouble();
                                     inEvent = false;
                                   });
                                 }
@@ -507,6 +517,8 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                             setState(() {
                               clipValues = updatedClipValues;
                             });
+                            playBack.updatePlaybackState(
+                                clipValues: clipValues);
                           }
                         },
                         onChangeStart: (value) {
@@ -515,6 +527,7 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                               insideClipSlider = true;
                               inEvent = true;
                             });
+                            playBack.insideEvent = true;
                           }
                         },
                         onChangeEnd: (value) async {
@@ -525,34 +538,60 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
                                     seek: Duration(
                                             milliseconds: clipValues[0].toInt())
                                         .inMilliseconds);
+                                setState(() {
+                                  trackProgress[0] = clipValues[0];
+                                });
+                              } else {
+                                playBack.updatePlaybackState(
+                                    currentProgress: Duration(
+                                        milliseconds: clipValues[0].toInt()));
+                                setState(() {
+                                  trackProgress[0] = clipValues[0];
+                                });
                               }
-
-                              setState(() {
-                                playbackState.currentProgress = Duration(
-                                    milliseconds: clipValues[0].toInt());
-                                trackProgress[0] = playbackState
-                                    .currentProgress!.inMilliseconds
-                                    .toDouble();
-                              });
                             } else if (clipValues[1] < trackProgress[0]) {
-                              // await _seek(
-                              //   seek: Duration(seconds: clipValues[0].toInt())
-                              //       .inMilliseconds);
-                              setState(() {
-                                playbackState.currentProgress = Duration(
-                                    milliseconds: clipValues[1].toInt());
-                                playbackState.paused = true;
-                              });
-                              await playBack.pauseTrack();
-                              setState(() {
-                                trackProgress[0] = clipValues[1];
-                              });
+                              if (playbackState.paused!) {
+                                setState(() {
+                                  trackProgress[0] = clipValues[1];
+                                });
+                                playBack.updatePlaybackState(
+                                    clipValues: clipValues,
+                                    currentProgress: Duration(
+                                        milliseconds: clipValues[1].toInt()));
+                              } else {
+                                int oldPos = playbackState
+                                    .currentProgress!.inMilliseconds;
+                                setState(() {
+                                  trackProgress[0] = clipValues[1];
+                                });
+                                playBack.updatePlaybackState(
+                                    paused: true,
+                                    currentProgress: Duration(
+                                        milliseconds: clipValues[1].toInt()));
+
+                                bool? success = await playBack.pauseTrack();
+                                playBack.updatePlaybackState(
+                                    currentProgress: Duration(
+                                        milliseconds: clipValues[1].toInt()));
+                                if (success == false) {
+                                  setState(() {
+                                    trackProgress[0] = oldPos.toDouble();
+                                  });
+                                }else {
+                                  setState(() {
+                                    trackProgress[0] = clipValues[1];
+                                  });
+                                }
+                              }
                             }
-                          }
-                          setState(() {
+                            setState(() {
                             inEvent = false;
                             insideClipSlider = false;
                           });
+                            playBack.insideEvent = false;
+                          }
+                          
+                          
                         },
                       ),
                       Padding(
@@ -594,10 +633,13 @@ class _ClipEditorState extends ConsumerState<ClipEditor> {
         context: context,
         builder: (BuildContext context) {
           return SaveClipModal(
-              song: ref.read(playbackProvider).playbackState.currentSong!,
-              clipPoints: clipValues,
-              musicLibraryService: widget.service,
-              fromSongPlayback: widget.fromSongPlaybackWidget,);
+            song: ref.read(playbackProvider).playbackState.currentSong!,
+            clipPoints: [
+              ...ref.read(playbackProvider).playbackState.clipValues!
+            ],
+            musicLibraryService: widget.service,
+            fromSongPlayback: widget.fromSongPlaybackWidget,
+          );
         });
   }
 

@@ -4,6 +4,7 @@ import 'package:hypeclip/Entities/Playlist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Pages/Explore/TrackList.dart';
+import 'package:hypeclip/main.dart';
 
 class UserPlaylistsPage extends StatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
@@ -25,11 +26,40 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
   void initState() {
     super.initState();
     musicServiceHandler = MusicServiceHandler(service: widget.service);
-    playlists = loadPlaylists();
+    if (db.playlistBox.isEmpty()) {
+      playlists = loadPlaylists();
+      playlists!.then((playlists) {
+        storeNewPlaylistsDB(playlists);
+      });
+    } else {
+      playlists = Future.value(db.playlistBox.getAll());
+      filteredPlaylists = db.playlistBox.getAll();
+      
+    }
+    
     search.addListener(() {
       updateSearchQuery(search.text);
     });
   }
+
+void storeNewPlaylistsDB(List<Playlist> playlists) {
+  // Fetch all existing playlists from the playlist box
+  List<Playlist> existingPlaylists = db.playlistBox.getAll();
+  
+  // Create a set of existing playlist IDs
+  Set<String> existingPlaylistIds = existingPlaylists.map((playlist) => playlist.id).toSet();
+  
+  // Calculate new playlists that don't exist in the playlist box
+  List<Playlist> newPlaylists = [];
+  for (Playlist playlist in playlists) {
+    if (!existingPlaylistIds.contains(playlist.id)) {
+      newPlaylists.add(playlist);
+    }
+  }
+  
+  // Store new playlists in the playlist box
+  db.playlistBox.putMany(newPlaylists);
+}
 
   Future<List<Playlist>> loadPlaylists() async {
     int offset = 0;
@@ -51,7 +81,7 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
   }
 
   void updateSearchQuery(String newQuery) {
-    setState(() {
+    
       if (newQuery.isNotEmpty) {
         playlists!.then((playlist) {
           //print(songs.length);
@@ -63,7 +93,15 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
           }).toList();
         });
       }
-    });
+      else {
+        playlists!.then((playlist) {
+          filteredPlaylists = playlist;
+        });
+      }
+      setState(() {
+        
+      });
+    
   }
 
   @override
@@ -93,6 +131,8 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
               // Handle any errors that occur during the future execution
               return Center(child: Text('Error: ${snapshot.error}'));
             } else {
+              List<Playlist> playlists = snapshot.data as List<Playlist>;
+
               // Once data is fetched, build the entire page content
               return Padding(
                 padding: const EdgeInsets.all(20.0),

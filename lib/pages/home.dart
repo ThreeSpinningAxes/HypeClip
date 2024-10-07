@@ -11,6 +11,7 @@ class Home extends ConsumerStatefulWidget {
   final StatefulNavigationShell child;
   const Home({super.key, required this.child});
 
+
   @override
   _HomeState createState() => _HomeState();
 }
@@ -22,6 +23,8 @@ class _HomeState extends ConsumerState<Home> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+   
   }
 
   // @override
@@ -34,8 +37,11 @@ class _HomeState extends ConsumerState<Home> {
     User? user = FirebaseAuth.instance.currentUser;
     // Determine the profile picture URL or null if not available
     String? profilePicUrl = user?.photoURL;
-    ref.watch(musicServicesProvider.notifier).updateMusicServices();
-
+    Future.delayed(Duration.zero, () {
+      ref.watch(musicServicesProvider.notifier).updateMusicServices();
+    });
+    
+    
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
@@ -80,6 +86,7 @@ class _HomeState extends ConsumerState<Home> {
               selectedItemColor: Color.fromARGB(255, 8, 104, 187),
               unselectedItemColor: Colors.white,
               onTap: (index) {
+                
                 widget.child.goBranch(index,
                     initialLocation: index == widget.child.currentIndex);
               },

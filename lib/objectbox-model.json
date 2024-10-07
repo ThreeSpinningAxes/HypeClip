@@ -12,7 +12,7 @@
           "id": "1:3646475469489993490",
           "name": "id",
           "type": 6,
-          "flags": 129
+          "flags": 1
         },
         {
           "id": "2:5228567039344799239",
@@ -87,14 +87,14 @@
     },
     {
       "id": "2:38032209886724473",
-      "lastPropertyId": "7:9114359661719988938",
+      "lastPropertyId": "8:2952492968814855538",
       "name": "Playlist",
       "properties": [
         {
           "id": "1:2507107500663129673",
           "name": "dbID",
           "type": 6,
-          "flags": 129
+          "flags": 1
         },
         {
           "id": "2:7436726987951804204",
@@ -127,6 +127,14 @@
           "id": "7:9114359661719988938",
           "name": "totalTracks",
           "type": 6
+        },
+        {
+          "id": "8:2952492968814855538",
+          "name": "userMusicStreamingServiceAccountId",
+          "type": 11,
+          "flags": 520,
+          "indexId": "6:77858185340425533",
+          "relationTarget": "UserConnectedMusicService"
         }
       ],
       "relations": [
@@ -184,14 +192,6 @@
           "type": 9
         },
         {
-          "id": "11:2683385237213603353",
-          "name": "originalSongDBId",
-          "type": 11,
-          "flags": 520,
-          "indexId": "4:2273690582270434786",
-          "relationTarget": "Song"
-        },
-        {
           "id": "12:8764570932977687374",
           "name": "linkedSongDBId",
           "type": 11,
@@ -200,7 +200,13 @@
           "relationTarget": "Song"
         }
       ],
-      "relations": []
+      "relations": [
+        {
+          "id": "11:6329358754405982976",
+          "name": "linkedPlaylistsDB",
+          "targetId": "4:5891164408967352254"
+        }
+      ]
     },
     {
       "id": "4:5891164408967352254",
@@ -211,7 +217,7 @@
           "id": "1:7878616718681556215",
           "name": "dbID",
           "type": 6,
-          "flags": 129
+          "flags": 1
         },
         {
           "id": "2:6556394252372289609",
@@ -236,23 +242,93 @@
           "targetId": "3:5317744468143076040"
         }
       ]
+    },
+    {
+      "id": "5:5847052262546585380",
+      "lastPropertyId": "5:1434238896907544753",
+      "name": "UserConnectedMusicService",
+      "properties": [
+        {
+          "id": "1:4444769691680332144",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:27490556055955667",
+          "name": "accessToken",
+          "type": 9
+        },
+        {
+          "id": "3:869272187348887856",
+          "name": "refreshToken",
+          "type": 9
+        },
+        {
+          "id": "4:7837593114993218792",
+          "name": "connectedUserDBId",
+          "type": 11,
+          "flags": 520,
+          "indexId": "7:6872033909649812997",
+          "relationTarget": "UserProfileDB"
+        },
+        {
+          "id": "5:1434238896907544753",
+          "name": "musicLibraryServiceDB",
+          "type": 9
+        }
+      ],
+      "relations": [
+        {
+          "id": "8:6391866633536201104",
+          "name": "userPlaylistsDB",
+          "targetId": "2:38032209886724473"
+        }
+      ]
+    },
+    {
+      "id": "6:2247108447826571828",
+      "lastPropertyId": "1:5805537477370951392",
+      "name": "UserProfileDB",
+      "properties": [
+        {
+          "id": "1:5805537477370951392",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        }
+      ],
+      "relations": [
+        {
+          "id": "9:7293152528198126790",
+          "name": "allTrackClipsDB",
+          "targetId": "3:5317744468143076040"
+        },
+        {
+          "id": "10:1384838242840462835",
+          "name": "allTrackClipPlaylistsDB",
+          "targetId": "4:5891164408967352254"
+        }
+      ]
     }
   ],
-  "lastEntityId": "4:5891164408967352254",
-  "lastIndexId": "5:1185253801173147599",
-  "lastRelationId": "7:5011536864274221388",
+  "lastEntityId": "6:2247108447826571828",
+  "lastIndexId": "7:6872033909649812997",
+  "lastRelationId": "11:6329358754405982976",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
   "retiredIndexUids": [
-    8833976317866044219
+    8833976317866044219,
+    2273690582270434786
   ],
   "retiredPropertyUids": [
     6391799891432596002,
     6281726068887092049,
     1374063591372238592,
-    4428027612275503602
+    4428027612275503602,
+    2683385237213603353
   ],
   "retiredRelationUids": [
     6404008765985708642,

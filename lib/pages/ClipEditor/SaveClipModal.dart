@@ -11,6 +11,7 @@ import 'package:hypeclip/Services/UserProfileService.dart';
 
 import 'package:hypeclip/Utilities/StringUtils.dart';
 import 'package:hypeclip/Widgets/SubmitButton.dart';
+import 'package:hypeclip/main.dart';
 
 class SaveClipModal extends ConsumerStatefulWidget {
   final Song song;
@@ -36,7 +37,8 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
   String defaultClipName = '';
   String? playlistName;
 
-  Set<String> selectedPlaylists = {};
+
+ List<String> selectedTrackClipPlaylistsIDs = List.from(<String>{});
 
   TextEditingController clipNameController = TextEditingController();
   TextEditingController clipDescriptionController = TextEditingController();
@@ -188,7 +190,7 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                             children: [
                               Icon(
                                 Icons.playlist_add,
-                                color: selectedPlaylists.isNotEmpty
+                                color: selectedTrackClipPlaylistsIDs.isNotEmpty
                                     ? Colors.green
                                     : Colors.white,
                               ),
@@ -197,7 +199,7 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                                 "Add to playlist",
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: selectedPlaylists.isNotEmpty
+                                  color: selectedTrackClipPlaylistsIDs.isNotEmpty
                                       ? Colors.green
                                       : Colors.white,
                                 ),
@@ -205,7 +207,7 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                             ],
                           ),
                         ),
-                        if (selectedPlaylists.isNotEmpty)
+                        if (selectedTrackClipPlaylistsIDs.isNotEmpty)
                           Row(
                             children: [
                               SizedBox(width: 8),
@@ -234,25 +236,33 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                                   DateTime.now().month, DateTime.now().day),
                               musicLibraryService: widget.musicLibraryService,
                             );
-                            if (selectedPlaylists.isNotEmpty) {
-                              for (String playlistName in selectedPlaylists) {
+                            clip.clipLengthDB =
+                                (clip.clipPoints[1] - clip.clipPoints[0])
+                                    .toInt();
+                            clip.linkedSongDB.target = widget.song;
+                            clip.musicLibraryServiceDB =
+                                widget.musicLibraryService.name;
+
+                            db.addNewTrackClipToDB(clip: clip, playlistIDs: selectedTrackClipPlaylistsIDs);
+
+                            if (selectedTrackClipPlaylistsIDs.isNotEmpty) {
+                              for (String playlistID in selectedTrackClipPlaylistsIDs) {
                                 await UserProfileService.saveNewTrackClip(
                                     trackClip: clip,
-                                    playlistName: playlistName,
+                                    playlistName: db.trackClipPlaylistBox.getAll().firstWhere((playlist) => playlist.playlistID == playlistID).playlistName,
                                     save: false);
                               }
-
                             } else {
                               await UserProfileService.saveNewTrackClip(
                                   trackClip: clip,
                                   playlistName: TrackClipPlaylist
                                       .SAVED_CLIPS_PLAYLIST_KEY,
                                   save: true);
-                             
                             }
-                             ref
-                                  .read(trackClipProvider.notifier)
-                                  .updateClips();
+                            ref.read(trackClipProvider.notifier).updateClips();
+                            ref
+                                .read(playbackProvider)
+                                .updatePlaybackState(inClipEditorMode: false);
 
                             if (context.mounted) {
                               if (!widget.fromSongPlayback &&
@@ -318,7 +328,7 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                           showDialog(
                               context: context,
                               builder: (context) => CreateNewPlaylistModal(
-                                    selectedPlaylistsInput: selectedPlaylists,
+                                    selectedTrackClipPlaylistIDs: selectedTrackClipPlaylistsIDs,
                                   )).then((value) {
                             setState(() {});
                           });
@@ -330,30 +340,30 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                     Expanded(
                       child: ListView.builder(
                         itemCount:
-                            ref.watch(trackClipProvider).values.length - 1,
+                            db.trackClipPlaylistBox.getAll().length, //ref.watch(trackClipProvider).values.length,
                         itemBuilder: (context, index) {
-                          List<TrackClipPlaylist> playlists = ref
-                              .watch(trackClipProvider)
-                              .values
-                              .where((playlist) =>
-                                  playlist.playlistName !=
-                                  TrackClipPlaylist.RECENTLY_LISTENED_KEY)
-                              .toList();
+                          List<TrackClipPlaylist> playlists = db.trackClipPlaylistBox.getAll();
+                         
+                          // ref
+                          //     .watch(trackClipProvider)
+                          //     .values
+                          //     .where((playlist) =>
+                          //         playlist.playlistName !=
+                          //         TrackClipPlaylist.RECENTLY_LISTENED_KEY)
+                          //     .toList();
                           return CheckboxListTile(
                             checkColor: Colors.transparent,
                             activeColor: Theme.of(context).primaryColor,
                             shape: CircleBorder(),
                             checkboxShape: CircleBorder(),
-                            secondary: playlists[index].clips!.isNotEmpty &&
-                                    playlists[index].clips![0].song!.albumImage !=
+                            secondary: playlists[index].clipsDB.isNotEmpty && playlists[index].clipsDB.first
+                                            .linkedSongDB.target!.albumImage !=
                                         null
                                 ? FadeInImage.assetNetwork(
                                     placeholder:
                                         'assets/loading_placeholder.gif', // Path to your placeholder image
-                                    image: playlists[index]
-                                        .clips![0]
-                                        .song!
-                                        .albumImage!,
+                                    image: playlists[index].clipsDB.first
+                                            .linkedSongDB.target!.albumImage!,
                                     fit: BoxFit.cover,
                                     width: 40.0, // Adjust the width as needed
                                     height: 40.0, // Adjust the height as needed
@@ -364,16 +374,16 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                                     child: Icon(Icons.music_note,
                                         color: Colors.white, size: 30)),
                             title: Text(playlists[index].playlistName),
-                            value: selectedPlaylists
-                                .contains(playlists[index].playlistName),
+                            value: selectedTrackClipPlaylistsIDs
+                                .contains(playlists[index].playlistID),
                             onChanged: (bool? value) {
                               setState(() {
-                                selectedPlaylists
-                                        .contains(playlists[index].playlistName)
-                                    ? selectedPlaylists
-                                        .remove(playlists[index].playlistName)
-                                    : selectedPlaylists
-                                        .add(playlists[index].playlistName);
+                                selectedTrackClipPlaylistsIDs
+                                        .contains(playlists[index].playlistID)
+                                    ? selectedTrackClipPlaylistsIDs
+                                        .remove(playlists[index].playlistID)
+                                    : selectedTrackClipPlaylistsIDs
+                                        .add(playlists[index].playlistID);
                               });
                             },
                           );

@@ -60,13 +60,13 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
     PlaybackNotifier playbackNotifier = ref.read(playbackProvider);
     setState(() {
       _isLoading = true;
-      playbackNotifier.insideEvent = true;
     });
+    playbackNotifier.insideEvent = true;
     await _asyncInit();
     setState(() {
       _isLoading = false;
-      playbackNotifier.insideEvent = false;
     });
+    playbackNotifier.insideEvent = false;
   }
 
   _asyncInit() async {

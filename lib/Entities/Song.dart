@@ -7,7 +7,7 @@ import 'package:objectbox/objectbox.dart';
 @Entity()
 class Song {
 
-  @Id(assignable: true)
+  @Id()
   int? id = 0;
 
   String? trackID;

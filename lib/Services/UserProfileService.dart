@@ -9,6 +9,7 @@ import 'package:hypeclip/Entities/UserProfile.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
+import 'package:hypeclip/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfileService {
@@ -133,6 +134,8 @@ class UserProfileService {
 
     //store to secure storage
 
+
+
     String? connectedMusicServicesJsonEncoded =
         await storage.read(key: _connectedMusicServicesKey);
     print(connectedMusicServicesJsonEncoded);
@@ -148,6 +151,9 @@ class UserProfileService {
       MusicLibraryService musicService) async {
     String service = musicService.name;
     userProfile.connectedMusicServices.remove(musicService);
+
+    db.deleteMusicService(service: musicService);
+    
     String? connectedMusicServicesJsonEncoded =
         await storage.read(key: _connectedMusicServicesKey);
     Map<String, dynamic> connectedMusicServices =

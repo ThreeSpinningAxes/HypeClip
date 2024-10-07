@@ -5,15 +5,16 @@ import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/ShowSnackbar.dart';
+import 'package:hypeclip/main.dart';
 
 
 class CreateNewPlaylistModal extends ConsumerStatefulWidget {
   final TrackClip? trackClip;
-  final Set<String>?
-      selectedPlaylistsInput; //if widget is  from the create new clip page, this will be used to preselect the newly created playlist
+ //if widget is  from the create new clip page, this will be used to preselect the newly created playlist
+  final List<String>? selectedTrackClipPlaylistIDs;
 
-  CreateNewPlaylistModal(
-      {super.key, this.trackClip, this.selectedPlaylistsInput});
+  CreateNewPlaylistModal( 
+      {super.key, this.trackClip, this.selectedTrackClipPlaylistIDs});
 
   @override
   _SaveClipModalState createState() => _SaveClipModalState();
@@ -31,7 +32,7 @@ class _SaveClipModalState extends ConsumerState<CreateNewPlaylistModal> {
 
   @override
   Widget build(BuildContext context) {
-    final allPlaylists = UserProfileService.getAllTrackClipPlaylists().values;
+    final allPlaylists = db.trackClipPlaylistBox.getAll();
 
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.8,
@@ -133,17 +134,27 @@ class _SaveClipModalState extends ConsumerState<CreateNewPlaylistModal> {
                               playlistName: playlistName,
                               clips: widget.trackClip != null
                                   ? <TrackClip>[widget.trackClip!]
-                                  : <TrackClip>[],
+                                  : List.from(<TrackClip>[]),
                               dateCreated: DateTime(DateTime.now().year,
                                   DateTime.now().month, DateTime.now().day),
+                                
                             );
+
+                            db.addNewTrackClipPlaylist(playlist);
+                            final playlists = db.trackClipPlaylistBox.getAll();
+                            for (var playlist in playlists) {
+                              print(playlist.playlistName);
+                            }
+                            
 
                             await ref
                                 .read(trackClipProvider.notifier)
                                 .addNewPlaylist(playlist: playlist);
-                            if (widget.selectedPlaylistsInput != null) {
-                              widget.selectedPlaylistsInput!
-                                  .add(playlist.playlistName);
+                            
+
+                            if (widget.selectedTrackClipPlaylistIDs != null) {
+                              widget.selectedTrackClipPlaylistIDs!
+                                  .add(playlist.playlistID);
                             }
 
                             if (context.mounted && Navigator.canPop(context)) {
