@@ -12,11 +12,11 @@ import '../Providers/TrackClipProvider.dart';
 
 class SaveTrackClipToPlaylistsDialog extends ConsumerStatefulWidget {
   final TrackClip trackClip;
+  final String playlistName;
 
-  final TrackClipPlaylist? currentPlaylist;
 
 
-  SaveTrackClipToPlaylistsDialog(this.trackClip, this.currentPlaylist,{super.key});
+  SaveTrackClipToPlaylistsDialog(this.trackClip, this.playlistName, {super.key});
   
   @override
   _SaveTrackClipToPlaylistsDialog createState() => _SaveTrackClipToPlaylistsDialog();
@@ -29,14 +29,12 @@ class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlayl
   List<String> selectedTrackClipPlaylistIDs = [];
 
  late final TrackClip trackClip ;
- late final TrackClipPlaylist currentPlaylist;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     trackClip = widget.trackClip;
-    currentPlaylist = widget.currentPlaylist!;
   }
   
   @override
@@ -50,7 +48,7 @@ class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlayl
     //     .toList();
 
     db.trackClipPlaylistBox.getAll().where((playlist) =>
-            playlist.playlistName != currentPlaylist.playlistName && playlist.playlistName != TrackClipPlaylist.RECENTLY_LISTENED_KEY)
+            playlist.playlistName != widget.playlistName && playlist.playlistName != TrackClipPlaylist.RECENTLY_LISTENED_KEY)
         .toList();
     
 
@@ -102,15 +100,15 @@ class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlayl
                           activeColor: Theme.of(context).primaryColor,
                           shape: CircleBorder(),
                           checkboxShape: CircleBorder(),
-                          secondary: playlists[index].clips!.isNotEmpty &&
-                                  playlists[index].clips![0].song!.albumImage !=
+                          secondary: playlists[index].clipsDB.isNotEmpty &&
+                                  playlists[index].clipsDB[0].linkedSongDB.target!.albumImage !=
                                       null
                               ? FadeInImage.assetNetwork(
                                   placeholder:
                                       'assets/loading_placeholder.gif', // Path to your placeholder image
                                   image: playlists[index]
-                                      .clips![0]
-                                      .song!
+                                      .clipsDB[0]
+                                      .linkedSongDB.target!
                                       .albumImage!,
                                   fit: BoxFit.cover,
                                   width: 40.0, // Adjust the width as needed
@@ -140,15 +138,7 @@ class _SaveTrackClipToPlaylistsDialog extends ConsumerState<SaveTrackClipToPlayl
                 SubmitButton(
                     onPressed: () {
                       if (selectedTrackClipPlaylistIDs.isNotEmpty) {
-                        for (String playlistID in selectedTrackClipPlaylistIDs) {
-                          ref
-                              .read(trackClipProvider.notifier)
-                              .addClipToPlaylist(
-                                  playlistName: db.trackClipPlaylistBox.query(TrackClipPlaylist_.playlistID.equals(playlistID)).build().findFirst()!.playlistName,
-                                  trackClip: trackClip,
-                                  save: false);
-                        }
-                        ref.read(trackClipProvider.notifier).updateClips();
+                        db.addTrackClipToPlaylists(clip: clip, playlistIDs: selectedTrackClipPlaylistIDs);
                         ShowSnackBar.showSnackbar(context,
                             message: "Clip saved to selected playlists",
                             seconds: 3,

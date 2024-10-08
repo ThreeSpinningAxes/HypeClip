@@ -6,6 +6,8 @@ import 'package:hypeclip/Entities/TrackClip.dart';
 import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Providers/TrackClipProvider.dart';
+import 'package:hypeclip/main.dart';
+import 'package:hypeclip/objectbox.g.dart';
 
 class MinimalTrackView extends ConsumerWidget {
 final String? imageURL;
@@ -37,15 +39,15 @@ final String? imageURL;
                   startPosition:
                       Duration(milliseconds: clip!.clipPoints[0].toInt()),
                   paused: true,
-                  currentTrackIndex: playlist!.clips!.indexOf(clip!),
+                  currentTrackIndex: playlist!.clipsDB.indexOf(clip!),
                   trackClipPlaylist: playlist,
                   currentTrackClip: clip,
                   inTrackClipPlaybackMode: true,
                   musicLibraryService: clip!.musicLibraryService,
                   isShuffleMode: false,
                   isRepeatMode: false,
-                  trackClipQueue: playlist!.clips,
-                  originalTrackQueue: playlist!.clips));
+                  trackClipQueue: playlist!.clipsDB,
+                  originalTrackQueue: playlist!.clipsDB));
               context.pushNamed('songPlayer', queryParameters: {
                 'resetForNewTrack': 'true',
               });
@@ -98,8 +100,9 @@ class MinimalTrackListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    TrackClipPlaylist? playlist = db.trackClipPlaylistBox.query(TrackClipPlaylist_.playlistName.equals(playlistName)).build().findFirst();
     List<TrackClip> tracks =
-        ref.watch(trackClipProvider)[playlistName]?.clips ?? [];
+        playlist?.clipsDB ?? [];
     return GridView.count(
       scrollDirection: Axis.horizontal,
       crossAxisCount: 2,
@@ -107,10 +110,10 @@ class MinimalTrackListView extends ConsumerWidget {
       mainAxisSpacing: 0,
       children: tracks.map((track) {
         return MinimalTrackView(
-          imageURL: track.song!.albumImage,
+          imageURL: track.linkedSongDB.target!.albumImage,
           trackName: track.clipName,
           clip: track,
-          playlist: ref.watch(trackClipProvider)[playlistName],
+          playlist: playlist,
         );
       }).toList(),
     );

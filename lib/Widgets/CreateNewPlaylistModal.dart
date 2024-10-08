@@ -7,13 +7,12 @@ import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/main.dart';
 
-
 class CreateNewPlaylistModal extends ConsumerStatefulWidget {
   final TrackClip? trackClip;
- //if widget is  from the create new clip page, this will be used to preselect the newly created playlist
+  //if widget is  from the create new clip page, this will be used to preselect the newly created playlist
   final List<String>? selectedTrackClipPlaylistIDs;
 
-  CreateNewPlaylistModal( 
+  CreateNewPlaylistModal(
       {super.key, this.trackClip, this.selectedTrackClipPlaylistIDs});
 
   @override
@@ -51,7 +50,6 @@ class _SaveClipModalState extends ConsumerState<CreateNewPlaylistModal> {
                 },
               ),
             ),
-            
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -134,10 +132,9 @@ class _SaveClipModalState extends ConsumerState<CreateNewPlaylistModal> {
                               playlistName: playlistName,
                               clips: widget.trackClip != null
                                   ? <TrackClip>[widget.trackClip!]
-                                  : List.from(<TrackClip>[]),
+                                  : List.empty(growable: true),
                               dateCreated: DateTime(DateTime.now().year,
                                   DateTime.now().month, DateTime.now().day),
-                                
                             );
 
                             db.addNewTrackClipPlaylist(playlist);
@@ -145,12 +142,6 @@ class _SaveClipModalState extends ConsumerState<CreateNewPlaylistModal> {
                             for (var playlist in playlists) {
                               print(playlist.playlistName);
                             }
-                            
-
-                            await ref
-                                .read(trackClipProvider.notifier)
-                                .addNewPlaylist(playlist: playlist);
-                            
 
                             if (widget.selectedTrackClipPlaylistIDs != null) {
                               widget.selectedTrackClipPlaylistIDs!

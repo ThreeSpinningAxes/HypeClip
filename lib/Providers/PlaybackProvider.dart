@@ -37,7 +37,7 @@ class PlaybackNotifier extends ChangeNotifier {
   Future<RadialGradient?> setImagePalette() async {
     String? imageURL;
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      imageURL = playbackState.currentTrackClip?.song!.albumImage;
+      imageURL = playbackState.currentTrackClip?.linkedSongDB.target!.albumImage;
     } else {
       imageURL = playbackState.currentSong?.albumImage;
     }
@@ -170,8 +170,8 @@ class PlaybackNotifier extends ChangeNotifier {
           timer.stop();
         }
       }
-      playbackState.trackClipQueue!.removeWhere((item) => item == track);
-      playbackState.originalTrackQueue!.removeWhere((item) => item == track);
+      playbackState.trackClipQueue!.removeWhere((item) => item.ID == track.ID);
+      playbackState.originalTrackQueue!.removeWhere((item) => (item as TrackClip).ID == track.ID);
       notifyListeners();
     }
   }
@@ -191,9 +191,9 @@ class PlaybackNotifier extends ChangeNotifier {
       trackLength = playbackState.currentTrackClip!.clipLength!;
       playbackState.currentTrackName = playbackState.currentTrackClip!.clipName;
       playbackState.currentTrackArtist =
-          playbackState.currentTrackClip!.song!.artistName;
+          playbackState.currentTrackClip!.linkedSongDB.target!.artistName;
       playbackState.currentTrackImg =
-          playbackState.currentTrackClip!.song!.albumImage;
+          playbackState.currentTrackClip!.linkedSongDB.target!.albumImage;
     } else {
       trackLength = playbackState.currentSong!.duration!;
       playbackState.currentTrackName = playbackState.currentSong!.songName;
@@ -240,7 +240,7 @@ class PlaybackNotifier extends ChangeNotifier {
       if (playbackState.currentTrackClip == null) {
         return Response('No track clip selected', 500);
       }
-      song = playbackState.currentTrackClip!.song!;
+      song = playbackState.currentTrackClip!.linkedSongDB.target!;
       playbackOffset += playbackState.currentTrackClip!.clipPoints[0].toInt();
     } else {
       if (playbackState.currentSong == null) {
@@ -280,7 +280,7 @@ class PlaybackNotifier extends ChangeNotifier {
     notifyListeners();
 
     if (playbackState.inTrackClipPlaybackMode ?? false) {
-      song = playbackState.currentTrackClip!.song!;
+      song = playbackState.currentTrackClip!.linkedSongDB.target!;
       playbackOffset += playbackState.currentTrackClip!.clipPoints[0].toInt();
     } else {
       song = playbackState.currentSong!;
@@ -334,7 +334,7 @@ class PlaybackNotifier extends ChangeNotifier {
           playbackState.trackClipQueue!.isEmpty) {
         return Response('No track clips in queue', 500);
       }
-      newTrack = playbackState.trackClipQueue![index].song;
+      newTrack = playbackState.trackClipQueue![index].linkedSongDB.target;
       trackStartPosition =
           playbackState.trackClipQueue![index].clipPoints[0].toInt();
       trackLength = (playbackState.trackClipQueue![index].clipPoints[1] -
@@ -359,13 +359,13 @@ class PlaybackNotifier extends ChangeNotifier {
         timer.start();
         if (playbackState.inTrackClipPlaybackMode ?? false) {
           playbackState.currentTrackClip = playbackState.trackClipQueue![index];
-          playbackState.currentSong = playbackState.trackClipQueue![index].song;
+          playbackState.currentSong = playbackState.trackClipQueue![index].linkedSongDB.target;
           playbackState.currentTrackName =
               playbackState.trackClipQueue![index].clipName;
           playbackState.currentTrackArtist =
-              playbackState.trackClipQueue![index].song!.artistName;
+              playbackState.trackClipQueue![index].linkedSongDB.target!.artistName;
           playbackState.currentTrackImg =
-              playbackState.trackClipQueue![index].song!.albumImage;
+              playbackState.trackClipQueue![index].linkedSongDB.target!.albumImage;
         } else {
           playbackState.currentSong = playbackState.trackQueue![index];
           playbackState.currentTrackName =
@@ -424,7 +424,10 @@ class PlaybackNotifier extends ChangeNotifier {
     if (playbackState.currentTrackIndex == 0) {
       r = await playNewTrackInList(trackQueueLength - 1);
     }
-    r = await playNewTrackInList(playbackState.currentTrackIndex! - 1);
+    else {
+      r = await playNewTrackInList(playbackState.currentTrackIndex! - 1);
+    }
+    
 
     if (r.statusCode == 200 || r.statusCode == 204) {
       playbackState.isRepeatMode = false;
@@ -484,12 +487,12 @@ class PlaybackNotifier extends ChangeNotifier {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
       playbackState.trackClipQueue = [
         ...playbackState.trackClipQueue!,
-        ...playlist.clips!
+        ...playlist.clipsDB
       ];
       if (playbackState.isShuffleMode) {
         playbackState.trackClipQueue = [
           ...playbackState.trackClipQueue!,
-          ...playlist.clips!
+          ...playlist.clipsDB
         ];
       }
       notifyListeners();
@@ -500,13 +503,13 @@ class PlaybackNotifier extends ChangeNotifier {
     if (playbackState.inTrackClipPlaybackMode ?? false) {
       playbackState.trackClipQueue = [...playbackState.trackClipQueue!];
       playbackState.trackClipQueue!
-          .insertAll(playbackState.currentTrackIndex! + 1, playlist.clips!);
+          .insertAll(playbackState.currentTrackIndex! + 1, playlist.clipsDB);
       if (playbackState.isShuffleMode) {
         playbackState.originalTrackQueue = [
           ...playbackState.originalTrackQueue!
         ];
         playbackState.originalTrackQueue!
-            .insertAll(playbackState.currentTrackIndex! + 1, playlist.clips!);
+            .insertAll(playbackState.currentTrackIndex! + 1, playlist.clipsDB);
       }
       notifyListeners();
     }

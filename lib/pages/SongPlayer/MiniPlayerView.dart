@@ -116,7 +116,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                       end: MediaQuery.of(context).size.width,
                     ).animate(_swipeController);
                     _swipeController.forward(from: 0.0);
-                    await _playNextTrack();
+                    await _playPrevTrack();
                     Future.delayed(Duration(milliseconds: 300), () {
                       _returnAnimation = Tween<double>(
                         begin: -MediaQuery.of(context).size.width,
@@ -131,7 +131,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                       end: -MediaQuery.of(context).size.width,
                     ).animate(_swipeController);
                     _swipeController.forward(from: 0.0);
-                    await _playPrevTrack();
+                    await _playNextTrack();
                     Future.delayed(Duration(milliseconds: 300), () {
                       _returnAnimation = Tween<double>(
                         begin: MediaQuery.of(context).size.width,

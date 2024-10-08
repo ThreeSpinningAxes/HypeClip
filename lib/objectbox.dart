@@ -31,6 +31,7 @@ class ObjectBox {
     trackClipBox = Box<TrackClip>(store);
     trackClipPlaylistBox = Box<TrackClipPlaylist>(store); 
     _initUserProfileBox();
+    _initRecentlyPlayedTrackClipPlaylist();
   }
 
   //Create an instance of ObjectBox to use throughout the app.
@@ -71,6 +72,20 @@ class ObjectBox {
           service: service,
           playlistID: "recentlyPlayed",
           playlistName: "Recently Played");
+    }
+  }
+
+  void _initRecentlyPlayedTrackClipPlaylist() {
+    if (!trackClipPlaylistBox
+        .getAll()
+        .any((element) => element.playlistID == "recentlyPlayed")) {
+      final playlist = TrackClipPlaylist(
+        playlistID: "recentlyPlayed",
+        playlistName: TrackClipPlaylist.RECENTLY_LISTENED_KEY,
+        clips: [],
+        dateCreated: DateTime.now(),
+      );
+      trackClipPlaylistBox.put(playlist);
     }
   }
 
@@ -177,6 +192,7 @@ class ObjectBox {
         return playlist;
       }).toList();
       trackClipPlaylistBox.putMany(modifiedPlaylists);
+      
     }
 
     else if (playlistIDs != null ) {
@@ -191,6 +207,7 @@ class ObjectBox {
     }
 
     trackClipBox.put(clip);
+    _logNewTrackclip();
   }
 
   void addNewTrackClipPlaylist(TrackClipPlaylist playlist) {
@@ -204,73 +221,85 @@ class ObjectBox {
       trackClipBox.putMany(clips);
     }
     trackClipPlaylistBox.put(playlist);
+    _logNewPlaylist();
   }
 
-  void deleteTrackClipPlaylist(TrackClipPlaylist playlist) {
+  void deleteTrackClipPlaylist({required TrackClipPlaylist playlist, bool deleteClips = false}) {
+    if (deleteClips) {
+      List<int> idsToDelete = [];
+
+      for (TrackClip clip in playlist.clipsDB) {
+        idsToDelete.add(clip.dbID!);
+      }
+      trackClipBox.removeMany(idsToDelete);
+      
+    }
       trackClipPlaylistBox.remove(playlist.dbID!);
   }
 
-  void deleteTrackClipFromPlaylist(TrackClip clip, TrackClipPlaylist playlist) {
+  void deleteTrackClipFromPlaylist(TrackClip clip, String playlistName) {
+    final playlist = trackClipPlaylistBox.query(TrackClipPlaylist_.playlistName.equals(playlistName)).build().findFirst()!;
     playlist.clipsDB.remove(clip);
+    playlist.clips?.remove(clip);
     playlist.clipsDB.applyToDb();
-    playlist.clips!.remove(clip);
-
   }
+
+  void deleteTrackClip(TrackClip clip) {
+    trackClipBox.remove(clip.dbID!);
+  }
+
+
+  void addTrackClipToPlaylists({required TrackClip clip, required List<String> playlistIDs})  {
+   List<TrackClipPlaylist> modifiedPlaylists = List.of([]);
+      List<TrackClipPlaylist> saveToPlaylists = trackClipPlaylistBox.getAll().where((playlist) => playlistIDs.contains(playlist.playlistID)).toList();
+      for (TrackClipPlaylist playlist in saveToPlaylists) {
+        playlist.clipsDB.add(clip);
+        clip.linkedPlaylistsDB.add(playlist);
+        modifiedPlaylists.add(playlist);
+      }
+      trackClipPlaylistBox.putMany(modifiedPlaylists);
+    }
 
   
 
-  void addSongToDB(
-      {String? playlistID,
-      String? playlistName,
-      required String trackid,
-      required Duration duration,
-      required String trackURI,
-      required String artistName,
-      required String songName,
-      String? songImage,
-      String? artistImage,
-      Color? songColor,
-      required String albumImage,
-      String? albumName,
-      String? imageURL,
-      required MusicLibraryService musicLibraryService}) {
-    final song = Song(
-      trackID: trackid,
-      trackURI: trackURI,
-      artistName: artistName,
-      songName: songName,
-      songImage: songImage,
-      artistImage: artistImage,
-      songColor: songColor,
-      albumImage: albumImage,
-      albumName: albumName,
-      imageURL: imageURL,
-      duration: duration,
-      musicLibraryService: musicLibraryService,
-    );
-    song.musicLibraryServiceDB = musicLibraryService.name;
-    song.durationDB = duration.inMilliseconds;
+  void addTrackClipToRecentlyListened({required TrackClip clip}) {
+    final recentlyListenedPlaylist = trackClipPlaylistBox.query(TrackClipPlaylist_.playlistName.equals(TrackClipPlaylist.RECENTLY_LISTENED_KEY)).build().findFirst()!;
+    recentlyListenedPlaylist.clipsDB.add(clip);
+    clip.linkedPlaylistsDB.add(recentlyListenedPlaylist);
+    trackClipPlaylistBox.put(recentlyListenedPlaylist);
+    trackClipBox.put(clip);
+  }
 
-    songBox.put(song);
-
-    if (playlistID != null) {
-      playlistBox
-          .getAll()
-          .firstWhere((element) => element.id == playlistID)
-          .songsDB
-          .add(song);
-      song.playlistDB.add(playlistBox
-          .getAll()
-          .firstWhere((element) => element.id == playlistID));
-    } else if (playlistName != null) {
-      playlistBox
-          .getAll()
-          .firstWhere((element) => element.name == playlistName)
-          .songsDB
-          .add(song);
-      song.playlistDB.add(playlistBox
-          .getAll()
-          .firstWhere((element) => element.name == playlistName));
+  void _logNewPlaylist() {
+    final allPlaylists = trackClipPlaylistBox.getAll();
+    for (var playlist in allPlaylists) {
+      print('Playlist Name: ${playlist.playlistName}');
+    }
+    if (allPlaylists.isNotEmpty) {
+      final latestPlaylist = allPlaylists.last;
+      print('Latest Playlist Details:');
+      print('Playlist ID: ${latestPlaylist.playlistID}');
+      print('Playlist Name: ${latestPlaylist.playlistName.toUpperCase()}');
+      print('Date Created: ${latestPlaylist.dateCreated}');
+      print('Number of Clips: ${latestPlaylist.clipsDB.length}');
     }
   }
+
+  void _logNewTrackclip() {
+    final allClips = trackClipBox.getAll();
+    for (var clip in allClips) {
+      print('Clip Name: ${clip.clipName}');
+    }
+    if (allClips.isNotEmpty) {
+      final latestClip = allClips.last;
+      print('Latest Clip Details:');
+      print('Clip ID: ${latestClip.dbID}');
+      print('Clip Name: ${latestClip.clipName.toUpperCase()}');
+      print('Date Created: ${latestClip.dateCreated}');
+      print('Clip Duration: ${latestClip.clipLength}');
+    }
+  }
+
+
+ 
 }

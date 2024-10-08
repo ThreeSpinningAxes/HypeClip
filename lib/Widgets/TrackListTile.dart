@@ -34,18 +34,18 @@ const TrackListTile( {this.onTap, super.key, this.trailing, this.trackClip, this
       artist = song!.artistName ?? 'Unknown';
     }
     else if (trackClip != null) {
-      leading = trackClip!.song!.albumImage != null
+      leading = trackClip!.linkedSongDB.target!.albumImage != null
           ? FadeInImage.assetNetwork(
               placeholder:
                   'assets/loading_placeholder.gif', // Path to your placeholder image
-              image: trackClip!.song!.albumImage!,
+              image: trackClip!.linkedSongDB.target!.albumImage!,
               fit: BoxFit.cover,
               width: 50.0, // Adjust the width as needed
               height: 50.0, // Adjust the height as needed
             )
           : Icon(Icons.music_note, color: Colors.white);
       title = trackClip!.clipName;
-      artist = trackClip!.song!.artistName!;
+      artist = trackClip!.linkedSongDB.target!.artistName!;
     }
     else {
       leading = Icon(Icons.music_note, color: Colors.white);
@@ -64,6 +64,7 @@ const TrackListTile( {this.onTap, super.key, this.trailing, this.trackClip, this
                                     color: Colors
                                         .white)), // Adjust according to your data structure
                             subtitle: Text(artist,
+                            
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: TextStyle(

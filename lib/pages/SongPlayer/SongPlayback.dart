@@ -16,6 +16,7 @@ import 'package:hypeclip/Entities/PlaybackState.dart';
 import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
+import 'package:hypeclip/main.dart';
 
 class SongPlayback extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
@@ -162,8 +163,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                       }
 
                       if (!error) {
-                        ref.read(miniPlayerVisibilityProvider.notifier).state =
-                            true;
+                        ref.read(miniPlayerVisibilityProvider.notifier).state = true;
                       }
                     },
                   ),
@@ -419,8 +419,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       ref.read(playbackProvider).setImagePalette();
 
       if (ref.read(playbackProvider).playbackState.inTrackClipPlaybackMode!) {
-        ref.read(trackClipProvider.notifier).appendRecentlyListenedToTrack(
-            ref.read(playbackProvider).playbackState.currentTrackClip!);
+        // ref.read(trackClipProvider.notifier).appendRecentlyListenedToTrack(
+        //     ref.read(playbackProvider).playbackState.currentTrackClip!);
+        db.addTrackClipToRecentlyListened(
+            clip: ref.read(playbackProvider).playbackState.currentTrackClip!,
+        );
       }
     }
   }
@@ -446,8 +449,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       });
 
       if (ref.read(playbackProvider).playbackState.inTrackClipPlaybackMode!) {
-        ref.read(trackClipProvider.notifier).appendRecentlyListenedToTrack(
-            ref.read(playbackProvider).playbackState.currentTrackClip!);
+        // ref.read(trackClipProvider.notifier).appendRecentlyListenedToTrack(
+        //     ref.read(playbackProvider).playbackState.currentTrackClip!);
+        db.addTrackClipToRecentlyListened(
+            clip: ref.read(playbackProvider).playbackState.currentTrackClip!,
+        );
       }
     }
   }

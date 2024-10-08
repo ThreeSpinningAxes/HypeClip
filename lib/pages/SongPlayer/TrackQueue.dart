@@ -32,14 +32,15 @@ class _TrackQueueState extends ConsumerState<TrackQueue> {
     if (inTrackClipPlaybackMode) {
       currentClip = playback.playbackState.currentTrackClip;
       currentSong = playback.playbackState.currentTrackClip!.song;
-      double t = playback.playbackState.currentTrackClip!.clipPoints[1] - playback.playbackState.currentTrackClip!.clipPoints[0];
-      
+      double t = playback.playbackState.currentTrackClip!.clipPoints[1] -
+          playback.playbackState.currentTrackClip!.clipPoints[0];
+
       trackDuration = Duration(milliseconds: t.toInt());
       queue = List<TrackClip>.from(playback.playbackState.trackClipQueue!);
     } else {
       currentClip = null;
       currentSong = playback.playbackState.currentSong;
-      trackDuration =playback.playbackState.currentSong!.duration!;
+      trackDuration = playback.playbackState.currentSong!.duration!;
       queue = List<Song>.from(playback.playbackState.trackQueue!);
     }
 
@@ -92,7 +93,6 @@ class _TrackQueueState extends ConsumerState<TrackQueue> {
                     icon: ref.watch(playbackProvider).playbackState.paused!
                         ? Icon(Icons.play_arrow)
                         : Icon(Icons.pause)),
-                    
               ),
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
@@ -100,14 +100,11 @@ class _TrackQueueState extends ConsumerState<TrackQueue> {
                   progress: playback.playbackState.currentProgress!,
                   total: trackDuration,
                   baseBarColor: Colors.white.withOpacity(0.3),
-                            thumbColor: Colors.white,
-                            thumbRadius: 0,
-                            timeLabelLocation: TimeLabelLocation.none,
-                        progressBarColor: Colors.white,
-                        
-                
-                            
-                            ),
+                  thumbColor: Colors.white,
+                  thumbRadius: 0,
+                  timeLabelLocation: TimeLabelLocation.none,
+                  progressBarColor: Colors.white,
+                ),
               ),
               SizedBox(height: 20),
               Text("Queue",
@@ -130,9 +127,15 @@ class _TrackQueueState extends ConsumerState<TrackQueue> {
                             inTrackClipPlaybackMode, oldIndex, newIndex);
                       },
                       itemBuilder: (BuildContext context, int index) {
+                        final item = queue[index];
+                        final uniqueKey = inTrackClipPlaybackMode
+                            ? 'trackClip-${item.ID}-$index'
+                            : 'track-${item.trackURI}-$index';
                         return Dismissible(
-                          key: ValueKey(inTrackClipPlaybackMode ? queue[index].ID : queue[index].trackURI),
-                          direction: queue.length > 1 ? DismissDirection.endToStart : DismissDirection.none,
+                          key: ValueKey(uniqueKey),
+                          direction: queue.length > 1
+                              ? DismissDirection.endToStart
+                              : DismissDirection.none,
                           onDismissed: (direction) {
                             if (queue.length == 1) {
                               return;
@@ -160,7 +163,8 @@ class _TrackQueueState extends ConsumerState<TrackQueue> {
                                 ? Colors.grey[800]
                                 : Theme.of(context).scaffoldBackgroundColor,
                             onTap: () async {
-                              await playback.playNewTrackInList(index, updateGradient: true);
+                              await playback.playNewTrackInList(index,
+                                  updateGradient: true);
                             },
                             trailing: IconButton(
                                 icon: Icon(
@@ -172,13 +176,13 @@ class _TrackQueueState extends ConsumerState<TrackQueue> {
                                           .playbackState.currentTrackIndex! !=
                                       index) {
                                     await playback
-                                        .playNewTrackInList(index, updateGradient: true)
+                                        .playNewTrackInList(index,
+                                            updateGradient: true)
                                         .then((value) {});
                                   }
                                   if (context.mounted) {
-                                    context.pushNamed('clipEditor', queryParameters: {
-                                       
-                                    });
+                                    context.pushNamed('clipEditor',
+                                        queryParameters: {});
                                   }
                                 }),
                           ),
