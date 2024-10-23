@@ -105,7 +105,7 @@ class _GenericExplorePageState extends State<GenericExplorePage> {
                       fontSize: 20,
                       color: Colors.white)), // Adjust text style as needed
               subtitle: Text(
-                  'Recent songs listened toon ${widget.service.name.toCapitalized()}',
+                  'Recent songs listened to on ${widget.service.name.toCapitalized()}',
                   style: TextStyle(fontSize: 14, color: Colors.white)),
               onTap: () {
                 // Add your action for Playlists here

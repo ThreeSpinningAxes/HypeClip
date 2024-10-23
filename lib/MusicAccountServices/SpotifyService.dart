@@ -5,11 +5,13 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart';
 import 'package:hypeclip/Entities/Playlist.dart';
+import 'package:hypeclip/Entities/UserConnectedMusicServiceDB.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Entities/Song.dart';
-import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/Utilities/RandomGen.dart';
+import 'package:hypeclip/main.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'dart:developer' as developer;
 
@@ -76,7 +78,19 @@ class SpotifyService {
     if (authCode != null) {
       Map<String, dynamic>? accessData = await _getAccessData(authCode);
       if (accessData != null) {
-        Userservice.addMusicService(MusicLibraryService.spotify, accessData);
+        if (!accessData.containsKey('error')) {
+          UserProfileService.addMusicService(
+              MusicLibraryService.spotify, accessData);
+          db.addConnectedMusicService(
+              service: MusicLibraryService.spotify,
+              accessToken: accessData[ACCESS_TOKEN_VAR_NAME],
+              refreshToken: accessData[REFRESH_TOKEN_VAR_NAME],
+              createDefaultPlaylists: true);
+
+        }
+        print(
+            "accesstoken: ${db.getFirstUser()?.connectedMusicStreamingServices.first.accessToken}");
+
         return accessData;
       } else {
         return null;
@@ -97,35 +111,36 @@ class SpotifyService {
   }
 
   Future<String?> getAccessTokenFromStorage() async {
-    Map<String, dynamic>? data =
-        await Userservice.getMusicServiceData(MusicLibraryService.spotify);
-    if (data != null) {
-      return data[ACCESS_TOKEN_VAR_NAME];
-    }
-    return null;
+    // Map<String, dynamic>? data = await UserProfileService.getMusicServiceData(
+    //     MusicLibraryService.spotify);
+   
+    // if (data != null) {
+    //   return data[ACCESS_TOKEN_VAR_NAME];
+    // }
+    // return null;
+     UserConnectedMusicService? token = db.userConnectedMusicServiceBox.getAll().where((element) =>
+        element.musicLibraryServiceDB == MusicLibraryService.spotify.name).firstOrNull;
+    return token?.accessToken;
   }
 
   Future<String?> getRefreshTokenFromStorage() async {
-    Map<String, dynamic>? data =
-        await Userservice.getMusicServiceData(MusicLibraryService.spotify);
-    if (data != null) {
-      return data[REFRESH_TOKEN_VAR_NAME];
-    }
-    return null;
+    // Map<String, dynamic>? data = await UserProfileService.getMusicServiceData(
+    //     MusicLibraryService.spotify);
+    // if (data != null) {
+    //   return data[REFRESH_TOKEN_VAR_NAME];
+    // }
+    // return null;
+UserConnectedMusicService? token = db.userConnectedMusicServiceBox.getAll().where((element) =>
+        element.musicLibraryServiceDB == MusicLibraryService.spotify.name).firstOrNull;
+    return token?.refreshToken;
+  
+    
   }
 
-  Future<String?> getExpirationTimeFromStorage() async {
-    Map<String, dynamic>? data =
-        await Userservice.getMusicServiceData(MusicLibraryService.spotify);
-    if (data != null) {
-      return data[ACCESS_TOKEN_EXP_VAR_NAME];
-    }
-    return null;
-  }
 
   Future<void> setAccessTokenToStorage(String accessToken) async {
     Map<String, dynamic> data = {ACCESS_TOKEN_VAR_NAME: accessToken};
-    await Userservice.addMusicService(MusicLibraryService.spotify, data);
+    await UserProfileService.addMusicService(MusicLibraryService.spotify, data);
   }
 
   Future<String?> getAuthorizationToken() async {
@@ -228,7 +243,14 @@ class SpotifyService {
       REFRESH_TOKEN_VAR_NAME: refreshToken,
       ACCESS_TOKEN_EXP_VAR_NAME: expiresIn.toString()
     };
-    await Userservice.setMusicServiceData(MusicLibraryService.spotify, data);
+    db.userConnectedMusicServiceBox
+        .getAll()
+        .where((element) =>
+            element.musicLibraryServiceDB == MusicLibraryService.spotify.name)
+        .first
+        .accessToken = accessToken;
+    await UserProfileService.setMusicServiceData(
+        MusicLibraryService.spotify, data);
   }
 
   /*
@@ -276,7 +298,14 @@ class SpotifyService {
             artistName: artists.map((artist) => artist['name']).join(', '),
             albumName: albumName,
             albumImage: albumImage,
-            duration: Duration(milliseconds: duration));
+            duration: Duration(milliseconds: duration),
+            trackID: item['track']['id'],
+            musicLibraryService: MusicLibraryService.spotify,
+            
+
+            );
+        song.musicLibraryServiceDB = MusicLibraryService.spotify.name;
+        song.durationDB = duration;
         songs.add(song);
       }
       return songs;
@@ -308,16 +337,30 @@ class SpotifyService {
 
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
-      List<Playlist> playlists = (data['items'] as List)
-          .map((item) => Playlist(
-                id: item['id'],
-                name: item['name'],
-                ownerName: item['owner']['display_name'] ?? 'Unknown',
-                imageUrl:
-                    item['images'].isNotEmpty ? item['images'][0]['url'] : null,
-                totalTracks: item['tracks']['total'],
-              ))
-          .toList();
+      List<Playlist> playlists = [];
+
+      for (var item in data['items']) {
+        String id = item['id'];
+        String name = item['name'];
+        String ownerName = item['owner']['display_name'] ?? 'Unknown';
+        String? imageUrl = item['images'] != null && item['images'].isNotEmpty
+            ? item['images'][0]['url']
+            : null;
+        int totalTracks = item['tracks']['total'];
+        Playlist playlist = Playlist(
+          id: id,
+          name: name,
+          ownerName: ownerName,
+          imageUrl: imageUrl,
+          totalTracks: totalTracks,    
+        );
+        playlist.userMusicStreamingServiceAccount.target = db.userConnectedMusicServiceBox.getAll().where((element) =>
+            element.musicLibraryServiceDB == MusicLibraryService.spotify.name).first;
+        playlist.musicLibraryServiceDB = MusicLibraryService.spotify.name;
+        playlists.add(playlist);
+        
+      }
+
       return playlists;
     } else if (response.statusCode == 401) {
       await refreshAccessToken();
@@ -348,22 +391,29 @@ class SpotifyService {
 
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
-      List<Song> tracks = (data['items'] as List)
-          .map((item) => Song(
-                trackURI: item['track']['uri'],
-                songName: item['track']['name'],
-                artistName: item['track']['artists']
-                    .map((artist) => artist['name'])
-                    .join(', '),
-                albumName: item['track']['album']['name'],
-                albumImage: item['track']['album']['images'].isNotEmpty
-                    ? item['track']['album']['images'][0]['url']
-                    : null,
-                duration: item['track']['duration_ms'] != null
-                    ? Duration(milliseconds: item['track']['duration_ms'])
-                    : null,
-              ))
-          .toList();
+      List<Song> tracks = [];
+      for (var item in data['items']) {
+        Song song = Song(
+          trackURI: item['track']['uri'],
+          songName: item['track']['name'],
+          artistName: (item['track']['artists'] as List)
+              .map((artist) => artist['name'])
+              .join(', '),
+          albumName: item['track']['album']['name'],
+          albumImage: item['track']['album']['images'].isNotEmpty
+              ? item['track']['album']['images'][0]['url']
+              : null,
+          duration: item['track']['duration_ms'] != null
+              ? Duration(milliseconds: item['track']['duration_ms'])
+              : null,
+          trackID: item['track']['id'],
+        );
+        song.musicLibraryServiceDB = MusicLibraryService.spotify.name;
+        song.durationDB = item['track']['duration_ms'];
+        song.playlistDB.add(playlist);
+
+        tracks.add(song);
+      }
       return tracks;
     } else if (response.statusCode == 401) {
       await refreshAccessToken();
@@ -374,12 +424,12 @@ class SpotifyService {
     }
   }
 
-  Future<List<Song>?> getRecentlyPlayedTracks({int limit = 25, int? time}) async {
+  Future<List<Song>?> getRecentlyPlayedTracks(
+      {int limit = 25, int? time}) async {
     String? accessToken = await getAccessTokenFromStorage();
 
     time = time ?? DateTime.now().millisecondsSinceEpoch;
     String url = '$BASE_API_URL$RECENTLY_PLAYED?limit=$limit';
-    
 
     var response = await http.get(
       Uri.parse(url),
@@ -387,26 +437,34 @@ class SpotifyService {
         'Authorization': 'Bearer $accessToken',
       },
     );
-    
 
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
-      List<Song> tracks = (data['items'] as List)
-          .map((item) => Song(
-                trackURI: item['track']['uri'],
-                songName: item['track']['name'],
-                artistName: item['track']['artists']
-                    .map((artist) => artist['name'])
-                    .join(', '),
-                albumName: item['track']['album']['name'],
-                albumImage: item['track']['album']['images'].isNotEmpty
-                    ? item['track']['album']['images'][0]['url']
-                    : null,
-                duration: item['track']['duration_ms'] != null
-                    ? Duration(milliseconds: item['track']['duration_ms'])
-                    : null,
-              ))
-          .toList();
+      List<Song> tracks = [];
+      for (var item in data['items']) {
+        Song song = Song(
+          trackURI: item['track']['uri'],
+          songName: item['track']['name'],
+          artistName: (item['track']['artists'] as List)
+          .map((artist) => artist['name'])
+          .join(', '),
+          albumName: item['track']['album']['name'],
+          albumImage: item['track']['album']['images'].isNotEmpty
+          ? item['track']['album']['images'][0]['url']
+          : null,
+          duration: item['track']['duration_ms'] != null
+          ? Duration(milliseconds: item['track']['duration_ms'])
+          : null,
+          trackID: item['track']['id'],
+          musicLibraryService: MusicLibraryService.spotify,
+          
+        );
+        song.musicLibraryServiceDB = MusicLibraryService.spotify.name;
+        song.durationDB = item['track']['duration_ms'];
+        
+
+        tracks.add(song);
+      }
       return tracks;
     } else if (response.statusCode == 401) {
       // Assuming refreshAccessToken is a method that refreshes the token
@@ -470,27 +528,23 @@ class SpotifyService {
   }
 
   // Checks if Spotify app is open on mobile device. If it is not, make this device the current active device.
-  Future<bool> isSpotifyAppOpen() async {
+  Future<Response> isSpotifyAppOpen() async {
     List<dynamic>? availableDevices = await getAvailableDevices();
     if (availableDevices != null) {
       for (dynamic device in availableDevices) {
         if (device['type'] == 'Smartphone' &&
             device['name'] == DeviceInfoManager().model) {
           deviceID = device['id'];
-          return await transferPlaybackToCurrentDevice().then((resp) {
-            if (resp.statusCode == 200 || resp.statusCode == 204) {
-              return true;
-            } else {
-              return false;
-            }
-          });
+          return await transferPlaybackToCurrentDevice();
         }
       }
-      return false;
+      String errorBody = createErrorBody(
+          'Your phone is not active with Spotify. Make sure the Spotify app on this device is active');
+      return Response(errorBody, 500);
     } else {
-      print(
-          "Spotify must be active on current device. Make sure the Spotify app is open");
-      return false;
+      String errorBody = createErrorBody(
+          'Your phone is not active with Spotify. Make sure the Spotify app on this device is active');
+      return Response(errorBody, 500);
     }
   }
 
@@ -504,12 +558,15 @@ class SpotifyService {
           return await transferPlaybackToCurrentDevice();
         }
       }
-      return Response("Your phone is not active with Spotify", 500);
+      String errorBody =
+          createErrorBody("Your phone is not active with Spotify");
+      return Response(errorBody, 500);
     } else {
       print(
           "Spotify must be active on current device. Make sure the Spotify app is open");
-      return Response('Spotify must be active on current device', 500);
-  }
+      return Response(
+          createErrorBody('Spotify must be active on current device'), 500);
+    }
   }
 
   Future<Response> transferPlaybackToCurrentDevice() async {
@@ -601,7 +658,7 @@ class SpotifyService {
       await refreshAccessToken();
       return await playTrack(trackURI, position: position);
     } else if (response.statusCode == 404) {
-      print('device is not active');
+      print(response.body);
     }
     return response;
   }
@@ -620,6 +677,7 @@ class SpotifyService {
 
     if (response.statusCode == 200) {
       // The request has succeeded and the playback has been paused
+
       return true;
     } else if (response.statusCode == 401) {
       // Assuming refreshAccessToken is a method that refreshes the token
@@ -640,6 +698,9 @@ class SpotifyService {
     }
   }
 
-
+  String createErrorBody(String error) {
+    return jsonEncode({
+      'error': {'message': error}
+    });
+  }
 }
-

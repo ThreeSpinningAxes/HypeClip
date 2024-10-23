@@ -7,20 +7,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
+import 'package:hypeclip/ErrorPages/GenericErrorPage.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
-import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
-import 'package:hypeclip/Providers/PlaybackState.dart';
-import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Entities/PlaybackState.dart';
+import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
-import 'package:palette_generator/palette_generator.dart';
+import 'package:hypeclip/main.dart';
 
 class SongPlayback extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
+  final bool? inTrackClipPlaybackMode;
+  final bool? resetForNewTrack;
 
-  const SongPlayback({super.key});
+  const SongPlayback(
+      {super.key, this.inTrackClipPlaybackMode, this.resetForNewTrack});
 
   @override
   _SongPlaybackState createState() => _SongPlaybackState();
@@ -29,318 +32,519 @@ class SongPlayback extends ConsumerStatefulWidget {
 class _SongPlaybackState extends ConsumerState<SongPlayback> {
   bool _isLoading = true;
   late final MusicServiceHandler musicServiceHandler;
-  bool insideEvenHandler = false;
+  bool error = false;
+  bool initError = false;
+  GenericErrorPage errorPage = GenericErrorPage();
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _asyncInit();
-    });
-
     super.initState();
+    musicServiceHandler = MusicServiceHandler(service: widget.service);
+    PlaybackNotifier playbackNotifier = ref.read(playbackProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _isLoading = true;
+        playbackNotifier.insideEvent = true;
+      });
+      _asyncInit().then((value) {
+
+        setState(() {
+          playbackNotifier.insideEvent = false;
+        });
+      });
+      setState(() {
+        _isLoading = false;
+      });
+    });
+  }
+
+  void _refresh() async {
+    PlaybackNotifier playbackNotifier = ref.read(playbackProvider);
+    setState(() {
+      _isLoading = true;
+    });
+    playbackNotifier.insideEvent = true;
+    await _asyncInit().then((value) {
+      setState(() {
+        playbackNotifier.insideEvent = false;
+      });
+    });
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   _asyncInit() async {
-    SpotifyService().isSpotifyAppOpen().then((isOpen) async {
-      if (!isOpen) {
-        if (mounted) {
-          setState(() {
-            ShowSnackBar.showSnackbarError(
-                context,
-                "Make sure the ${widget.service.name.toCapitalized()} app is running on your device and is active",
-                5);
-            _isLoading = false;
-          });
-        }
-      } else {
-        PlaybackState playbackState = ref.read(playbackProvider).playbackState;
-        if (playbackState.domColorLinGradient == null) {
-          ref.read(playbackProvider).setImagePalette();
-        }
-        if (playbackState.currentProgress == null || 
-        playbackState.currentProgress!.inMilliseconds == Duration.zero.inMilliseconds) {
-          Response? r = await ref.watch(playbackProvider).playCurrentTrack(0);
-          if (r.statusCode != 200 && r.statusCode != 204) {
-            if (mounted) {
-              setState(() {
-                ShowSnackBar.showSnackbarError(
-                    context, jsonDecode(r.body)['error']['message'], 5);
-              });
-            }
-          }
-        }
+    Response r = await musicServiceHandler.isStreaingServiceAppOpen();
+    if (r.statusCode != 200 && r.statusCode != 204) {
+      errorPage = GenericErrorPage(
+        errorHeader: "Error with ${widget.service.name.toCapitalized()}",
+        errorDescription: jsonDecode(r.body)['error']['message'],
+        buttonText: "Retry",
+        buttonAction: _refresh,
+      );
+      setState(() {
+        _isLoading = false;
+        error = true;
+        initError = true;
+      });
+      return;
+    }
+    PlaybackState playbackState = ref.read(playbackProvider).playbackState;
+
+    if (widget.resetForNewTrack ?? false) {
+      r = await ref.watch(playbackProvider).playTrackAfterInit();
+      if (r.statusCode != 200 && r.statusCode != 204) {
+        errorPage = GenericErrorPage(
+          errorHeader:
+              "Failed to play track ${playbackState.currentSong!.songName}",
+          errorDescription: jsonDecode(r.body)['error']['message'],
+          buttonText: "Retry",
+          buttonAction: _refresh,
+        );
 
         setState(() {
-          _isLoading = false;
+          error = true;
+          initError = true;
         });
+        return;
       }
+    }
+    setState(() {
+      error = false;
+      initError = false;
     });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final playBack = ref.watch(playbackProvider);
-    final Song currentSong =
-        ref.watch(playbackProvider).playbackState.currentSong!;
-    final PlaybackState playbackState =
-        ref.watch(playbackProvider).playbackState;
-    final bool fromListOfTracks =
-        playbackState.songs != null && playbackState.songs!.length > 1;
-
     if (_isLoading) {
-      return Container(
-        child: Center(
-          child: CircularProgressIndicator(
-            color: Colors.white,
-          ),
-        ),
-      );
-    } else {
-      return Container(
-        decoration: BoxDecoration(
-          gradient: playbackState.domColorLinGradient,
-        ),
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.topLeft,
-              heightFactor: 1,
-              child: IconButton(
-                icon: const Icon(
-                  Icons.keyboard_arrow_down,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  context.pop();
-                  ref.read(miniPlayerVisibilityProvider.notifier).state = true;
-                },
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 20,
-                    ),
-                    Image.network(
-                      currentSong.songImage ?? currentSong.albumImage!,
-                      height: 300,
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 35),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(currentSong.songName ?? 'Unknown Song Name',
-                                style: TextStyle(
-                                    fontSize: 24,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
-                            SizedBox(height: 4),
-                            Text(currentSong.artistName!,
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.white)),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (fromListOfTracks)
-                          IconButton(
-                              icon: Icon(Icons.skip_previous,
-                                  color: Colors.white),
-                              onPressed: () async {
-                                if (!insideEvenHandler) {
-                                  insideEvenHandler = true;
-                                  await _playPreviousSong();
-                                  insideEvenHandler = false;
-                                }
-                              }),
-                        IconButton(
-                            icon: Icon(
-                                playbackState.paused!
-                                    ? Icons.play_arrow
-                                    : Icons.pause,
-                                color: Colors.white,
-                                size: 36),
-                            onPressed: () async {
-                              if (!insideEvenHandler) {
-                                insideEvenHandler = true;
-                                if (playbackState.paused!) {
-                                  await _playSong(
-                                      position: playBack.timer.currentProgress
-                                          .inMilliseconds);
-                                } else {
-                                  bool? r = await playBack.pauseSong();
-                                  if (r == false) {
-                                    ShowSnackBar.showSnackbarError(
-                                        context, "Failed to pause playback", 5);
-                                  }
-                                }
-                                insideEvenHandler = false;
-                              }
-
-                              // var x = await SpotifyService().getAvailableDevices();
-                              // print(x);
-                            }),
-                        if (fromListOfTracks)
-                          IconButton(
-                              icon: Icon(Icons.skip_next, color: Colors.white),
-                              onPressed: () async {
-                                if (!insideEvenHandler) {
-                                  insideEvenHandler = true;
-
-                                  await _playNextSong();
-
-                                  insideEvenHandler = false;
-                                }
-                              }),
-                      ],
-                    ),
-                    SizedBox(height: 25),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, right: 20),
-                      child: ProgressBar(
-                        // baseBarColor: Colors.black,
-                        progressBarColor: Colors.white,
-                        baseBarColor: Colors.white.withOpacity(0.3),
-                        thumbColor: Colors.white,
-                        progress: playBack.playbackState.currentProgress!,
-                        //buffered: Duration(milliseconds: 2000),
-                        total: currentSong.duration!,
-
-                        onSeek: (duration) async {
-                          insideEvenHandler = true;
-
-                          await _seek(seek: duration.inMilliseconds);
-                          insideEvenHandler = false;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+      return Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
         ),
       );
     }
+    if (initError) {
+      return errorPage;
+    }
+    final playBack = ref.watch(playbackProvider);
+    final PlaybackState playbackState = playBack.playbackState;
+    final String trackName = playbackState.currentTrackName!;
+    final int trackDuration = playbackState.trackLength!;
+    final String trackArtist = playbackState.currentTrackArtist!;
+    final String trackImg = playbackState.currentTrackImg!;
+
+    return Scaffold(
+      body: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: playbackState.domColorLinGradient,
+            color: playbackState.domColorLinGradient == null
+                ? Colors.transparent
+                : null,
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 10, top: 20),
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  heightFactor: 1,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    onPressed: () {
+                      PlaybackNotifier playBack = ref.read(playbackProvider);
+                      if (playBack.insideEvent) {
+                        return;
+                      }
+                      if (context.mounted) {
+                        context.pop();
+                      }
+
+                      if (!error) {
+                        ref.read(miniPlayerVisibilityProvider.notifier).state = true;
+                      }
+                    },
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.network(
+                        trackImg,
+                        height: 300,
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 35),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                trackName,
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                trackArtist,
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.white),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.repeat),
+                            color: playbackState.isRepeatMode
+                                ? Color.fromARGB(255, 8, 104, 187)
+                                : Colors.white,
+                            onPressed: () {
+                              PlaybackNotifier playBack =
+                                  ref.read(playbackProvider);
+                              if (playBack.insideEvent) {
+                                return;
+                              }
+                              playBack.updatePlaybackState(
+                                  isRepeatMode: !playbackState.isRepeatMode);
+                            },
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                  icon: Icon(Icons.skip_previous,
+                                      color: Colors.white),
+                                  onPressed: () async {
+                                    PlaybackNotifier playBack =
+                                        ref.read(playbackProvider);
+                                    if (!playBack.insideEvent) {
+                                      
+                                      if (playbackState.currentProgress!
+                                              .inMilliseconds <=
+                                          Duration(seconds: 3).inMilliseconds) {
+                                        await _playPreviousSong();
+                                      } else if (playbackState.currentProgress!
+                                              .inMilliseconds >=
+                                          Duration(seconds: 3).inMilliseconds) {
+                                        await _seek(seek: 0);
+                                      }
+                                      
+                                    }
+                                  }),
+                              IconButton(
+                                  icon: Icon(
+                                      playbackState.paused!
+                                          ? Icons.play_arrow
+                                          : Icons.pause,
+                                      color: Colors.white,
+                                      size: 36),
+                                  onPressed: () async {
+                                    await _pausePlayback(
+                                        playbackState.currentSong!,
+                                        trackDuration);
+                                  }),
+                              IconButton(
+                                  icon: Icon(Icons.skip_next,
+                                      color: Colors.white),
+                                  onPressed: () async {
+                                    PlaybackNotifier playBack =
+                                        ref.read(playbackProvider);
+                                    if (!playBack.insideEvent) {
+                                      
+
+                                      await _playNextSong();
+
+                                     
+                                    }
+                                  }),
+                            ],
+                          ),
+                          IconButton(
+                              icon: Icon(Icons.shuffle),
+                              color: playbackState.isShuffleMode
+                                  ? Color.fromARGB(255, 8, 104, 187)
+                                  : Colors.white,
+                              onPressed: () {
+                                PlaybackNotifier playBack =
+                                    ref.read(playbackProvider);
+                                if (!playBack.insideEvent) {
+                                  playBack.insideEvent = true;
+
+                                  if (!playbackState.isShuffleMode) {
+                                    playBack.shuffleQueue();
+                                  } else {
+                                    playBack.undueShuffle();
+                                  }
+                                  playBack.insideEvent = false;
+                                }
+                              }),
+                        ],
+                      ),
+                      if (playbackState.inTrackClipPlaybackMode != null &&
+                          !playbackState.inTrackClipPlaybackMode!)
+                        IconButton(
+                            onPressed: () {
+                              PlaybackNotifier playBack =
+                                  ref.read(playbackProvider);
+                              if (playBack.insideEvent) {
+                                return;
+                              }
+                              context.pushNamed('clipEditor');
+                            },
+                            icon: Icon(
+                              Icons.cut,
+                              color: Colors.white,
+                            )),
+                      if (playbackState.inTrackClipPlaybackMode == null ||
+                          playbackState.inTrackClipPlaybackMode!)
+                        SizedBox(
+                          height: 20,
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, right: 20),
+                        child: ProgressBar(
+                          // baseBarColor: Colors.black,
+                          progressBarColor: Colors.white,
+                          baseBarColor: Colors.white.withOpacity(0.3),
+                          thumbColor: Colors.white,
+                          progress: playBack.playbackState.currentProgress!,
+                          //buffered: Duration(milliseconds: 2000),
+                          total: Duration(milliseconds: trackDuration),
+                          onSeek: (duration) async {
+                            PlaybackNotifier playBack =
+                                ref.read(playbackProvider);
+                            if (playBack.insideEvent) {
+
+                              return;
+                            }
+
+                            
+                            if (playbackState.paused!) {
+                              // setState(() {
+                              //   playBack.playbackState.currentProgress =
+                              //       duration;
+                              // });
+                              playBack.updatePlaybackState(
+                                  currentProgress: duration);
+                            } else if (playbackState
+                                    .currentProgress!.inMilliseconds >=
+                                trackDuration) {
+                              await _playNextSong();
+                            } else {
+                              await _seek(seek: duration.inMilliseconds);
+                            }
+
+                            
+                          },
+                        ),
+                      ),
+                      if (playbackState.inTrackClipPlaybackMode!)
+                        IconButton(
+                          icon: Icon(
+                            Icons.refresh,
+                            size: 36,
+                          ),
+                          color: Colors.white,
+                          onPressed: () async {
+                            PlaybackNotifier playBack =
+                                    ref.read(playbackProvider);
+                            if (playBack.insideEvent) {
+                              return;
+                            }
+                            
+                            await _seek(seek: 0);
+                            
+                          },
+                        ),
+                      SizedBox(height: 10),
+                      TextButton(
+                        onPressed: () {
+                          if (playBack.insideEvent) {
+                            return;
+                          }
+                          context.pushNamed('queue');
+                        },
+                        child: Text(
+                          "Queue",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _playNextSong() async {
-    Response r = await ref.read(playbackProvider).playNextTrack();
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response r = await ref.read(playbackProvider).playNextTrack().whenComplete(() {
+      p.insideEvent = false;
+    });
     if (r.statusCode != 200 && r.statusCode != 204) {
-      if (mounted) {
-        setState(() {
-          ShowSnackBar.showSnackbarError(
-              context, jsonDecode(r.body)['error']['message'], 5);
-        });
-      }
+      setState(() {
+        ShowSnackBar.showSnackbarError(
+            context, jsonDecode(r.body)['error']['message'], 5);
+        error = true;
+      });
     } else {
       setState(() {
-        _isLoading = true;
+        error = false;
       });
-     
-          ref.read(playbackProvider).setImagePalette();
-      setState(() {
-        _isLoading = false;
-      });
+
+      ref.read(playbackProvider).setImagePalette();
+
+      if (ref.read(playbackProvider).playbackState.inTrackClipPlaybackMode!) {
+        // ref.read(trackClipProvider.notifier).appendRecentlyListenedToTrack(
+        //     ref.read(playbackProvider).playbackState.currentTrackClip!);
+        db.addTrackClipToRecentlyListened(
+            clip: ref.read(playbackProvider).playbackState.currentTrackClip!,
+        );
+      }
     }
   }
 
   Future<void> _playPreviousSong() async {
-    insideEvenHandler = true;
-    Response r = await ref.read(playbackProvider).playPreviousTrack();
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response r = await ref.read(playbackProvider).playPreviousTrack().whenComplete(() {
+      p.insideEvent = false;
+    });
     if (r.statusCode != 200 && r.statusCode != 204) {
-      if (mounted) {
-        setState(() {
-          ShowSnackBar.showSnackbarError(
-              context, jsonDecode(r.body)['error']['message'], 5);
-        });
-      }
+      setState(() {
+        ShowSnackBar.showSnackbarError(
+            context, jsonDecode(r.body)['error']['message'], 5);
+        error = true;
+      });
     } else {
       setState(() {
         _isLoading = true;
+        error = false;
       });
-     
-          ref.read(playbackProvider).setImagePalette();
+
+      ref.read(playbackProvider).setImagePalette();
       setState(() {
         _isLoading = false;
       });
+
+      if (ref.read(playbackProvider).playbackState.inTrackClipPlaybackMode!) {
+        // ref.read(trackClipProvider.notifier).appendRecentlyListenedToTrack(
+        //     ref.read(playbackProvider).playbackState.currentTrackClip!);
+        db.addTrackClipToRecentlyListened(
+            clip: ref.read(playbackProvider).playbackState.currentTrackClip!,
+        );
+      }
     }
   }
 
   Future<void> _playSong({int? position}) async {
-    Response? r = await ref.watch(playbackProvider).playCurrentTrack(position);
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response? r = await ref.watch(playbackProvider).playCurrentTrack(position).whenComplete(() {
+      p.insideEvent = false;
+    });
     Response response = r;
     if (response.statusCode != 204 && response.statusCode != 200) {
       if (mounted) {
         setState(() {
           ShowSnackBar.showSnackbarError(
               context, jsonDecode(response.body)['error']['message'], 5);
+          error = true;
         });
       }
+    } else {
+      error = false;
     }
   }
 
   Future<void> _seek({required int seek}) async {
-    Response? r = await ref.read(playbackProvider).seekCurrentTrack(seek);
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response? r = await ref.read(playbackProvider).seekCurrentTrack(seek).whenComplete(() {
+      p.insideEvent = false;
+    });
     Response response = r;
     if (response.statusCode != 204 && response.statusCode != 200) {
-      if (mounted) {
-        setState(() {
-          ShowSnackBar.showSnackbarError(
-              context, jsonDecode(response.body)['error']['message'], 5);
-        });
-      }
+      setState(() {
+        ShowSnackBar.showSnackbarError(
+            context, jsonDecode(response.body)['error']['message'], 5);
+        error = true;
+      });
+    } else {
+      setState(() {
+        error = false;
+      });
     }
   }
 
-  Future<LinearGradient?> getImagePalette(String? imageURL) async {
-    if (imageURL == null) {
-      return null;
+  Future<void> _pausePlayback(Song currentSong, int trackDuration) async {
+    PlaybackNotifier playBack = ref.read(playbackProvider);
+    if(playBack.insideEvent) {
+      return;
     }
-    final ImageProvider imageProvider = NetworkImage(imageURL);
-    final PaletteGenerator paletteGenerator =
-        await PaletteGenerator.fromImageProvider(imageProvider);
-    Color? domColor = paletteGenerator.dominantColor?.color;
-    LinearGradient linearGradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        Theme.of(context).scaffoldBackgroundColor,
-        domColor?.withOpacity(0.33) ?? Colors.black.withOpacity(0.1),
-        domColor?.withOpacity(0.66) ?? Colors.black.withOpacity(0.3),
-        domColor ?? Colors.black,
-        domColor?.withOpacity(0.66) ?? Colors.black.withOpacity(0.7),
-        domColor?.withOpacity(0.33) ?? Colors.black.withOpacity(0.3),
-        Theme.of(context).scaffoldBackgroundColor,
-      ],
-      stops: [
-        0.0,
-        0.175,
-        0.3125,
-        0.5,
-        0.6875,
-        0.825,
-        1.0,
-      ],
-    );
-    return linearGradient;
+    playBack.insideEvent = true;
+      
+      PlaybackState playbackState = ref.read(playbackProvider).playbackState;
+      if (playbackState.paused!) {
+        if (playbackState.currentProgress!.inMilliseconds >= trackDuration) {
+          if (playbackState.isRepeatMode) {
+            await _seek(seek: 0);
+          } else {
+            await _playNextSong();
+          }
+        } else {
+          await _playSong(position: playBack.currentProgress.inMilliseconds);
+        }
+      } else {
+        bool? result = await playBack.pauseTrack().whenComplete(() {
+          playBack.insideEvent = false;
+        });
+        if (result == false) {
+          ShowSnackBar.showSnackbarError(
+              context, "Failed to pause playback", 5);
+        }
+      }
+
+    }
+  
+
+  @override
+  void setState(VoidCallback fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
   }
 }

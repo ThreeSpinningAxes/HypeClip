@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Entities/Playlist.dart';
+import 'package:hypeclip/Entities/UserConnectedMusicServiceDB.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Pages/Explore/TrackList.dart';
+import 'package:hypeclip/main.dart';
 
 class UserPlaylistsPage extends StatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
@@ -19,23 +21,74 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
   late MusicServiceHandler musicServiceHandler;
   Future<List<Playlist>>? playlists;
   List<Playlist> filteredPlaylists = [];
-  TextEditingController search = TextEditingController();
-  ScrollController _scrollController = ScrollController();
+  TextEditingController search = TextEditingController(text: "");
 
   @override
   void initState() {
     super.initState();
+
     musicServiceHandler = MusicServiceHandler(service: widget.service);
-    playlists = loadPlaylists();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
-        loadPlaylists();
-      }
-    });
+    List<Playlist> userPlaylistsForService = db
+        .getFirstUser()!
+        .connectedMusicStreamingServices
+        .where(
+            (service) => service.musicLibraryServiceDB == widget.service.name)
+        .first
+        .userPlaylistsDB;
+    if (userPlaylistsForService.isEmpty ||
+        userPlaylistsForService
+            .where((playlist) =>
+                playlist.id != Playlist.likedTracksID &&
+                playlist.id != Playlist.recentlyPlayedID)
+            .isEmpty) {
+      playlists = loadPlaylists();
+      playlists!.then((playlists) {
+        storeNewPlaylistsDB(playlists);
+      });
+    } else {
+      List<Playlist> filteredPlaylists = db.playlistBox
+          .getAll()
+          .where((playlist) =>
+              playlist.musicLibraryServiceDB == widget.service.name &&
+              !playlist.backup.hasValue &&
+              playlist.id != Playlist.likedTracksID &&
+              playlist.id != Playlist.recentlyPlayedID)
+          .toList();
+      playlists = Future.value(filteredPlaylists);
+    }
+
     search.addListener(() {
       updateSearchQuery(search.text);
     });
+    updateSearchQuery(search.text);
+  }
+
+  void storeNewPlaylistsDB(List<Playlist> playlists) {
+    // Fetch all existing playlists from the playlist box
+    List<Playlist> existingPlaylists = db.playlistBox.getAll();
+
+    // Create a set of existing playlist IDs
+    Set<String> existingPlaylistIds =
+        existingPlaylists.map((playlist) => playlist.id).toSet();
+
+    UserConnectedMusicService service = db
+        .getFirstUser()!
+        .connectedMusicStreamingServices
+        .where(
+            (service) => service.musicLibraryServiceDB == widget.service.name)
+        .first;
+    // Calculate new playlists that don't exist in the playlist box
+    List<Playlist> newPlaylists = [];
+    for (Playlist playlist in playlists) {
+      if (!existingPlaylistIds.contains(playlist.id)) {
+        playlist.userMusicStreamingServiceAccount.target = service;
+        newPlaylists.add(playlist);
+      }
+    }
+
+    db.playlistBox.putMany(newPlaylists);
+    service.userPlaylistsDB.addAll(newPlaylists);
+    db.userConnectedMusicServiceBox.put(service);
   }
 
   Future<List<Playlist>> loadPlaylists() async {
@@ -59,19 +112,22 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
   }
 
   void updateSearchQuery(String newQuery) {
-    setState(() {
-      if (newQuery.isNotEmpty) {
-        playlists!.then((playlist) {
-          //print(songs.length);
-          filteredPlaylists = playlist.where((playlist) {
-            return playlist.name
-                .toString()
-                .toLowerCase()
-                .contains(search.text.toLowerCase());
-          }).toList();
-        });
-      }
-    });
+    if (newQuery.isNotEmpty) {
+      playlists!.then((playlist) {
+        //print(songs.length);
+        filteredPlaylists = playlist.where((playlist) {
+          return playlist.name
+              .toString()
+              .toLowerCase()
+              .contains(search.text.toLowerCase());
+        }).toList();
+      });
+    } else {
+      playlists!.then((playlist) {
+        filteredPlaylists = playlist;
+      });
+    }
+    setState(() {});
   }
 
   @override
@@ -110,25 +166,25 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
                       height: 40,
                     ),
                     if (snapshot.data!.isEmpty)
-                      
-                        ListTile(
-                      title: Text('No Playlists found',
-                          style: TextStyle(fontSize: 22, color: Colors.white)),
-                     
-                         
-                    ),
-                      
+                      ListTile(
+                        title: Text('No Playlists found',
+                            style:
+                                TextStyle(fontSize: 22, color: Colors.white)),
+                      ),
+
                     if (snapshot.data!.isNotEmpty)
-                    ListTile(
-                      title: Text('Your Saved Playlists',
-                          style: TextStyle(fontSize: 22, color: Colors.white)),
-                      subtitle: Text('${snapshot.data!.length} playlists',
-                          style: TextStyle(fontSize: 14, color: Colors.white)),
-                    ),
+                      ListTile(
+                        title: Text('Your Saved Playlists',
+                            style:
+                                TextStyle(fontSize: 22, color: Colors.white)),
+                        subtitle: Text('${snapshot.data!.length} playlists',
+                            style:
+                                TextStyle(fontSize: 14, color: Colors.white)),
+                      ),
                     SizedBox(height: 15),
                     // Your SearchBar widget here
                     // Assuming SearchBar doesn't depend on the fetched data
-                    
+
                     if (snapshot.data!.isNotEmpty)
                       SearchBar(
                         controller: search,
@@ -152,44 +208,57 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
                     SizedBox(height: 20),
                     // Now, ListView.builder to display the fetched data
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: filteredPlaylists.length,
-                        itemBuilder: (context, index) {
-                          // var song = filteredSongs[index]['track'];
+                      child: SizedBox(
+                        height: 400,
+                        child: ListView.builder(
+                          itemCount: filteredPlaylists.length,
+                          itemBuilder: (context, index) {
+                            // var song = filteredSongs[index]['track'];
 
-                          Playlist playlist = filteredPlaylists[index];
-                          //var artistImage = song['artists'][0]['images'][0]['url'];
+                            Playlist playlist = filteredPlaylists[index];
+                            //var artistImage = song['artists'][0]['images'][0]['url'];
 
-                          return ListTile(
-                            
-                             leading: playlist.imageUrl != null
-                                ? FadeInImage.assetNetwork(
-                                    placeholder:
-                                        'assets/loading_placeholder.gif', // Path to your placeholder image
-                                    image: playlist.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    width: 50.0, // Adjust the width as needed
-                                    height: 50.0, // Adjust the height as needed
-                                  )
-                                : Icon(Icons.music_note, color: Colors.white),
+                            return ListTile(
+                              leading: playlist.imageUrl != null
+                                  ? FadeInImage.assetNetwork(
+                                      placeholder:
+                                          'assets/loading_placeholder.gif', // Path to your placeholder image
+                                      image: playlist.imageUrl!,
+                                      fit: BoxFit.cover,
+                                      imageErrorBuilder:
+                                          (context, error, stackTrace) => Icon(
+                                              Icons.music_note,
+                                              color: Colors.white),
 
-                            onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) =>
-                                      TrackList(playlist: playlist)));
-                            },
-                            title: Text(playlist.name,
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors
-                                        .white)), // Adjust according to your data structure
-                            subtitle: Text(playlist.ownerName ?? 'Unknown',
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                style: TextStyle(
-                                    fontSize: 12, color: Colors.white)),
-                          );
-                        },
+                                      width: 50.0, // Adjust the width as needed
+                                      height:
+                                          50.0, // Adjust the height as needed
+                                    )
+                                  : SizedBox(
+                                      width: 50,
+                                      height: 50,
+                                      child: Icon(Icons.music_note,
+                                          color: Colors.white),
+                                    ),
+
+                              onTap: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) =>
+                                        TrackList(playlist: playlist)));
+                              },
+                              title: Text(playlist.name,
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors
+                                          .white)), // Adjust according to your data structure
+                              subtitle: Text(playlist.ownerName ?? 'Unknown',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.white)),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ],

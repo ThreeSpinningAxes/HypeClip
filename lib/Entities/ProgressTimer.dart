@@ -1,18 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:hypeclip/Providers/PlaybackState.dart';
+import 'package:hypeclip/Providers/PlaybackProvider.dart';
+import 'package:hypeclip/Entities/PlaybackState.dart';
 
-class ProgressTimer extends ChangeNotifier  {
+class ProgressTimer extends ChangeNotifier {
   final Duration interval = Duration(milliseconds: 100);
-  late Timer _timer;
+  Timer? _timer;
   Duration trackLength;
-  Duration currentProgress;
   bool trackFinished = false;
+
   late PlaybackState? playbackState = PlaybackState();
+  late PlaybackNotifier? playbackNotifier;
 
-
-  ProgressTimer({required this.trackLength, required this.currentProgress, this.playbackState});
+  ProgressTimer(
+      {required this.trackLength, this.playbackState, this.playbackNotifier});
 
   void setPlaybackState(PlaybackState playbackState) {
     this.playbackState = playbackState;
@@ -20,52 +22,89 @@ class ProgressTimer extends ChangeNotifier  {
 
   void start({int? seek}) {
     if (seek != null) {
-      currentProgress = Duration(milliseconds: seek);
+      playbackNotifier!.playbackState.currentProgress =
+          Duration(milliseconds: seek);
     }
-    _timer = Timer.periodic(interval, (timer) {
-      if (currentProgress.inMilliseconds < trackLength.inMilliseconds) {         
-          currentProgress = Duration(milliseconds: currentProgress.inMilliseconds + 100);
-          playbackState!.currentProgress = currentProgress;
-          notifyListeners();         
+    if (playbackNotifier!.playbackState.currentProgress!.inMilliseconds <
+        trackLength.inMilliseconds) {
+      trackFinished = false;
+    }
+    _timer = Timer.periodic(interval, (timer) async {
+      if (playbackNotifier!.playbackState.currentProgress!.inMilliseconds <
+          trackLength.inMilliseconds) {
+        playbackNotifier!.playbackState.currentProgress = Duration(
+            milliseconds:
+                playbackNotifier!.currentProgress.inMilliseconds + 100);
+        if (playbackNotifier!.playbackState.inClipEditorMode) {
+          await handleClipEditor();
+        }
+        notifyListeners();
       } else {
-        timer.cancel();
+        playbackNotifier!.playbackState.currentProgress = trackLength;
         trackFinished = true;
-        playbackState!.paused = true;
+        timer.cancel();
+        await handleTrackEnd();
+
         notifyListeners(); // Stop the timer if the song ends
       }
     });
   }
 
   void stop() {
-    _timer.cancel();
-  }
-
-  void resetToBeginning() {
-    currentProgress = Duration.zero;
-    trackFinished = false;
-  }
-
-  void seek(Duration seekPosition) {
-    // Seek to a specific time
-    if (seekPosition.inMilliseconds <= trackLength.inMilliseconds) {
-      currentProgress = seekPosition;
-    } else {
-      currentProgress = trackLength;
-      trackFinished = true;
-      playbackState!.paused = true;
-    }
+    _timer!.cancel();
   }
 
   void resetForNewTrack(Duration newTrackLength) {
-    _timer.cancel();
+    _timer!.cancel();
     trackLength = newTrackLength;
-    currentProgress = Duration.zero;
+    playbackNotifier!.playbackState.currentProgress = Duration.zero;
     trackFinished = false;
   }
 
   bool isActive() {
-    return _timer.isActive;
+    if (_timer == null) {
+      return false;
+    }
+    return _timer!.isActive;
   }
 
+  Future<void> handleTrackEnd() async {
+    PlaybackState playbackState = playbackNotifier!.playbackState;
+    if (playbackNotifier?.insideEvent ?? false) {
+      return;
+    }
+    playbackNotifier!.insideEvent = true;
+    notifyListeners();
 
+    //regular song playback
+    if (!playbackState.inClipEditorMode) {
+      if (!playbackState.paused!) {
+        if (playbackState.isRepeatMode) {
+          await playbackNotifier!.seekCurrentTrack(0);
+        } else {
+          await playbackNotifier!.playNextTrack();
+          playbackNotifier!.setImagePalette();
+        }
+      }
+      return;
+    } 
+    playbackNotifier!.insideEvent = false;
+    notifyListeners();
+  }
+
+  Future<void> handleClipEditor() async {
+    PlaybackState playbackState = playbackNotifier!.playbackState;
+    if (playbackNotifier!.playbackState.isSeeking! || playbackNotifier!.insideEvent) {
+      return;
+    }
+    if (!playbackState.isSeeking!) {
+      if (playbackState.currentProgress!.inMilliseconds >= playbackState.clipValues![1]) {
+        playbackNotifier!.insideEvent = true;
+        playbackNotifier!.updatePlaybackState(paused: true, );
+        await playbackNotifier!.pauseTrack();
+        playbackNotifier!.updatePlaybackState(currentProgress: Duration(milliseconds: playbackState.clipValues![1].toInt()));
+        playbackNotifier!.insideEvent = false;
+      } 
+    }
+  }
 }

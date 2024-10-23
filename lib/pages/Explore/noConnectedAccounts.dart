@@ -38,7 +38,7 @@ class NoConnectedAccounts extends StatelessWidget {
               ),
             ),
             onPressed: () =>
-                {context.goNamed('explore/connectMusicServicesPage')})
+                {context.pushNamed('settings/connectedMusicAccounts')})
       ],
     );
   }

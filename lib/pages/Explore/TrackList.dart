@@ -4,12 +4,11 @@ import 'package:hypeclip/Entities/Playlist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Entities/Song.dart';
-import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
-import 'package:hypeclip/Providers/PlaybackState.dart';
-
+import 'package:hypeclip/Entities/PlaybackState.dart';
+import 'package:hypeclip/main.dart';
 
 class TrackList extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
@@ -21,10 +20,9 @@ class TrackList extends ConsumerStatefulWidget {
       this.playlist,
       this.fetchLikedSongs = false,
       this.fetchRecentlyPlayedTracks = false});
-      
 
- @override
- ConsumerState<ConsumerStatefulWidget> createState() => _TrackListState();
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _TrackListState();
 }
 
 class _TrackListState extends ConsumerState<TrackList>
@@ -34,33 +32,64 @@ class _TrackListState extends ConsumerState<TrackList>
   Future<List<Song>>? trackList;
   List<Song> filteredSongs = [];
   TextEditingController search = TextEditingController();
-  ScrollController _scrollController = ScrollController();
+  Map<String, int>? originalTrackIndexFromPlaylist;
+  late Playlist _playlist;
 
   @override
   void initState() {
     super.initState();
     musicServiceHandler = MusicServiceHandler(service: widget.service);
-    trackList = loadSongs();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
-        loadSongs();
-      }
-    });
+    
+    String playlistID;
+    if (widget.fetchLikedSongs) {
+      playlistID = 'likedTracks';
+    }
+    else if (widget.fetchRecentlyPlayedTracks) {
+      playlistID = 'recentlyPlayed';
+    }
+    else {
+      playlistID = widget.playlist!.id;
+    }
+
+    if (widget.playlist == null) {
+      _playlist = db.playlistBox.getAll().firstWhere((playlist) => playlist.userMusicStreamingServiceAccount.target?.musicLibraryServiceDB == widget.service.name
+       && playlist.id == playlistID && !playlist.backup.hasValue, orElse: () {
+        db.initPlaylists(service: widget.service);
+        return db.playlistBox.getAll().firstWhere((playlist) => playlist.id == playlistID);
+      },);
+    }
+    else {
+      _playlist = widget.playlist!;
+    }
+
+    if (_playlist.songsDB.isEmpty) {
+      trackList = loadSongs().then((tracks) {
+        return getNewTracksAndStore(tracks);
+      });
+    }
+    else {
+      trackList = Future.value(_playlist.songsDB);
+      filteredSongs = _playlist.songsDB;
+    }
+    
+
     search.addListener(() {
       updateSearchQuery(search.text);
     });
   }
+  
 
   Future<List<Song>> loadSongs() async {
+    Future<List<Song>> songs;
     if (widget.fetchLikedSongs) {
-      return await loadLikedSongs();
-    } else if (widget.fetchRecentlyPlayedTracks){
-      return await loadRecentlyPlayedSongs();
+      songs = loadLikedSongs();
+    } else if (widget.fetchRecentlyPlayedTracks) {
+      songs = loadRecentlyPlayedSongs();
+    } else {
+      songs = loadTracksFromPlaylist();
     }
-    else {
-      return loadTracksFromPlaylist();
-    }
+
+    return songs;
   }
 
   Future<List<Song>> loadLikedSongs() async {
@@ -80,6 +109,7 @@ class _TrackListState extends ConsumerState<TrackList>
         break;
       }
     }
+
     return likedSongs; // Return the list of all fetched songs
   }
 
@@ -111,23 +141,64 @@ class _TrackListState extends ConsumerState<TrackList>
     return tracks; // Return the list of all fetched songs
   }
 
-  void updateSearchQuery(String newQuery) {
-    setState(() {
-      if (newQuery.isNotEmpty) {
+  void updateSearchQuery(String searchString) {
+   
+      if (searchString.isNotEmpty) {
         trackList!.then((songs) {
           //print(songs.length);
           filteredSongs = songs.where((song) {
-            return song.songName
+            final songNameContainsSearch = song.songName
                 .toString()
                 .toLowerCase()
-                .contains(search.text.toLowerCase());
+                .contains(searchString.toLowerCase());
+            final artistNameContainsSearch = song.artistName
+                .toString()
+                .toLowerCase()
+                .contains(searchString.toLowerCase());
+            return songNameContainsSearch || artistNameContainsSearch;
           }).toList();
         });
       }
-    });
+      else {
+        trackList!.then((songs) {
+          filteredSongs = songs;
+        });
+      }
+      setState(() {
+        
+      });
   }
 
-  @override
+
+  List<Song> getNewTracksAndStore(List<Song> tracks) {
+
+    
+    // Create a set of existing song IDs
+    Set<String> existingTrackIds = db.songBox.getAll().where((song) => song.musicLibraryServiceDB == widget.service.name).map((song) => song.trackID!).toSet();
+    
+    // Calculate new songs that don't exist in the song box
+    List<Song> newTracks = [];
+    List<Song> updateExistingTracks = [];
+    for (Song song in tracks) {
+      if (!existingTrackIds.contains(song.trackID)) {
+        song.playlistDB.add(_playlist);
+        newTracks.add(song);
+      }
+      else {
+        song.playlistDB.add(_playlist);
+        updateExistingTracks.add(song);
+      }
+    }
+    
+    // Store new songs in the song box
+    _playlist.songsDB.addAll(newTracks);
+    _playlist.songsDB.addAll(updateExistingTracks);
+    db.playlistBox.put(_playlist);
+    db.songBox.putMany(newTracks);
+    
+    return newTracks;
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -156,9 +227,22 @@ class _TrackListState extends ConsumerState<TrackList>
               return Center(child: Text('Error: ${snapshot.error}'));
             } else {
               // Once data is fetched, build the entire page content
+
+              // store the index of the original track in the playlist
+              List<Song> trackList = snapshot.data as List<Song>;
+              
+              if (originalTrackIndexFromPlaylist == null) {
+                if (trackList.isNotEmpty) {
+                  originalTrackIndexFromPlaylist = {
+                    for (var song in trackList)
+                      song.trackURI: trackList.indexOf(song)
+                  };
+                }
+              }
+
               Widget? leading; // Assign a default value
               if (widget.playlist != null) {
-                leading = widget.playlist!.imageUrl != null ||
+                leading = widget.playlist!.imageUrl != null &&
                         widget.playlist!.imageUrl!.isNotEmpty
                     ? Image(image: NetworkImage(widget.playlist!.imageUrl!))
                     : Icon(Icons.music_note, color: Colors.white);
@@ -170,12 +254,10 @@ class _TrackListState extends ConsumerState<TrackList>
                 title = 'Recently Played Tracks';
               } else if (widget.fetchLikedSongs) {
                 title = 'Liked Songs';
-              }
-              else {
+              } else {
                 title = widget.playlist!.name;
               }
-                   
-              
+
               return Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
@@ -185,17 +267,16 @@ class _TrackListState extends ConsumerState<TrackList>
                     ),
                     ListTile(
                       leading: leading,
-                      title: Text(
-                          title,
+                      title: Text(title,
                           style: TextStyle(fontSize: 22, color: Colors.white)),
-                      subtitle: Text('${snapshot.data!.length} songs',
+                      subtitle: Text('${filteredSongs.length} songs',
                           style: TextStyle(fontSize: 14, color: Colors.white)),
                     ),
                     SizedBox(height: 15),
                     // Your SearchBar widget here
                     // Assuming SearchBar doesn't depend on the fetched data
                     SearchBar(
-                      controller: search,
+                      controller: search, 
                       hintText: 'Search',
                       hintStyle: WidgetStateProperty.all(
                           TextStyle(color: Colors.black)),
@@ -224,8 +305,40 @@ class _TrackListState extends ConsumerState<TrackList>
                           //var artistImage = song['artists'][0]['images'][0]['url'];
 
                           return ListTile(
-                            trailing:
-                                Icon(Icons.cut_outlined, color: Colors.white),
+                            trailing: IconButton(
+                              icon: Icon(
+                                Icons.cut_outlined,
+                                color: Colors.white,
+                              ),
+                              onPressed: () async {
+                                List<Song>? songs = trackList;
+
+                                // if (ref.read(playbackProvider).playbackState.currentSong != null && ref.read(playbackProvider).playbackState.currentSong!.trackURI == song.trackURI) {
+                                //   ref.read(playbackProvider).state.currentSong!.isPlaying = false;
+                                // }
+
+                                ref.read(playbackProvider).init(PlaybackState(
+                                    currentSong: song,
+                                    currentProgress: Duration.zero,
+                                    
+                                    paused: true,
+                                    currentTrackIndex:
+                                        originalTrackIndexFromPlaylist?[
+                                                song.trackURI] ??
+                                            0,
+                                    songs: songs,
+                                    musicLibraryService: widget.service,
+                                    inSongPlaybackMode: true,
+                                    inTrackClipPlaybackMode: false,
+                                    originalTrackQueue: List.empty(growable: true)));
+                                ref
+                                    .watch(
+                                        miniPlayerVisibilityProvider.notifier)
+                                    .state = false;
+
+                                context.pushNamed('clipEditor', queryParameters: {'fromSongPlaybackWidget': 'false'});
+                              },
+                            ),
                             leading: song.albumImage != null
                                 ? FadeInImage.assetNetwork(
                                     placeholder:
@@ -238,16 +351,26 @@ class _TrackListState extends ConsumerState<TrackList>
                                 : Icon(Icons.music_note, color: Colors.white),
 
                             onTap: () async {
-                              List<Song>? songs = await trackList;
+                              List<Song>? songs = trackList;
                               ref.read(playbackProvider).init(PlaybackState(
-                                  currentSong: song,
-                                  currentProgress: Duration.zero,
-                                  paused: true,
-                                  currentSongIndex: index,
-                                  songs: songs,
-                                  musicLibraryService: widget.service));
-                              ref.watch(miniPlayerVisibilityProvider.notifier).state = false;
-                              context.pushNamed('songPlayer');
+                                    currentSong: song,
+                                    currentProgress: Duration.zero,
+                                    paused: true,
+                                    currentTrackIndex:
+                                        originalTrackIndexFromPlaylist?[song.trackURI] ?? 0,
+                                    trackQueue: [...songs],
+                                    songs: songs,
+                                    musicLibraryService: widget.service,
+                                    inSongPlaybackMode: true,
+                                    inTrackClipPlaybackMode: false,
+                                    originalTrackQueue: [...songs],
+                                    isShuffleMode: false,
+                                    isRepeatMode: false,
+                                  ));
+                              ref
+                                  .watch(miniPlayerVisibilityProvider.notifier)
+                                  .state = false;
+                              context.pushNamed('songPlayer', queryParameters: {'resetForNewTrack': 'true'});
                             },
                             title: Text(song.songName ?? 'Unknown',
                                 style: TextStyle(

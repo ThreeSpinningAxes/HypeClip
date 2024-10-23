@@ -1,13 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/OnBoarding/Registration/PasswordSetupPage.dart';
 import 'package:hypeclip/OnBoarding/Registration/registrationUsernameEmailPage.dart';
 import 'package:hypeclip/OnBoarding/loginPage.dart';
 import 'package:hypeclip/OnBoarding/widgets/Auth.dart';
+import 'package:hypeclip/Pages/ClipEditor/ClipEditor.dart';
 import 'package:hypeclip/Pages/ConnectMusicServicesPage.dart';
 import 'package:hypeclip/Pages/Explore/ConnectedAccounts.dart';
 import 'package:hypeclip/Pages/Explore/GenericExplorePage.dart';
@@ -15,42 +18,58 @@ import 'package:hypeclip/Pages/Explore/UserPlaylists.dart';
 import 'package:hypeclip/Pages/Explore/explore.dart';
 import 'package:hypeclip/Pages/Explore/TrackList.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
+import 'package:hypeclip/Pages/Library/ListOfTrackClipPlaylists.dart';
+import 'package:hypeclip/Pages/Library/ListOfTrackClips.dart';
+import 'package:hypeclip/Pages/Settings/AboutUs.dart';
+import 'package:hypeclip/Pages/Settings/ConnectedMusicLibrariesSettings.dart';
 import 'package:hypeclip/Pages/SongPlayer/SongPlayback.dart';
+import 'package:hypeclip/Pages/SongPlayer/TrackQueue.dart';
 import 'package:hypeclip/Pages/home.dart';
-import 'package:hypeclip/Pages/library.dart';
-import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Pages/Library/library.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/DeviceInfoManager.dart';
 import 'package:hypeclip/firebase_options.dart';
+import 'package:hypeclip/objectbox.dart';
+
+
 
 Future<void> initUser() async {
-  
   User? user = FirebaseAuth.instance.currentUser;
 
   if (user != null) {
-    Userservice.setUser(
-     user.uid,
+    UserProfileService.setUser(
+      user.uid,
       user.displayName ?? '',
       user.email ?? '',
       true,
     );
-    await Userservice.fetchAndStoreConnectedMusicLibrariesFromFireStore();
+    await UserProfileService
+        .fetchAndStoreConnectedMusicLibrariesFromFireStore();
+    await UserProfileService.initMusicServicesForStorage();
+    await UserProfileService.loadUserTrackClipPlaylistsFromPreferences();
   }
 }
+late ObjectBox db;
 
 Future main() async {
   //main method is where the root of the application runs
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
   WidgetsFlutterBinding.ensureInitialized();
+  db = await ObjectBox.create();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await initUser();
+
   await DeviceInfoManager().initDeviceId();
-  await Future.delayed(const Duration(milliseconds: 1200));
+  await Future.delayed(const Duration(milliseconds: 3200));
+  await initUser();
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     _router.refresh();
-
   });
-  
+  FlutterNativeSplash.remove();
   runApp(const ProviderScope(child: MyApp()));
   //run app takes in a root widget that displays on your device. The root widget is described by a class
 }
@@ -60,6 +79,116 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 final GoRouter _router = GoRouter(
   initialLocation: '/auth/login',
   routes: [
+    GoRoute(
+        path: '/songPlayer',
+        name: 'songPlayer',
+        pageBuilder: (context, state) {
+           final bool resetForNewTrack =
+              state.uri.queryParameters['resetForNewTrack'] == 'false'
+                  ? false
+                  : true;
+          return NoTransitionPage(
+              key: state.pageKey,
+              child: SongPlayback(
+                key: state.pageKey,
+                resetForNewTrack: resetForNewTrack,
+              ));
+        }),
+    GoRoute(
+        path: '/queue',
+        name: 'queue',
+        pageBuilder: (context, state) {
+          return NoTransitionPage(
+              key: state.pageKey,
+              child: TrackQueue(
+                key: state.pageKey,
+              ));
+        }),
+    GoRoute(
+        path: '/clipEditor',
+        name: 'clipEditor',
+        pageBuilder: (context, state) {
+          final bool showMiniOnExit =
+              state.uri.queryParameters['fromMiniPlayer'] == 'true'
+                  ? true
+                  : false;
+          final bool fromSongPlaybackWidget =
+              state.uri.queryParameters['fromSongPlaybackWidget'] == 'false'
+                  ? false
+                  : true;
+          return NoTransitionPage(
+              key: state.pageKey,
+              child: ClipEditor(
+                key: state.pageKey,
+                showMiniPlayerOnExit: showMiniOnExit,
+                fromSongPlaybackWidget: fromSongPlaybackWidget,
+              ));
+        }),
+         GoRoute(
+                  path: '/aboutUs',
+                  name: "settings/aboutUs",
+                  pageBuilder: (context, state) {
+                    return NoTransitionPage(
+                        key: state.pageKey,
+                        child: AboutUsPage(key: state.pageKey));
+                  },
+                  routes: [
+                    GoRoute(
+                        path: 'privacyPolicy',
+                        name: "settings/abousUs/privacyPolicy",
+                        pageBuilder: (context, state) {
+                          return NoTransitionPage(
+                              key: state.pageKey,
+                              child: PrivacyPolicyPage(
+                                key: state.pageKey,
+                                
+                              ));
+                        }),
+                    GoRoute(
+                        path: 'termsOfService',
+                        name: "settings/abousUs/termsOfService",
+                        pageBuilder: (context, state) {
+                          return NoTransitionPage(
+                              key: state.pageKey,
+                              child: TermsOfServicePage(
+                                key: state.pageKey,
+                                
+                              ));
+                        }),
+                    GoRoute(
+                        path: 'contact',
+                        name: "settings/aboutUs/contact",
+                        pageBuilder: (context, state) {
+                          return NoTransitionPage(
+                              key: state.pageKey,
+                              child: ContactUsPage(
+                                key: state.pageKey,
+                                
+                              ));
+                        }),
+                  ]),
+              GoRoute(
+                  path: '/connectedMusicAccounts',
+                  name: "settings/connectedMusicAccounts",
+                  pageBuilder: (context, state) {
+                    return NoTransitionPage(
+                        key: state.pageKey,
+                        child: ConnectedMusicLibrariesSettings(
+                          key: state.pageKey,
+                        ));
+                  }),
+              GoRoute(
+                  path: '/howToUse',
+                  name: "settings/howToUse",
+                  pageBuilder: (context, state) {
+                    return NoTransitionPage(
+                        key: state.pageKey,
+                        child: ListOfTrackClips(
+                          key: state.pageKey,
+                          playlistName:
+                              TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY,
+                        ));
+                  }),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           Home(key: state.pageKey, child: navigationShell),
@@ -74,19 +203,53 @@ final GoRouter _router = GoRouter(
                     key: state.pageKey,
                   ));
             },
+            routes: [
+              GoRoute(
+                  path: 'savedClips',
+                  name: "library/savedClips",
+                  pageBuilder: (context, state) {
+                    return NoTransitionPage(
+                        key: state.pageKey,
+                        child: ListOfTrackClips(
+                          key: state.pageKey,
+                          playlistName:
+                              TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY,
+                        ));
+                  }),
+              GoRoute(
+                  path: 'clipPlaylists',
+                  name: "library/clipPlaylists",
+                  pageBuilder: (context, state) {
+                    return NoTransitionPage(
+                        key: state.pageKey,
+                        child: ListOfTrackClipPlaylists(
+                          key: state.pageKey,
+                        ));
+                  },
+                  routes: [
+                    GoRoute(
+                        path: 'playlist/:playlistName',
+                        name: "library/clipPlaylists/playlist",
+                        pageBuilder: (context, state) {
+                          String playlistName =
+                              state.pathParameters['playlistName'] ??
+                                  TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY;
+                          return NoTransitionPage(
+                              key: state.pageKey,
+                              child: ListOfTrackClips(
+                                key: state.pageKey,
+                                playlistName: playlistName,
+                              ));
+                        }),
+                  ]),
+            ],
           ),
-          GoRoute(path: '/songPlayer', name: 'songPlayer', pageBuilder: (context, state) {
-            return NoTransitionPage(
-                key: state.pageKey,
-                child: SongPlayback(
-                  key: state.pageKey,
-                ));
-          }),
         ]),
+        
         StatefulShellBranch(routes: <RouteBase>[
-         
           GoRoute(
               path: '/explore',
+              name: 'explore',
               pageBuilder: (context, state) {
                 return NoTransitionPage(
                     key: state.pageKey,
@@ -111,7 +274,12 @@ final GoRouter _router = GoRouter(
                   pageBuilder: (context, state) {
                     return NoTransitionPage(
                         key: state.pageKey,
-                        child: ConnectMusicServicesPage(key: state.pageKey, showBackButton: true, showContinue: false, showDescription: true,));
+                        child: ConnectMusicServicesPage(
+                          key: state.pageKey,
+                          showBackButton: true,
+                          showContinue: false,
+                          showDescription: true,
+                        ));
                   },
                 ),
                 GoRoute(
@@ -144,17 +312,21 @@ final GoRouter _router = GoRouter(
                               pageBuilder: (context, state) {
                                 // later change so that you can pass in any service
                                 return NoTransitionPage(
-                                    key: state.pageKey, child: TrackList(fetchLikedSongs: true,));
+                                    key: state.pageKey,
+                                    child: TrackList(
+                                      fetchLikedSongs: true,
+                                    ));
                               },
                             ),
-                             GoRoute(
+                            GoRoute(
                               path: 'userPlaylists',
                               name:
                                   'explore/connectedAccounts/browseMusicPlatform/userPlaylists',
                               pageBuilder: (context, state) {
                                 // later change so that you can pass in any service
                                 return NoTransitionPage(
-                                    key: state.pageKey, child: UserPlaylistsPage());
+                                    key: state.pageKey,
+                                    child: UserPlaylistsPage());
                               },
                             ),
                             GoRoute(
@@ -164,7 +336,10 @@ final GoRouter _router = GoRouter(
                               pageBuilder: (context, state) {
                                 // later change so that you can pass in any service
                                 return NoTransitionPage(
-                                    key: state.pageKey, child: TrackList(fetchRecentlyPlayedTracks: true,));
+                                    key: state.pageKey,
+                                    child: TrackList(
+                                      fetchRecentlyPlayedTracks: true,
+                                    ));
                               },
                             ),
                           ]),

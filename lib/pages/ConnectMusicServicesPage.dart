@@ -6,11 +6,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/AppleMusicService.dart';
-import 'package:hypeclip/MusicAccountServices/SpotifyService.dart';
+import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/OnBoarding/UserProfileFireStoreService.dart';
 import 'package:hypeclip/OnBoarding/widgets/externalSignInServiceButton.dart';
-import 'package:hypeclip/Services/UserService.dart';
-import 'package:hypeclip/Utilities/ShowErrorDialog.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
+import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Utilities/ShowLoading.dart';
 
 class ConnectMusicServicesPage extends ConsumerStatefulWidget {
@@ -28,7 +28,7 @@ class ConnectMusicServicesPage extends ConsumerStatefulWidget {
 class _ConnectMusicLibrariesRegistrationPageState
     extends ConsumerState<ConnectMusicServicesPage> {
   Set<MusicLibraryService> musicServices =
-      Userservice.getConnectedMusicLibraries();
+      UserProfileService.getConnectedMusicLibraries();
 
   String nextText = 'Skip';
   String nextTextDescriptor =
@@ -46,13 +46,13 @@ class _ConnectMusicLibrariesRegistrationPageState
       }
       musicServices.add(service);
 
-      print(Userservice.getConnectedMusicLibraries());
+      print(UserProfileService.getConnectedMusicLibraries());
     });
     await UserProfileFireStoreService()
         .addMusicService(FirebaseAuth.instance.currentUser!.uid, service, data);
     if (mounted) {
       ShowSnackBar.showSnackbar(
-          context, "Susscessfully added ${service.name}", 3);
+          context, message: "Susscessfully added ${service.name}", seconds: 3);
     }
   }
 
@@ -104,8 +104,8 @@ class _ConnectMusicLibrariesRegistrationPageState
                               setState(() {
                                 _isLoading = true;
                               });
-                              Map<String, dynamic>? data = await SpotifyService().authorize();
-                              if (data !=null && Userservice.hasMusicService(MusicLibraryService.spotify)) {
+                              Map<String, dynamic>? data = await MusicServiceHandler(service: MusicLibraryService.spotify).authenticate(MusicLibraryService.spotify);
+                              if (data !=null && UserProfileService.hasMusicService(MusicLibraryService.spotify)) {
                                 afterSuccessfulConnection(MusicLibraryService.spotify, data);
                               }
                              
@@ -130,7 +130,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                         ExternalSignInServiceButton(
                             onPressed: () async {
                               Map<String, dynamic>? s =
-                                  await Userservice.getMusicServiceData(
+                                  await UserProfileService.getMusicServiceData(
                                       MusicLibraryService.spotify);
                               print(jsonEncode(s));
                             },
@@ -163,7 +163,7 @@ class _ConnectMusicLibrariesRegistrationPageState
                       ExternalSignInServiceButton(
                           onPressed: () async {
                             Map<String, dynamic>? data = await AppleMusicService().authorize();
-                            if (data != null && Userservice.hasMusicService(MusicLibraryService.appleMusic)) {
+                            if (data != null && UserProfileService.hasMusicService(MusicLibraryService.appleMusic)) {
                               
                               afterSuccessfulConnection(MusicLibraryService.spotify, data);
                               

@@ -10,7 +10,7 @@ import 'package:hypeclip/OnBoarding/widgets/formTextField.dart';
 import 'package:hypeclip/OnBoarding/widgets/navigateToLoginOrRegistration.dart';
 import 'package:hypeclip/OnBoarding/widgets/orFormSplit.dart'; // Ensure this custom widget supports `validator`
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:hypeclip/Services/UserService.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/ShowLoading.dart';
 
 class LoginPage extends StatefulWidget {
@@ -111,21 +111,25 @@ class _LoginPageState extends State<LoginPage> {
                           setState(() {
                             _isLoading = true;
                           });
-                          UserCredential? userCredential = await Auth().signInWithGoogle(context);
+                          UserCredential? userCredential =
+                              await Auth().signInWithGoogle(context);
                           if (mounted) {
-                              setState(() {
-                                _isLoading = false;
-                              });
-                            }
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
                           if (userCredential != null) {
-                              if (userCredential.additionalUserInfo!.isNewUser) {
-                                GoRouter.of(context).goNamed('register/connectMusicServices');
+                            if (userCredential.additionalUserInfo!.isNewUser) {
+                              if (context.mounted) {
+                                GoRouter.of(context)
+                                    .goNamed('register/connectMusicServices');
                               }
-                              else {
+                            } else {
+                              if (context.mounted) {
                                 GoRouter.of(context).go('/auth');
                               }
                             }
-
+                          }
                         },
                         buttonText: 'Continue with Google',
                         icon: SvgPicture.asset(
@@ -153,13 +157,12 @@ class _LoginPageState extends State<LoginPage> {
         email: emailController.text,
         password: passwordController.text,
       );
-      Userservice.setUser(
+      UserProfileService.setUser(
           FirebaseAuth.instance.currentUser!.uid,
           FirebaseAuth.instance.currentUser!.displayName ?? '',
           FirebaseAuth.instance.currentUser!.email ?? '',
           true);
-      await Userservice.fetchAndStoreConnectedMusicLibrariesFromFireStore();
-      
+      await UserProfileService.fetchAndStoreConnectedMusicLibrariesFromFireStore();
     } on FirebaseAuthException catch (e) {
       String message;
 
@@ -175,11 +178,11 @@ class _LoginPageState extends State<LoginPage> {
         SnackBar(content: Text(message)),
       );
     } on FirebaseException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message??'An error occurred. Please try again.')),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(e.message ?? 'An error occurred. Please try again.')),
       );
-    }
-    catch (e) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred. Please try again.')),
       );
