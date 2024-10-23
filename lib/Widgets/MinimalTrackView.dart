@@ -5,7 +5,6 @@ import 'package:hypeclip/Entities/PlaybackState.dart';
 import 'package:hypeclip/Entities/TrackClip.dart';
 import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
-import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/main.dart';
 import 'package:hypeclip/objectbox.g.dart';
 
@@ -101,8 +100,8 @@ class MinimalTrackListView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     TrackClipPlaylist? playlist = db.trackClipPlaylistBox.query(TrackClipPlaylist_.playlistName.equals(playlistName)).build().findFirst();
-    List<TrackClip> tracks =
-        playlist?.clipsDB ?? [];
+
+    List<TrackClip> tracks = playlist?.clipsDB ?? [];
     return GridView.count(
       scrollDirection: Axis.horizontal,
       crossAxisCount: 2,

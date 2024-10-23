@@ -1,3 +1,4 @@
+import 'package:hypeclip/Entities/BackupConnectedServiceContent.dart';
 import 'package:hypeclip/Entities/TrackClip.dart';
 import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Entities/UserConnectedMusicServiceDB.dart';
@@ -12,6 +13,10 @@ class UserProfileDB {
 
   @Backlink('connectedUserDB')
   final connectedMusicStreamingServices = ToMany<UserConnectedMusicService>();
+
+  
+  @Backlink()
+  final streamingServiceBackups = ToMany<BackupConnectedServiceContent>();
 
   final allTrackClipsDB = ToMany<TrackClip>();
 

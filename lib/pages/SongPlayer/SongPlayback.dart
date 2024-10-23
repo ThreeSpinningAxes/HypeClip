@@ -13,7 +13,6 @@ import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
-import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Utilities/StringExtensions.dart';
 import 'package:hypeclip/main.dart';
@@ -48,11 +47,13 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
         playbackNotifier.insideEvent = true;
       });
       _asyncInit().then((value) {
-        setState(() {});
+
+        setState(() {
+          playbackNotifier.insideEvent = false;
+        });
       });
       setState(() {
         _isLoading = false;
-        playbackNotifier.insideEvent = false;
       });
     });
   }
@@ -63,11 +64,14 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
       _isLoading = true;
     });
     playbackNotifier.insideEvent = true;
-    await _asyncInit();
+    await _asyncInit().then((value) {
+      setState(() {
+        playbackNotifier.insideEvent = false;
+      });
+    });
     setState(() {
       _isLoading = false;
     });
-    playbackNotifier.insideEvent = false;
   }
 
   _asyncInit() async {
@@ -239,7 +243,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                                     PlaybackNotifier playBack =
                                         ref.read(playbackProvider);
                                     if (!playBack.insideEvent) {
-                                      playBack.insideEvent = true;
+                                      
                                       if (playbackState.currentProgress!
                                               .inMilliseconds <=
                                           Duration(seconds: 3).inMilliseconds) {
@@ -249,7 +253,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                                           Duration(seconds: 3).inMilliseconds) {
                                         await _seek(seek: 0);
                                       }
-                                      playBack.insideEvent = false;
+                                      
                                     }
                                   }),
                               IconButton(
@@ -271,11 +275,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                                     PlaybackNotifier playBack =
                                         ref.read(playbackProvider);
                                     if (!playBack.insideEvent) {
-                                      playBack.insideEvent = true;
+                                      
 
                                       await _playNextSong();
 
-                                      playBack.insideEvent = false;
+                                     
                                     }
                                   }),
                             ],
@@ -335,10 +339,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                             PlaybackNotifier playBack =
                                 ref.read(playbackProvider);
                             if (playBack.insideEvent) {
+
                               return;
                             }
 
-                            playBack.insideEvent = true;
+                            
                             if (playbackState.paused!) {
                               // setState(() {
                               //   playBack.playbackState.currentProgress =
@@ -354,7 +359,7 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                               await _seek(seek: duration.inMilliseconds);
                             }
 
-                            playBack.insideEvent = false;
+                            
                           },
                         ),
                       ),
@@ -371,9 +376,9 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
                             if (playBack.insideEvent) {
                               return;
                             }
-                            playBack.insideEvent = true;
+                            
                             await _seek(seek: 0);
-                            playBack.insideEvent = false;
+                            
                           },
                         ),
                       SizedBox(height: 10),
@@ -404,7 +409,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
   }
 
   Future<void> _playNextSong() async {
-    Response r = await ref.read(playbackProvider).playNextTrack();
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response r = await ref.read(playbackProvider).playNextTrack().whenComplete(() {
+      p.insideEvent = false;
+    });
     if (r.statusCode != 200 && r.statusCode != 204) {
       setState(() {
         ShowSnackBar.showSnackbarError(
@@ -429,8 +438,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
   }
 
   Future<void> _playPreviousSong() async {
-    
-    Response r = await ref.read(playbackProvider).playPreviousTrack();
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response r = await ref.read(playbackProvider).playPreviousTrack().whenComplete(() {
+      p.insideEvent = false;
+    });
     if (r.statusCode != 200 && r.statusCode != 204) {
       setState(() {
         ShowSnackBar.showSnackbarError(
@@ -459,7 +471,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
   }
 
   Future<void> _playSong({int? position}) async {
-    Response? r = await ref.watch(playbackProvider).playCurrentTrack(position);
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response? r = await ref.watch(playbackProvider).playCurrentTrack(position).whenComplete(() {
+      p.insideEvent = false;
+    });
     Response response = r;
     if (response.statusCode != 204 && response.statusCode != 200) {
       if (mounted) {
@@ -475,7 +491,11 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
   }
 
   Future<void> _seek({required int seek}) async {
-    Response? r = await ref.read(playbackProvider).seekCurrentTrack(seek);
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response? r = await ref.read(playbackProvider).seekCurrentTrack(seek).whenComplete(() {
+      p.insideEvent = false;
+    });
     Response response = r;
     if (response.statusCode != 204 && response.statusCode != 200) {
       setState(() {
@@ -509,14 +529,15 @@ class _SongPlaybackState extends ConsumerState<SongPlayback> {
           await _playSong(position: playBack.currentProgress.inMilliseconds);
         }
       } else {
-        bool? result = await playBack.pauseTrack();
+        bool? result = await playBack.pauseTrack().whenComplete(() {
+          playBack.insideEvent = false;
+        });
         if (result == false) {
           ShowSnackBar.showSnackbarError(
               context, "Failed to pause playback", 5);
         }
       }
 
-     playBack.insideEvent = false;
     }
   
 

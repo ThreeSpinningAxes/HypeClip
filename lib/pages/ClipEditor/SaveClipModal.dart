@@ -247,10 +247,10 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
 
                             if (selectedTrackClipPlaylistsIDs.isNotEmpty) {
                               for (String playlistID in selectedTrackClipPlaylistsIDs) {
-                                await UserProfileService.saveNewTrackClip(
-                                    trackClip: clip,
-                                    playlistName: db.trackClipPlaylistBox.getAll().firstWhere((playlist) => playlist.playlistID == playlistID).playlistName,
-                                    save: false);
+                                // await UserProfileService.saveNewTrackClip(
+                                //     trackClip: clip,
+                                //     playlistName: db.trackClipPlaylistBox.getAll().firstWhere((playlist) => playlist.playlistID == playlistID).playlistName,
+                                //     save: false);
                               }
                             } else {
                               await UserProfileService.saveNewTrackClip(
@@ -340,9 +340,9 @@ class _SaveClipModalState extends ConsumerState<SaveClipModal> {
                     Expanded(
                       child: ListView.builder(
                         itemCount:
-                            db.trackClipPlaylistBox.getAll().length, //ref.watch(trackClipProvider).values.length,
+                            db.trackClipPlaylistBox.getAll().length - 1, 
                         itemBuilder: (context, index) {
-                          List<TrackClipPlaylist> playlists = db.trackClipPlaylistBox.getAll();
+                          List<TrackClipPlaylist> playlists = db.trackClipPlaylistBox.getAll().where((playlist) => playlist.playlistName != TrackClipPlaylist.RECENTLY_LISTENED_KEY).toList();
                          
                           // ref
                           //     .watch(trackClipProvider)

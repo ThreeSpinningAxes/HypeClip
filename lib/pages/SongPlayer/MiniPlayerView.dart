@@ -99,6 +99,8 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                 });
               },
               onHorizontalDragEnd: (details) async {
+                
+    
                 if (details.primaryVelocity!.abs() < 500) {
                   // If velocity is below threshold, return to center
                   _returnAnimation = Tween<double>(
@@ -241,7 +243,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                         ref.read(playbackProvider);
                                     
                                     if (!playBack.insideEvent) {
-                                      playBack.insideEvent = true;
+                                      
 
                                       if (playbackState.paused!) {
                                         if (playbackState.currentProgress!
@@ -267,7 +269,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                         }
                                       }
 
-                                      playBack.insideEvent = false;
+                                      
                                     }
 
                                     // var x = await SpotifyService().getAvailableDevices();
@@ -309,13 +311,9 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                         if (playBack.insideEvent) {
                                           return;
                                         }
-                                        setState(() {
-                                          playBack.insideEvent = true;
-                                        });
+                                        
                                         await _seek(seek: 0);
-                                        setState(() {
-                                          playBack.insideEvent = false;
-                                        });
+                                        
                                       },
                                       icon: Icon(
                                         Icons.refresh,
@@ -330,7 +328,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                 PlaybackNotifier playBack =
                                     ref.read(playbackProvider);
                                 if (!playBack.insideEvent) {
-                                  playBack.insideEvent = true;
+                                 
 
                                   if (playbackState.paused!) {
                                     playBack.updatePlaybackState(
@@ -343,7 +341,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
                                     await _seek(seek: duration.inMilliseconds);
                                   }
 
-                                  playBack.insideEvent = false;
+                                  
                                 }
                               },
                               baseBarColor: Colors.black,
@@ -366,6 +364,7 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
   }
 
   Future<void> _playSong({int? position}) async {
+    
     Response? r = await ref.watch(playbackProvider).playCurrentTrack(position);
     Response response = r;
     if (response.statusCode != 204 && response.statusCode != 200) {
@@ -376,7 +375,11 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
   }
 
   Future<void> _seek({required int seek}) async {
-    Response? r = await ref.read(playbackProvider).seekCurrentTrack(seek);
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response? r = await ref.read(playbackProvider).seekCurrentTrack(seek).whenComplete(() {
+      p.insideEvent = false;
+    }); 
     Response response = r;
     if (response.statusCode != 204 && response.statusCode != 200) {
       if (mounted) {
@@ -386,7 +389,11 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
   }
 
   Future<void> _playNextTrack() async {
-    Response? r = await ref.watch(playbackProvider).playNextTrack();
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response? r = await ref.watch(playbackProvider).playNextTrack().whenComplete( () {
+      p.insideEvent = false;
+    });
 
     Response response = r;
     if (response.statusCode != 204 && response.statusCode != 200) {
@@ -399,7 +406,11 @@ class _MiniPlayerViewState extends ConsumerState<MiniPlayerView>
   }
 
   Future<void> _playPrevTrack() async {
-    Response? r = await ref.watch(playbackProvider).playPreviousTrack();
+    PlaybackNotifier p = ref.read(playbackProvider);
+    p.insideEvent = true;
+    Response? r = await ref.watch(playbackProvider).playPreviousTrack().whenComplete(() {
+      p.insideEvent = false;
+    });
     Response response = r;
     if (response.statusCode != 204 && response.statusCode != 200) {
       if (mounted) {

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart';
 import 'package:hypeclip/Entities/Playlist.dart';
+import 'package:hypeclip/Entities/UserConnectedMusicServiceDB.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Services/UserProfileService.dart';
@@ -83,9 +84,9 @@ class SpotifyService {
           db.addConnectedMusicService(
               service: MusicLibraryService.spotify,
               accessToken: accessData[ACCESS_TOKEN_VAR_NAME],
-              refreshToken: accessData[REFRESH_TOKEN_VAR_NAME]);
+              refreshToken: accessData[REFRESH_TOKEN_VAR_NAME],
+              createDefaultPlaylists: true);
 
-          db.initPlaylists(service: MusicLibraryService.spotify);
         }
         print(
             "accesstoken: ${db.getFirstUser()?.connectedMusicStreamingServices.first.accessToken}");
@@ -110,31 +111,32 @@ class SpotifyService {
   }
 
   Future<String?> getAccessTokenFromStorage() async {
-    Map<String, dynamic>? data = await UserProfileService.getMusicServiceData(
-        MusicLibraryService.spotify);
-    if (data != null) {
-      return data[ACCESS_TOKEN_VAR_NAME];
-    }
-    return null;
+    // Map<String, dynamic>? data = await UserProfileService.getMusicServiceData(
+    //     MusicLibraryService.spotify);
+   
+    // if (data != null) {
+    //   return data[ACCESS_TOKEN_VAR_NAME];
+    // }
+    // return null;
+     UserConnectedMusicService? token = db.userConnectedMusicServiceBox.getAll().where((element) =>
+        element.musicLibraryServiceDB == MusicLibraryService.spotify.name).firstOrNull;
+    return token?.accessToken;
   }
 
   Future<String?> getRefreshTokenFromStorage() async {
-    Map<String, dynamic>? data = await UserProfileService.getMusicServiceData(
-        MusicLibraryService.spotify);
-    if (data != null) {
-      return data[REFRESH_TOKEN_VAR_NAME];
-    }
-    return null;
+    // Map<String, dynamic>? data = await UserProfileService.getMusicServiceData(
+    //     MusicLibraryService.spotify);
+    // if (data != null) {
+    //   return data[REFRESH_TOKEN_VAR_NAME];
+    // }
+    // return null;
+UserConnectedMusicService? token = db.userConnectedMusicServiceBox.getAll().where((element) =>
+        element.musicLibraryServiceDB == MusicLibraryService.spotify.name).firstOrNull;
+    return token?.refreshToken;
+  
+    
   }
 
-  Future<String?> getExpirationTimeFromStorage() async {
-    Map<String, dynamic>? data = await UserProfileService.getMusicServiceData(
-        MusicLibraryService.spotify);
-    if (data != null) {
-      return data[ACCESS_TOKEN_EXP_VAR_NAME];
-    }
-    return null;
-  }
 
   Future<void> setAccessTokenToStorage(String accessToken) async {
     Map<String, dynamic> data = {ACCESS_TOKEN_VAR_NAME: accessToken};
@@ -350,12 +352,11 @@ class SpotifyService {
           name: name,
           ownerName: ownerName,
           imageUrl: imageUrl,
-          totalTracks: totalTracks,
-          
+          totalTracks: totalTracks,    
         );
         playlist.userMusicStreamingServiceAccount.target = db.userConnectedMusicServiceBox.getAll().where((element) =>
             element.musicLibraryServiceDB == MusicLibraryService.spotify.name).first;
-
+        playlist.musicLibraryServiceDB = MusicLibraryService.spotify.name;
         playlists.add(playlist);
         
       }

@@ -9,7 +9,6 @@ import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
-import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/Utilities/GenericError.dart';
 import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Widgets/ConfirmationDialog.dart';
@@ -54,7 +53,7 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
       trackClips = db.trackClipBox.query().watch(triggerImmediately: true).map(
           (trackClip) => trackClip
               .find()
-              .where((clip) => matchSearchString(clip))
+              .where((clip) => clip.backup.target == null && matchSearchString(clip))
               .toList());
     } else {
       trackClips = db.trackClipPlaylistBox
@@ -64,7 +63,7 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
               .find()
               .first
               .clipsDB
-              .where((clip) => matchSearchString(clip))
+              .where((clip) =>  matchSearchString(clip))
               .toList());
     }
     return StreamBuilder(
@@ -108,7 +107,7 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
                           SizedBox(height: 20),
                           SubmitButton(
                             onPressed: () {
-                              if (db.trackClipBox.isEmpty()) {
+                              if (widget.playlistName == TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY || db.trackClipBox.isEmpty()) {
                                 context.goNamed('explore');
                                 return;
                               }
@@ -390,9 +389,10 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
                                       'Are you sure you want to remove this clip from this playlist?',
                                   onPrimaryConfirm: ()  {
 
-                                    db.deleteTrackClipFromPlaylist(
-                                        clip, playlistName);
-                                    
+                                    db.deleteTrackClipFromPlaylist(clip, playlistName);
+                                     setState(() {
+                                      
+                                    });
 
                                       ShowSnackBar.showSnackbar(context,
                                           message: 'Removed clip from playlist',
@@ -443,8 +443,10 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
                                       'Are you sure you want to permanently delete this clip?',
                                   onPrimaryConfirm: ()  {
 
-                                    deleteTrackClip(clip);
-                                    
+                                    deleteTrackClip(clip: clip);
+                                    setState(() {
+                                      
+                                    });
 
                                       ShowSnackBar.showSnackbar(context,
                                           message: 'Deleted clip',
@@ -555,7 +557,11 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClips> {
         artistNameContainsSearch;
   }
 
-  void deleteTrackClip(TrackClip clip) {
+  void deleteTrackClip({required TrackClip clip, bool fromSavedClips = false}) {
+    // if (fromSavedClips) {
+    //   db.deleteTrackClip(clip);
+      
+    // }
     db.deleteTrackClip(clip);
     ref.read(playbackProvider).removeTrackClipFromQueue(clip);
     

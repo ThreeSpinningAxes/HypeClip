@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:hypeclip/Utilities/StringExtensions.dart';
 
 SvgPicture getSVGIcon(MusicLibraryService service) {
   switch (service) {
@@ -38,7 +39,15 @@ enum MusicLibraryService {
   googlePlayMusic,
   napster,
   unknown,
+
+
 }
+
+MusicLibraryService getMusicLibraryServiceName(String value) {
+  return MusicLibraryService.values.firstWhere((e) => e.toString().split('.').last == value);
+}
+
+
 class MusicLibraryServiceTile extends StatelessWidget {
   final MusicLibraryService service;
   final void Function()? onTap;
@@ -57,7 +66,7 @@ class MusicLibraryServiceTile extends StatelessWidget {
     return ListTile(
       leading: getSVGIcon(service),
       trailing: trailing,
-      title: Text(service.name, style: const TextStyle(color: Colors.white, ),),
+      title: Text(service.name.toCapitalized(), style: const TextStyle(color: Colors.white, ),),
       onTap: () {
         onTap?.call();
       },

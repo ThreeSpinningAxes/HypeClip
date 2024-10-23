@@ -6,9 +6,7 @@ import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Widgets/CreateNewPlaylistModal.dart';
 import 'package:hypeclip/Widgets/SubmitButton.dart';
 import 'package:hypeclip/main.dart';
-import 'package:hypeclip/objectbox.g.dart';
 
-import '../Providers/TrackClipProvider.dart';
 
 class SaveTrackClipToPlaylistsDialog extends ConsumerStatefulWidget {
   final TrackClip trackClip;

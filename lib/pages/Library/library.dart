@@ -85,7 +85,7 @@ class _LibraryState extends ConsumerState<Library> {
           Padding(
             padding: const EdgeInsets.only(left:20),
             child: Text(
-              "Listen Again",
+              "Recently Played Clips",
               style: TextStyle(
                   fontSize: 24,
                   color: Colors.white,

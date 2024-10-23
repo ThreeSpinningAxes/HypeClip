@@ -8,6 +8,7 @@ import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
+import 'package:hypeclip/main.dart';
 import 'package:palette_generator/palette_generator.dart';
 
 final playbackProvider = ChangeNotifierProvider(
@@ -408,6 +409,9 @@ class PlaybackNotifier extends ChangeNotifier {
 
     if (r.statusCode == 200 || r.statusCode == 204) {
       playbackState.isRepeatMode = false;
+      if (playbackState.inTrackClipPlaybackMode ?? false) {
+        db.addTrackClipToRecentlyListened(clip: playbackState.currentTrackClip!);
+      } 
     }
     return r;
   }
@@ -431,6 +435,9 @@ class PlaybackNotifier extends ChangeNotifier {
 
     if (r.statusCode == 200 || r.statusCode == 204) {
       playbackState.isRepeatMode = false;
+      if (playbackState.inTrackClipPlaybackMode ?? false) {
+        db.addTrackClipToRecentlyListened(clip: playbackState.currentTrackClip!);
+      } 
     }
     return r;
   }

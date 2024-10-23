@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:8206777011072132457",
-      "lastPropertyId": "14:2938041381718720521",
+      "lastPropertyId": "15:3976833749141121159",
       "name": "Song",
       "properties": [
         {
@@ -70,6 +70,14 @@
           "id": "14:2938041381718720521",
           "name": "durationDB",
           "type": 6
+        },
+        {
+          "id": "15:3976833749141121159",
+          "name": "backupId",
+          "type": 11,
+          "flags": 520,
+          "indexId": "9:533724143938896267",
+          "relationTarget": "BackupConnectedServiceContent"
         }
       ],
       "relations": [
@@ -87,7 +95,7 @@
     },
     {
       "id": "2:38032209886724473",
-      "lastPropertyId": "8:2952492968814855538",
+      "lastPropertyId": "10:7491811255347019236",
       "name": "Playlist",
       "properties": [
         {
@@ -135,6 +143,19 @@
           "flags": 520,
           "indexId": "6:77858185340425533",
           "relationTarget": "UserConnectedMusicService"
+        },
+        {
+          "id": "9:340917540280358045",
+          "name": "backupId",
+          "type": 11,
+          "flags": 520,
+          "indexId": "8:3804280957664001465",
+          "relationTarget": "BackupConnectedServiceContent"
+        },
+        {
+          "id": "10:7491811255347019236",
+          "name": "musicLibraryServiceDB",
+          "type": 9
         }
       ],
       "relations": [
@@ -147,7 +168,7 @@
     },
     {
       "id": "3:5317744468143076040",
-      "lastPropertyId": "12:8764570932977687374",
+      "lastPropertyId": "14:8210351766372133414",
       "name": "TrackClip",
       "properties": [
         {
@@ -198,6 +219,19 @@
           "flags": 520,
           "indexId": "5:1185253801173147599",
           "relationTarget": "Song"
+        },
+        {
+          "id": "13:308455942180562499",
+          "name": "backupId",
+          "type": 11,
+          "flags": 520,
+          "indexId": "10:1318873852091833423",
+          "relationTarget": "BackupConnectedServiceContent"
+        },
+        {
+          "id": "14:8210351766372133414",
+          "name": "linkedTrackClipPlaylistsForCache",
+          "type": 26
         }
       ],
       "relations": [
@@ -310,10 +344,37 @@
           "targetId": "4:5891164408967352254"
         }
       ]
+    },
+    {
+      "id": "7:357874240679407431",
+      "lastPropertyId": "3:8729719097233942423",
+      "name": "BackupConnectedServiceContent",
+      "properties": [
+        {
+          "id": "1:744737165570003859",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:958550599501832137",
+          "name": "musicServiceDB",
+          "type": 9
+        },
+        {
+          "id": "3:8729719097233942423",
+          "name": "linkedUserId",
+          "type": 11,
+          "flags": 520,
+          "indexId": "11:8794542164921285304",
+          "relationTarget": "UserProfileDB"
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "6:2247108447826571828",
-  "lastIndexId": "7:6872033909649812997",
+  "lastEntityId": "7:357874240679407431",
+  "lastIndexId": "11:8794542164921285304",
   "lastRelationId": "11:6329358754405982976",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

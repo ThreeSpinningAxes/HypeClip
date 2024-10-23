@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hypeclip/Entities/BackupConnectedServiceContent.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
@@ -33,6 +34,10 @@ class TrackClip {
   
   final linkedPlaylistsDB = ToMany<TrackClipPlaylist>();
 
+  final backup = ToOne<BackupConnectedServiceContent>();
+
+  @Property(type: PropertyType.intVector)
+  List<int>? linkedTrackClipPlaylistsForCache = [];
 
   String clipName;
   String? clipDescription;

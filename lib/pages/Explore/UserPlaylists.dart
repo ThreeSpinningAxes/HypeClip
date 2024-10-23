@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hypeclip/Entities/Playlist.dart';
+import 'package:hypeclip/Entities/UserConnectedMusicServiceDB.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/MusicAccountServices/MusicServiceHandler.dart';
 import 'package:hypeclip/Pages/Explore/TrackList.dart';
@@ -20,52 +21,82 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
   late MusicServiceHandler musicServiceHandler;
   Future<List<Playlist>>? playlists;
   List<Playlist> filteredPlaylists = [];
-  TextEditingController search = TextEditingController();
+  TextEditingController search = TextEditingController(text: "");
 
   @override
   void initState() {
     super.initState();
+
     musicServiceHandler = MusicServiceHandler(service: widget.service);
-    if (db.playlistBox.isEmpty()) {
+    List<Playlist> userPlaylistsForService = db
+        .getFirstUser()!
+        .connectedMusicStreamingServices
+        .where(
+            (service) => service.musicLibraryServiceDB == widget.service.name)
+        .first
+        .userPlaylistsDB;
+    if (userPlaylistsForService.isEmpty ||
+        userPlaylistsForService
+            .where((playlist) =>
+                playlist.id != Playlist.likedTracksID &&
+                playlist.id != Playlist.recentlyPlayedID)
+            .isEmpty) {
       playlists = loadPlaylists();
       playlists!.then((playlists) {
         storeNewPlaylistsDB(playlists);
       });
     } else {
-      playlists = Future.value(db.playlistBox.getAll());
-      filteredPlaylists = db.playlistBox.getAll();
-      
+      List<Playlist> filteredPlaylists = db.playlistBox
+          .getAll()
+          .where((playlist) =>
+              playlist.musicLibraryServiceDB == widget.service.name &&
+              !playlist.backup.hasValue &&
+              playlist.id != Playlist.likedTracksID &&
+              playlist.id != Playlist.recentlyPlayedID)
+          .toList();
+      playlists = Future.value(filteredPlaylists);
     }
-    
+
     search.addListener(() {
       updateSearchQuery(search.text);
     });
+    updateSearchQuery(search.text);
   }
 
-void storeNewPlaylistsDB(List<Playlist> playlists) {
-  // Fetch all existing playlists from the playlist box
-  List<Playlist> existingPlaylists = db.playlistBox.getAll();
-  
-  // Create a set of existing playlist IDs
-  Set<String> existingPlaylistIds = existingPlaylists.map((playlist) => playlist.id).toSet();
-  
-  // Calculate new playlists that don't exist in the playlist box
-  List<Playlist> newPlaylists = [];
-  for (Playlist playlist in playlists) {
-    if (!existingPlaylistIds.contains(playlist.id)) {
-      newPlaylists.add(playlist);
+  void storeNewPlaylistsDB(List<Playlist> playlists) {
+    // Fetch all existing playlists from the playlist box
+    List<Playlist> existingPlaylists = db.playlistBox.getAll();
+
+    // Create a set of existing playlist IDs
+    Set<String> existingPlaylistIds =
+        existingPlaylists.map((playlist) => playlist.id).toSet();
+
+    UserConnectedMusicService service = db
+        .getFirstUser()!
+        .connectedMusicStreamingServices
+        .where(
+            (service) => service.musicLibraryServiceDB == widget.service.name)
+        .first;
+    // Calculate new playlists that don't exist in the playlist box
+    List<Playlist> newPlaylists = [];
+    for (Playlist playlist in playlists) {
+      if (!existingPlaylistIds.contains(playlist.id)) {
+        playlist.userMusicStreamingServiceAccount.target = service;
+        newPlaylists.add(playlist);
+      }
     }
+
+    db.playlistBox.putMany(newPlaylists);
+    service.userPlaylistsDB.addAll(newPlaylists);
+    db.userConnectedMusicServiceBox.put(service);
   }
-  
-  // Store new playlists in the playlist box
-  db.playlistBox.putMany(newPlaylists);
-}
 
   Future<List<Playlist>> loadPlaylists() async {
     int offset = 0;
     List<Playlist> playlists = [];
     while (true) {
-      List<Playlist>? fetchedPlaylists = await musicServiceHandler.getUserPlaylists(50, offset);
+      List<Playlist>? fetchedPlaylists =
+          await musicServiceHandler.getUserPlaylists(50, offset);
       if (fetchedPlaylists != null && fetchedPlaylists.isNotEmpty) {
         playlists.addAll(fetchedPlaylists);
         filteredPlaylists.addAll(fetchedPlaylists);
@@ -81,27 +112,22 @@ void storeNewPlaylistsDB(List<Playlist> playlists) {
   }
 
   void updateSearchQuery(String newQuery) {
-    
-      if (newQuery.isNotEmpty) {
-        playlists!.then((playlist) {
-          //print(songs.length);
-          filteredPlaylists = playlist.where((playlist) {
-            return playlist.name
-                .toString()
-                .toLowerCase()
-                .contains(search.text.toLowerCase());
-          }).toList();
-        });
-      }
-      else {
-        playlists!.then((playlist) {
-          filteredPlaylists = playlist;
-        });
-      }
-      setState(() {
-        
+    if (newQuery.isNotEmpty) {
+      playlists!.then((playlist) {
+        //print(songs.length);
+        filteredPlaylists = playlist.where((playlist) {
+          return playlist.name
+              .toString()
+              .toLowerCase()
+              .contains(search.text.toLowerCase());
+        }).toList();
       });
-    
+    } else {
+      playlists!.then((playlist) {
+        filteredPlaylists = playlist;
+      });
+    }
+    setState(() {});
   }
 
   @override
@@ -131,8 +157,6 @@ void storeNewPlaylistsDB(List<Playlist> playlists) {
               // Handle any errors that occur during the future execution
               return Center(child: Text('Error: ${snapshot.error}'));
             } else {
-              List<Playlist> playlists = snapshot.data as List<Playlist>;
-
               // Once data is fetched, build the entire page content
               return Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -142,25 +166,25 @@ void storeNewPlaylistsDB(List<Playlist> playlists) {
                       height: 40,
                     ),
                     if (snapshot.data!.isEmpty)
-                      
-                        ListTile(
-                      title: Text('No Playlists found',
-                          style: TextStyle(fontSize: 22, color: Colors.white)),
-                     
-                         
-                    ),
-                      
+                      ListTile(
+                        title: Text('No Playlists found',
+                            style:
+                                TextStyle(fontSize: 22, color: Colors.white)),
+                      ),
+
                     if (snapshot.data!.isNotEmpty)
-                    ListTile(
-                      title: Text('Your Saved Playlists',
-                          style: TextStyle(fontSize: 22, color: Colors.white)),
-                      subtitle: Text('${snapshot.data!.length} playlists',
-                          style: TextStyle(fontSize: 14, color: Colors.white)),
-                    ),
+                      ListTile(
+                        title: Text('Your Saved Playlists',
+                            style:
+                                TextStyle(fontSize: 22, color: Colors.white)),
+                        subtitle: Text('${snapshot.data!.length} playlists',
+                            style:
+                                TextStyle(fontSize: 14, color: Colors.white)),
+                      ),
                     SizedBox(height: 15),
                     // Your SearchBar widget here
                     // Assuming SearchBar doesn't depend on the fetched data
-                    
+
                     if (snapshot.data!.isNotEmpty)
                       SearchBar(
                         controller: search,
@@ -190,27 +214,33 @@ void storeNewPlaylistsDB(List<Playlist> playlists) {
                           itemCount: filteredPlaylists.length,
                           itemBuilder: (context, index) {
                             // var song = filteredSongs[index]['track'];
-                        
+
                             Playlist playlist = filteredPlaylists[index];
                             //var artistImage = song['artists'][0]['images'][0]['url'];
-                        
+
                             return ListTile(
-                              
-                               leading: playlist.imageUrl != null
+                              leading: playlist.imageUrl != null
                                   ? FadeInImage.assetNetwork(
                                       placeholder:
                                           'assets/loading_placeholder.gif', // Path to your placeholder image
                                       image: playlist.imageUrl!,
                                       fit: BoxFit.cover,
+                                      imageErrorBuilder:
+                                          (context, error, stackTrace) => Icon(
+                                              Icons.music_note,
+                                              color: Colors.white),
+
                                       width: 50.0, // Adjust the width as needed
-                                      height: 50.0, // Adjust the height as needed
+                                      height:
+                                          50.0, // Adjust the height as needed
                                     )
                                   : SizedBox(
-                                    width: 50,
-                                    height: 50,
-                                    child: Icon(Icons.music_note, color: Colors.white),
+                                      width: 50,
+                                      height: 50,
+                                      child: Icon(Icons.music_note,
+                                          color: Colors.white),
                                     ),
-                        
+
                               onTap: () {
                                 Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) =>

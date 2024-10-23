@@ -3,17 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
 import 'package:hypeclip/Entities/PlaybackState.dart';
+import 'package:hypeclip/Entities/TrackClip.dart';
 import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Providers/MiniPlayerProvider.dart';
 import 'package:hypeclip/Widgets/ConfirmationDialog.dart';
 import 'package:hypeclip/Widgets/CreateNewPlaylistModal.dart';
 import 'package:hypeclip/Providers/PlaybackProvider.dart';
-import 'package:hypeclip/Providers/TrackClipProvider.dart';
 import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/Widgets/TrackUI.dart';
 import 'package:hypeclip/main.dart';
-import 'package:hypeclip/objectbox.g.dart';
 
 class ListOfTrackClipPlaylists extends ConsumerStatefulWidget {
   final MusicLibraryService service = MusicLibraryService.spotify;
@@ -358,10 +357,13 @@ class _ListOfTrackClipsState extends ConsumerState<ListOfTrackClipPlaylists> {
     if (isAllSavedClips) {
       playlist = TrackClipPlaylist(
         playlistName: TrackClipPlaylist.SAVED_CLIPS_PLAYLIST_KEY,
-        clips: db.trackClipBox.getAll(),
+        clips: db.trackClipBox.getAll().where((clip) {
+          return clip.musicLibraryService == widget.service && clip.backup.target == null;
+        }).toList(),
       );
-      playlist.clipsDB.addAll(db.trackClipBox.getAll());
+      playlist.clipsDB.addAll(playlist.clips!);
     }
+    
 
     return ListTile(
       title: Text(

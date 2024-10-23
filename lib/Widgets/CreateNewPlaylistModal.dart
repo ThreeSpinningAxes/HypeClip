@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hypeclip/Entities/TrackClip.dart';
 import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
-import 'package:hypeclip/Providers/TrackClipProvider.dart';
-import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/Utilities/ShowSnackbar.dart';
 import 'package:hypeclip/main.dart';
 

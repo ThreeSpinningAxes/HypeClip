@@ -40,18 +40,22 @@ class _TrackListState extends ConsumerState<TrackList>
     super.initState();
     musicServiceHandler = MusicServiceHandler(service: widget.service);
     
-
-
+    String playlistID;
     if (widget.fetchLikedSongs) {
-      _playlist = db.playlistBox.getAll().firstWhere((playlist) => playlist.id == 'likedTracks', orElse: () {
-        db.initPlaylists(service: widget.service);
-        return db.playlistBox.getAll().firstWhere((playlist) => playlist.id == 'likedTracks');
-      },);
+      playlistID = 'likedTracks';
     }
     else if (widget.fetchRecentlyPlayedTracks) {
-      _playlist = db.playlistBox.getAll().firstWhere((playlist) => playlist.id == 'recentlyPlayed', orElse: () {
+      playlistID = 'recentlyPlayed';
+    }
+    else {
+      playlistID = widget.playlist!.id;
+    }
+
+    if (widget.playlist == null) {
+      _playlist = db.playlistBox.getAll().firstWhere((playlist) => playlist.userMusicStreamingServiceAccount.target?.musicLibraryServiceDB == widget.service.name
+       && playlist.id == playlistID && !playlist.backup.hasValue, orElse: () {
         db.initPlaylists(service: widget.service);
-        return db.playlistBox.getAll().firstWhere((playlist) => playlist.id == 'recentlyPlayed');
+        return db.playlistBox.getAll().firstWhere((playlist) => playlist.id == playlistID);
       },);
     }
     else {
@@ -73,6 +77,7 @@ class _TrackListState extends ConsumerState<TrackList>
       updateSearchQuery(search.text);
     });
   }
+  
 
   Future<List<Song>> loadSongs() async {
     Future<List<Song>> songs;
@@ -166,23 +171,28 @@ class _TrackListState extends ConsumerState<TrackList>
 
 
   List<Song> getNewTracksAndStore(List<Song> tracks) {
-     List<Song> existingTracks = db.songBox.getAll();
+
     
     // Create a set of existing song IDs
-    Set<String> existingTrackIds = existingTracks.map((song) => song.trackID!).toSet();
+    Set<String> existingTrackIds = db.songBox.getAll().where((song) => song.musicLibraryServiceDB == widget.service.name).map((song) => song.trackID!).toSet();
     
     // Calculate new songs that don't exist in the song box
     List<Song> newTracks = [];
+    List<Song> updateExistingTracks = [];
     for (Song song in tracks) {
-      if (!existingTrackIds.contains(song.trackURI)) {
+      if (!existingTrackIds.contains(song.trackID)) {
         song.playlistDB.add(_playlist);
         newTracks.add(song);
-       
+      }
+      else {
+        song.playlistDB.add(_playlist);
+        updateExistingTracks.add(song);
       }
     }
     
     // Store new songs in the song box
     _playlist.songsDB.addAll(newTracks);
+    _playlist.songsDB.addAll(updateExistingTracks);
     db.playlistBox.put(_playlist);
     db.songBox.putMany(newTracks);
     
@@ -259,7 +269,7 @@ class _TrackListState extends ConsumerState<TrackList>
                       leading: leading,
                       title: Text(title,
                           style: TextStyle(fontSize: 22, color: Colors.white)),
-                      subtitle: Text('${snapshot.data!.length} songs',
+                      subtitle: Text('${filteredSongs.length} songs',
                           style: TextStyle(fontSize: 14, color: Colors.white)),
                     ),
                     SizedBox(height: 15),

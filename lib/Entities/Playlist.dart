@@ -1,11 +1,17 @@
 
 
+import 'package:hypeclip/Entities/BackupConnectedServiceContent.dart';
 import 'package:hypeclip/Entities/Song.dart';
 import 'package:hypeclip/Entities/UserConnectedMusicServiceDB.dart';
+import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:objectbox/objectbox.dart';
 
 @Entity()
 class Playlist {
+  
+  static const String likedTracksID = "likedTracks";
+
+  static const String recentlyPlayedID = "recentlyPlayed";
   
   @Id()
   int? dbID = 0; 
@@ -21,7 +27,19 @@ class Playlist {
   
   final songsDB = ToMany<Song>();
 
+  final backup = ToOne<BackupConnectedServiceContent>();
+
   final userMusicStreamingServiceAccount = ToOne<UserConnectedMusicService>();
+
+  @Transient()
+  MusicLibraryService? musicLibraryService;
+
+  String get musicLibraryServiceDB => musicLibraryService?.name ?? 'unknown';
+  set musicLibraryServiceDB(String value) {
+   musicLibraryService = MusicLibraryService.values.firstWhere((val) {
+      return val.name == value;
+    }, orElse: () => MusicLibraryService.unknown);
+  }
 
   Playlist({
     this.dbID,
@@ -31,5 +49,6 @@ class Playlist {
     this.ownerName,
     this.imageUrl,
     this.totalTracks,
+    this.musicLibraryService,
   });
 }
