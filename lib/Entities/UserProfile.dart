@@ -6,6 +6,7 @@ import "package:hypeclip/Enums/MusicLibraryServices.dart";
 class UserProfile {
   String? username;
 
+
   String? ID;
 
   String? email;
@@ -41,7 +42,6 @@ class UserProfile {
   TrackClipPlaylist get getRecentlyListenedPlaylist =>
       playlists[TrackClipPlaylist.RECENTLY_LISTENED_KEY]!;
   bool get getLoadedTrackClips => loadedTrackClips;
-
 // Setters
   set setUsername(String value) => username = value;
   set setID(String value) => ID = value;

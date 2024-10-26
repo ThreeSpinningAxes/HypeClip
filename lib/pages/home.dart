@@ -45,6 +45,9 @@ class _HomeState extends ConsumerState<Home> {
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
+              scrolledUnderElevation: 0,
+              surfaceTintColor: Colors.transparent,
+              forceMaterialTransparency: true,
               title: Text(pageNames[widget.child.currentIndex],
                   style: TextStyle(
                       fontSize: 24,
@@ -165,15 +168,7 @@ class _HomeState extends ConsumerState<Home> {
                       // ...
                     },
                   ),
-                  ListTile(
-                    title: const Text('Log out'),
-                    leading: Icon(Icons.logout, color: Colors.white),
-                    onTap: () async {
-                      await UserProfileService.logout();
-                      // Update the state of the app.
-                      // ...
-                    },
-                  ),
+                
                   ListTile(
                     title: const Text('How to use'),
                     leading: Icon(Icons.help_outline, color: Colors.white,),
@@ -189,6 +184,15 @@ class _HomeState extends ConsumerState<Home> {
                     onTap: () async {
                       
                       context.push('/aboutUs');
+                    },
+                  ),
+                    ListTile(
+                    title: const Text('Log out'),
+                    leading: Icon(Icons.logout, color: Colors.white),
+                    onTap: () async {
+                      await UserProfileService.logout();
+                      // Update the state of the app.
+                      // ...
                     },
                   ),
                 

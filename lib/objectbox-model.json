@@ -322,7 +322,7 @@
     },
     {
       "id": "6:2247108447826571828",
-      "lastPropertyId": "1:5805537477370951392",
+      "lastPropertyId": "2:7067611816217463674",
       "name": "UserProfileDB",
       "properties": [
         {
@@ -330,6 +330,13 @@
           "name": "id",
           "type": 6,
           "flags": 1
+        },
+        {
+          "id": "2:7067611816217463674",
+          "name": "uid",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "12:8561450810130202504"
         }
       ],
       "relations": [
@@ -374,7 +381,7 @@
     }
   ],
   "lastEntityId": "7:357874240679407431",
-  "lastIndexId": "11:8794542164921285304",
+  "lastIndexId": "12:8561450810130202504",
   "lastRelationId": "11:6329358754405982976",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

@@ -11,6 +11,9 @@ class UserProfileDB {
   @Id()
   int id = 0;
 
+  @Index()
+  String? uid;
+
   @Backlink('connectedUserDB')
   final connectedMusicStreamingServices = ToMany<UserConnectedMusicService>();
 

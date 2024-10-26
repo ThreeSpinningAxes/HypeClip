@@ -6,6 +6,7 @@ import 'package:hypeclip/Entities/TrackClipPlaylist.dart';
 import 'package:hypeclip/Entities/UserConnectedMusicServiceDB.dart';
 import 'package:hypeclip/Entities/UserProfileDB.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
+import 'package:hypeclip/Services/UserProfileService.dart';
 import 'package:hypeclip/objectbox.g.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -57,9 +58,17 @@ class ObjectBox {
   void _initUserProfileBox() {
     if (userProfileBox.isEmpty()) {
       // Initialize the UserProfileDB box with default data
-      final userProfile = UserProfileDB();
-      userProfileBox.put(userProfile);
+      // final userProfile = UserProfileDB();
+      // userProfileBox.put(userProfile);
     }
+  }
+
+
+  void addNewUser({String? uid}) {
+    final userProfile = UserProfileDB()
+      ..uid = uid;
+    userProfileBox.put(userProfile);
+
   }
 
   void initPlaylists({required MusicLibraryService service}) {
@@ -126,7 +135,7 @@ class ObjectBox {
       {required MusicLibraryService service,
       bool deleteData = false,
       int? userId}) {
-    int id = userId ?? getFirstUser()!.id;
+    int id = userId ?? getCurrentUser()!.id;
     UserConnectedMusicService connectedStreamingService =
         userConnectedMusicServiceBox.getAll().firstWhere((element) =>
             element.service?.name == service.name &&
@@ -159,7 +168,7 @@ class ObjectBox {
   }
 
   void cacheStreamingServiceData({required MusicLibraryService service}) {
-    final userProfile = getFirstUser();
+    final userProfile = getCurrentUser();
     BackupConnectedServiceContent? backupService =
         backupConnectedServiceContentBox
             .getAll()
@@ -252,7 +261,7 @@ class ObjectBox {
       String? refreshToken,
       bool createDefaultPlaylists = true}) {
     final userProfile =
-        userId != null ? userProfileBox.get(userId) : getFirstUser();
+        userId != null ? userProfileBox.get(userId) : getCurrentUser();
     if (userProfile != null) {
       final connectedMusicService = UserConnectedMusicService()
         ..service = service
@@ -317,7 +326,7 @@ class ObjectBox {
 
   void _initMusicServices({int? userId}) {
     final userProfile =
-        userId != null ? userProfileBox.get(userId) : getFirstUser();
+        userId != null ? userProfileBox.get(userId) : getCurrentUser();
     for (UserConnectedMusicService service
         in userProfile!.connectedMusicStreamingServices) {
       // if (service.musicLibraryServiceDB != MusicLibraryService.spotify.name) {
@@ -343,7 +352,9 @@ class ObjectBox {
     userConnectedMusicServiceBox.remove(account.id);
   }
 
-  UserProfileDB? getFirstUser() {
+  UserProfileDB? getCurrentUser() {
+    String currentUserID = UserProfileService.userProfile.ID!;
+    return userProfileBox.getAll().where((element) => element.uid == currentUserID).firstOrNull;
     return userProfileBox.getAll().isNotEmpty
         ? userProfileBox.getAll().first
         : null;
@@ -366,7 +377,7 @@ class ObjectBox {
       ..musicLibraryServiceDB = service.name;
 
     final userProfile =
-        userId != null ? userProfileBox.get(userId) : getFirstUser();
+        userId != null ? userProfileBox.get(userId) : getCurrentUser();
     if (userProfile != null) {
       final connectedMusicService = userProfile.connectedMusicStreamingServices
           .firstWhere(

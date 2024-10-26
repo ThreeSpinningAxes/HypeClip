@@ -57,7 +57,8 @@ Future main() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   WidgetsFlutterBinding.ensureInitialized();
-  db = await ObjectBox.create();
+
+
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -66,6 +67,7 @@ Future main() async {
   await DeviceInfoManager().initDeviceId();
   await Future.delayed(const Duration(milliseconds: 3200));
   await initUser();
+  db = await ObjectBox.create();
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     _router.refresh();
   });

@@ -331,14 +331,20 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(6, 2247108447826571828),
       name: 'UserProfileDB',
-      lastPropertyId: const obx_int.IdUid(1, 5805537477370951392),
+      lastPropertyId: const obx_int.IdUid(2, 7067611816217463674),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
             id: const obx_int.IdUid(1, 5805537477370951392),
             name: 'id',
             type: 6,
-            flags: 1)
+            flags: 1),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 7067611816217463674),
+            name: 'uid',
+            type: 9,
+            flags: 2048,
+            indexId: const obx_int.IdUid(12, 8561450810130202504))
       ],
       relations: <obx_int.ModelRelation>[
         obx_int.ModelRelation(
@@ -433,7 +439,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
       entities: _entities,
       lastEntityId: const obx_int.IdUid(7, 357874240679407431),
-      lastIndexId: const obx_int.IdUid(11, 8794542164921285304),
+      lastIndexId: const obx_int.IdUid(12, 8561450810130202504),
       lastRelationId: const obx_int.IdUid(11, 6329358754405982976),
       lastSequenceId: const obx_int.IdUid(0, 0),
       retiredEntityUids: const [],
@@ -843,8 +849,11 @@ obx_int.ModelDefinition getObjectBoxModel() {
           object.id = id;
         },
         objectToFB: (UserProfileDB object, fb.Builder fbb) {
-          fbb.startTable(2);
+          final uidOffset =
+              object.uid == null ? null : fbb.writeString(object.uid!);
+          fbb.startTable(3);
           fbb.addInt64(0, object.id);
+          fbb.addOffset(1, uidOffset);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -853,7 +862,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final rootOffset = buffer.derefObject(0);
 
           final object = UserProfileDB()
-            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0)
+            ..uid = const fb.StringReader(asciiOptimization: true)
+                .vTableGetNullable(buffer, rootOffset, 6);
           obx_int.InternalToManyAccess.setRelInfo<UserProfileDB>(
               object.allTrackClipsDB,
               store,
@@ -1169,6 +1180,10 @@ class UserProfileDB_ {
   /// See [UserProfileDB.id].
   static final id =
       obx.QueryIntegerProperty<UserProfileDB>(_entities[5].properties[0]);
+
+  /// See [UserProfileDB.uid].
+  static final uid =
+      obx.QueryStringProperty<UserProfileDB>(_entities[5].properties[1]);
 
   /// see [UserProfileDB.allTrackClipsDB]
   static final allTrackClipsDB =
