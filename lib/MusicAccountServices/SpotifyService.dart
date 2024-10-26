@@ -621,7 +621,7 @@ UserConnectedMusicService? token = db.userConnectedMusicServiceBox.getAll().wher
 
   Future<bool> checkIfAppIsActive() async {
     try {
-      return await SpotifySdk.isSpotifyAppActive;
+      return await false;
     } on PlatformException catch (e) {
       developer
           .log("Failed to check if Spotify app is active: '${e.message}'.");
