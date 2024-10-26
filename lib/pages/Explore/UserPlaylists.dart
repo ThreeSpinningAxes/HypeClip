@@ -29,7 +29,7 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
 
     musicServiceHandler = MusicServiceHandler(service: widget.service);
     List<Playlist> userPlaylistsForService = db
-        .getFirstUser()!
+        .getCurrentUser()!
         .connectedMusicStreamingServices
         .where(
             (service) => service.musicLibraryServiceDB == widget.service.name)
@@ -72,7 +72,7 @@ class _UserPlaylistsPageState extends State<UserPlaylistsPage>
         existingPlaylists.map((playlist) => playlist.id).toSet();
 
     UserConnectedMusicService service = db
-        .getFirstUser()!
+        .getCurrentUser()!
         .connectedMusicStreamingServices
         .where(
             (service) => service.musicLibraryServiceDB == widget.service.name)

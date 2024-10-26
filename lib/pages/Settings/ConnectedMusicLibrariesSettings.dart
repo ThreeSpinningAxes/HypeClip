@@ -29,7 +29,7 @@ class _ConnectedMusicLibrariesSettingsState
     super.initState();
 
     for (UserConnectedMusicService service
-        in db.getFirstUser()!.connectedMusicStreamingServices) {
+        in db.getCurrentUser()!.connectedMusicStreamingServices) {
       MusicLibraryService s =
           getMusicLibraryServiceName(service.musicLibraryServiceDB);
       unconnectedServices.remove(s);

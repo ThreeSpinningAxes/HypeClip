@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hypeclip/Entities/UserProfileDB.dart';
 import 'package:hypeclip/Enums/MusicLibraryServices.dart';
 import 'package:hypeclip/Pages/Explore/noConnectedAccounts.dart';
 import 'package:hypeclip/Services/UserProfileService.dart';
@@ -73,7 +74,6 @@ class _ConnectedAccountsState extends State<ConnectedAccounts> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         onTap: () async {
-         
             debug.log('Connected to${service.name}');
             context.pushNamed('explore/connectedAccounts/browseMusicPlatform');
           

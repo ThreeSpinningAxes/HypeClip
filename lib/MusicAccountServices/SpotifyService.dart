@@ -89,7 +89,7 @@ class SpotifyService {
 
         }
         print(
-            "accesstoken: ${db.getFirstUser()?.connectedMusicStreamingServices.first.accessToken}");
+            "accesstoken: ${db.getCurrentUser()?.connectedMusicStreamingServices.first.accessToken}");
 
         return accessData;
       } else {

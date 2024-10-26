@@ -52,6 +52,7 @@ class UserProfileService {
   static Future<void> initNewUser(
       String id, String username, String email, bool isLoggedIn) async {
     setUser(id, username, email, isLoggedIn);
+    db.addNewUser(uid: id);
     await initMusicServicesForStorage();
     await loadUserTrackClipPlaylistsFromPreferences();
   }
